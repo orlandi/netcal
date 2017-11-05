@@ -27,3 +27,4 @@ external/toolbox_image/toolbox/.svn/*
 external/toolbox_image/tests/*
 *.svn*
 external/exportfig/\.ignore/
+*.gexf
