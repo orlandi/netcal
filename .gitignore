@@ -3,6 +3,7 @@
 production/*
 netcalCurrent.zip
 tex/*
+internal/hacks/*
 tmp/*
 *.mat
 *sublime*
