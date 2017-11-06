@@ -28,13 +28,16 @@ obj = networkInferenceBase;
 obj.init(networkInferenceXcorrOptions, 'cross-correlation', varargin{:}, 'gui', gcbf);
 % Transfomr the lags
 obj.params.maximumLag = round(obj.params.maximumLag*experiment.fps);
-[success, inferenceData, inferenceDataSurrogates, members] = obj.infer(@infer, experiment, obj.params.value, obj.params.maximumLag, obj.params.normalizationType);
+[success, inferenceData, inferenceDataSurrogates, members] = obj.infer(@infer, @normalize, experiment, obj.params.value, obj.params.maximumLag, obj.params.normalizationType);
 if(success)
   experiment = loadBigFields(experiment, {'inference', 'inferenceSurrogates'});
   if(~isfield(experiment, 'inference') || ~isfield(experiment.inference, 'xcorr'))
     experiment.inference.xcorr = zeros(length(experiment.ROI));
+  end
+  if(~isfield(experiment, 'inferenceSurrogates') || ~isfield(experiment.inferenceSurrogates, 'xcorr'))
     experiment.inferenceSurrogates.xcorr = zeros(length(experiment.ROI));
-  elseif(numel(experiment.inference.xcorr) ~= length(experiment.ROI)^2)
+  end
+  if(numel(experiment.inference.xcorr) ~= length(experiment.ROI)^2)
     experiment.inference.xcorr = zeros(length(experiment.ROI));
   end
   if(numel(experiment.inferenceSurrogates.xcorr) ~= length(experiment.ROI)^2*obj.params.surrogates.amount)
@@ -47,22 +50,18 @@ if(success)
     experiment.inferenceSurrogates.xcorr(members, members) = inferenceDataSurrogates;
   end
 end
+experiment.saveBigFields = true;
 obj.cleanup();
 
   %------------------------------------------------------------------------
-  function retData = infer(I, J, value, lag, norm)
+  function retData = infer(I, J, value, lag, ~)
     % If I is a matrix it means it has the surrogates incorporated
     if(size(I, 2) > 1)
-%       dataOrig = xcorr(I(:, 1), J, lag, norm);
-%       data = zeros(length(dataOrig), size(I, 2));
-%       data(:, 1) = dataOrig;
-%       for i = 2:size(I, 2)
-%         data(:, i+1) = xcorr(I(:, i), J, lag, norm);
-%       end
-      %data = xcorr2(I, J, lag, norm);
-      data = xcorr2(I, J); % No lag or norm for now
+      data = xcorr2(I, J); % No lag for now (normalization has been done outside)
+      % Now the lag
+      data = data((size(I, 1))-lag:(size(I, 1)+lag), :);
     else
-      data = xcorr(I, J, lag, norm);
+      data = xcorr(I, J, lag);
     end
     retData = zeros(size(I, 2), 1);
     for i = 1:size(I, 2)
@@ -75,6 +74,22 @@ obj.cleanup();
         case '0lag'
           retData(i) = data(floor(length(data)/2)+1, i);
       end
+    end
+  end
+%------------------------------------------------------------------------
+  function normalizedData = normalize(data, ~, ~, type)
+    switch type
+      case 'coeff'
+        normalizedData = zeros(size(data));
+        for i = 1:size(normalizedData, 2)
+          if(sum(data(:,i).^2) ~= 0)
+            normalizedData(:, i) = data(:, i)/sqrt(sum(data(:, i).^2));
+          else
+            normalizedData(:, i) = zeros(size(data(:, i)));
+          end
+        end
+      case 'none'
+        normalizedData = data;
     end
   end
 end

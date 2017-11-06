@@ -21,7 +21,7 @@ classdef networkInferenceBase < handle
   methods
     % Use this function to do the actual inference
     %----------------------------------------------------------------------
-    function [success, inferenceData, inferenceDataSurrogates, members] = infer(obj, funcHandle, experiment, varargin)
+    function [success, inferenceData, inferenceDataSurrogates, members] = infer(obj, inferFunc, normFunc, experiment, varargin)
       obj.surrogates = obj.params.surrogates;
       obj.globalConditioning = obj.params.globalConditioning;
       
@@ -62,51 +62,59 @@ classdef networkInferenceBase < handle
       end
       % Create the asdf2 structure
       asdf2 = experimentToAsdf2(experiment);
-       
+      % Let's turn all rasters into a 2D array for slicing
+      raster = zeros(asdf2.nbins, length(members));
+      for i = 1:length(members)
+        raster(asdf2.raster{members(i)}, i) = 1;
+      end
+      % Normalize data
+      raster = feval(normFunc, raster, varargin{:});
       if(obj.params.pbar > 0)
         ncbar.setBarName(sprintf('Performing %s based inference', obj.inferenceName));
       end
+      
       % The actual comparison - we will iterate thorugh all pairs in both directions. Might be overkill for symmetric measures, but since we are not sure how it will behave with the surrogates, better be safe than sorry
       % We will check for I->J interactions. Using the surrogates on I
       curIteration = 0;
       totalIterations = length(members)*(length(members)-1)*(Nsurrogates+1);
       for i = 1:length(members)
-        if(all(isnan(asdf2.raster{members(i)})) || isempty(asdf2.raster{members(i)}))
+        if(sum(raster(:, i)) == 0)
           curIteration = curIteration + (length(members)-1)*(Nsurrogates+1);
           if(obj.params.pbar > 0)
             ncbar.update(curIteration/totalIterations);
           end
           continue;
         end
-        Iorig = zeros(asdf2.nbins, 1);
-        Iorig(asdf2.raster{members(i)}) = 1;
+        Iorig = raster(:, i);
         if(~obj.surrogates.useAllAtOnce)
           for s = 0:Nsurrogates
             % s=0 is the original, not surrogate
             if(s == 0)
               I = Iorig;
             else
-              % Generate the surrogate
-              I = obj.generateSurrogate(I, asdf2.raster{members(i)}, obj.surrogates.type, obj.surrogates.jitterAmount);
+              % Generate the surrogate - still use the spike list
+              I = obj.generateSurrogate(Iorig, asdf2.raster{members(i)}, obj.surrogates.type, obj.surrogates.jitterAmount);
+              I = feval(normFunc, I, varargin{:});
             end
             inferenceDataCol = zeros(1, length(members));
             for j = 1:length(members)
               if(i == j)
                 continue;
               end
-              curIteration = curIteration + 1;
-              if(all(isnan(asdf2.raster{members(j)})) || isempty(asdf2.raster{members(j)}))
-                curIteration = curIteration + 1;
-                if(obj.params.pbar > 0)
-                  ncbar.update(curIteration/totalIterations);
-                end
+              J = raster(:, j);
+              % If there are no spikes, skip
+              if(sum(J) == 0)
+%                 curIteration = curIteration + 1;
+%                 if(obj.params.pbar > 0)
+%                   ncbar.update(curIteration/totalIterations);
+%                 end
                 continue;
               end
-              J = zeros(asdf2.nbins, 1);
-              J(asdf2.raster{members(j)}) = 1;
+              
               % The actual computation
-              inferenceDataCol(j) = feval(funcHandle, I, J, varargin{:});
+              inferenceDataCol(j) = feval(inferFunc, I, J, varargin{:});
             end
+            curIteration = curIteration + length(members) - 1;
             if(s == 0)
               inferenceData(i, :) = inferenceDataCol;
             else
@@ -123,23 +131,20 @@ classdef networkInferenceBase < handle
           for s = 1:Nsurrogates
             fullSurrogates(:, s+1) = obj.generateSurrogate(Iorig, asdf2.raster{members(i)}, obj.surrogates.type, obj.surrogates.jitterAmount);
           end
+          % Normalize them
+          fullSurrogates = feval(normFunc, fullSurrogates, varargin{:});
           % Use them
          for j = 1:length(members)
             if(i == j)
               continue;
             end
-            curIteration = curIteration + 1;
-            if(all(isnan(asdf2.raster{members(j)})) || isempty(asdf2.raster{members(j)}))
-              curIteration = curIteration + 1;
-              if(obj.params.pbar > 0)
-                ncbar.update(curIteration/totalIterations);
-              end
+            J = raster(:, j);
+            if(sum(J) == 0)
               continue;
             end
-            J = zeros(asdf2.nbins, 1);
-            J(asdf2.raster{members(j)}) = 1;
+            
             % The actual computation
-            inferenceDataFullSurrogates = feval(funcHandle, fullSurrogates, J, varargin{:});
+            inferenceDataFullSurrogates = feval(inferFunc, fullSurrogates, J, varargin{:});
             inferenceData(i, j) = inferenceDataFullSurrogates(1);
             if(Nsurrogates > 0)
               inferenceDataSurrogates(i, j, :) = inferenceDataFullSurrogates(2:end);

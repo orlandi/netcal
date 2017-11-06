@@ -17,11 +17,9 @@ classdef networkInferenceXcorrOptions < networkInferenceOptions
     maximumLag = 5;
     
     % How to normalize the cross-correlation measure (see MATLAB's xcorr)
-    % - biased: scales the raw cross-correlation by 1/M
-    % - unbiased: scales the raw correlation by 1/(M-abs(lags))
     % - coeff: normalizes the sequence so that the auto-correlations at zero lag are identically 1.0
     % - none: no scaling
-    normalizationType = {'coeff', 'biased', 'unbiased', 'none'};
+    normalizationType = {'coeff', 'none'};
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)
