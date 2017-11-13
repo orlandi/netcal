@@ -1,5 +1,9 @@
 ![logo](gui/images/logo_netcal.png)
 
+NETCAL: An interactive platform for large-scale, NETwork and population dynamics analysis of CALcium imaging recordings
+
+NETCAL is a MATLAB-built, dedicated software platform to record, manage and analyze high-speed high-resolution calcium imaging experiments. Its ease of use, interactive graphical interface and exhaustive documentation is aimed to wet-lab researchers, but it will also meet the needs of any experienced data scientist through its plugin and scripting system. We have developed a large set of tools and incorporated state-of-the-art algorithms and toolboxes for large-scale analysis of network and population dynamics. Analyses include: automated cell detection (both static and dynamic); trace and population sorting through machine learning, clustering and pattern recognition; bursting dynamics; spike detection; network inference (from functional networks to causal relations); and many more. Several of these tools are also available in real-time, e.g. cells and spikes can be monitored during the actual recording, giving the researcher extensive feedback on the progress of the experiment.
+
 # Installation instructions
 - You can find [here](http://www.itsnetcal.com/getting-started/) the latest installation instructions.
 - Install additional MATLAB toolboxes: Go to the installDependencies folder and execute the mltbx files (or drag and drop in MATLAB).
