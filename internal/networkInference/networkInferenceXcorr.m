@@ -54,7 +54,10 @@ experiment.saveBigFields = true;
 obj.cleanup();
 
   %------------------------------------------------------------------------
-  function retData = infer(I, J, value, lag, ~)
+  function retData = infer(I, J, G, value, lag, ~)
+    % Multiply by the global signal. If it's 0, those values will not count
+    I = bsxfun(@times,I,G);
+    J = bsxfun(@times,J,G);
     % If I is a matrix it means it has the surrogates incorporated
     if(size(I, 2) > 1)
       data = xcorr2(I, J); % No lag for now (normalization has been done outside)

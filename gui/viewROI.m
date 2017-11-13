@@ -415,6 +415,7 @@ function resetImage(~, ~)
   minIntensity = min(currFrame(:));
   maxIntensityText.String = sprintf('%.2f', maxIntensity);
   minIntensityText.String = sprintf('%.2f', minIntensity);
+  [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, bpp, true);
   updateImage();
 end
 
@@ -426,6 +427,7 @@ function removeBackground(~, ~)
   currFrame(currFrame <0) = 0;
   bpp = 8;
   ncbar.close();
+  [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, bpp, true);
   updateImage();
 end
 

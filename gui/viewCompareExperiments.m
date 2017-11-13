@@ -986,6 +986,11 @@ function plotBars(populationsBefore, populationsTransitions, options)
     if(size(populationsAfter, 1) > 1)
       populationsAfter = populationsAfter';
     end
+    minPopulationsBefore = populationsBefore;
+    maxPopulationsBefore = populationsBefore;
+    minPopulationsTransitions = populationsTransitions;
+    maxPopulationsTransitions = populationsTransitions;
+    multipleInputs = false;
   end
 
 

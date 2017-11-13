@@ -1,0 +1,861 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Notebook with self test script for xml_io_tools Package</title>
+      <meta name="generator" content="MATLAB 7.4">
+      <meta name="date" content="2007-07-17">
+      <meta name="m-file" content="xml_selftest_script"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h1>Notebook with self test script for xml_io_tools Package</h1>
+         <introduction>
+            <p>Created as part of package testing.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Test reading/writing data structures without attributes</a></li>
+               <li><a href="#4">Test reading/writing data structures with attributes</a></li>
+               <li><a href="#7">Another test of reading/writing data structures with attributes</a></li>
+               <li><a href="#10">Show use of ItemName preference parameter in xml_read</a></li>
+               <li><a href="#12">Test reading and writing of a large XML file</a></li>
+            </ul>
+         </div>
+         <h2>Test reading/writing data structures without attributes<a name="1"></a></h2>
+         <p><b>Create data structure without attributes</b></p><pre class="codeinput">tree=[];
+tree.Double = -3.14e2;
+tree.Complex = 1.23+i*3.21;
+tree.Empty  = [];
+tree.RowVec = -2:0.8:3;
+tree.ColVec = [6;7;8];
+tree.Matrix = [1 2 3; 4 5 6; 7 8 9];
+tree.Sparse = sparse(2,3,-5);
+tree.Character = <span class="string">'Q'</span>;
+tree.String = <span class="string">'Single String'</span>;
+tree.StringCellArray = {<span class="string">'Jack'</span>, <span class="string">' Jill '</span>, <span class="string">''</span>, <span class="string">'XML Chars: &lt;&amp;&gt; '</span>, <span class="string">'Special Chars: !$^*()_+=-@#{}[];:,./\?''"'</span>};
+tree.CharArray = [<span class="string">' Jack'</span>; <span class="string">'Jill '</span>; <span class="string">'&lt;&amp;''"&gt;'</span>];
+tree.Boolean = (1==2);
+tree.Struct.Parent.Child1 = 1;
+tree.Struct.Parent.Child2 = 2;
+tree.EmptyStruct = struct([]);
+tree.StructArray(1).CellArray = {<span class="string">'John'</span>, 3.14, 0:0.11:1, [], <span class="string">''</span>, {<span class="string">'cell'</span>, 1, <span class="string">'of cells'</span>}};
+tree.StructArray(2).CellArray = {1:5, <span class="string">'Jack'</span>, sparse(eye(3)), 1+sqrt(-(5:7)), {}};
+fprintf(<span class="string">'Original Structure:\n'</span>);
+gen_object_display(tree) <span class="comment">% function by Ohad Gal with some minor corrections</span>
+</pre><pre class="codeoutput">Original Structure:
+             Double: [-314]
+            Complex: [1.23+3.21i]
+              Empty: [0x0 double]
+             RowVec: [-2        -1.2        -0.4         0.4         1.2           2         2.8]
+             ColVec: [3x1 double]
+             Matrix: [3x3 double]
+             Sparse: [2x3 double]
+          Character: 'Q'
+             String: 'Single String'
+    StringCellArray: [1x5 cell] = 
+                     Jack
+                      Jill 
+                                          XML Chars: &lt;&amp;&gt; 
+                     Special Chars: !$^*()_+=-@#{}[];:,./\?'"
+          CharArray: ' JackJill &lt;&amp;'"&gt;'
+            Boolean: false
+             Struct: [1x1 struct]
+                     Parent: [1x1 struct]
+                             Child1: [1]
+                             Child2: [2]
+        EmptyStruct: [0x0 struct]
+        StructArray: [1x2 struct]
+                     CellArray: [1x6 cell] = 
+                                John
+                                    3.1400
+                                         0    0.1100    0.2200    0.3300    0.4400    0.5500    0.6600    0.7700    0.8800    0.9900
+                                                                                                    'cell'    [1]    'of cells'
+
+                     CellArray: [1x5 cell] = 
+                                     1     2     3     4     5
+                                Jack
+                                   (1,1)        1
+   (2,2)        1
+   (3,3)        1
+                                   1.0000 + 2.2361i   1.0000 + 2.4495i   1.0000 + 2.6458i
+                                
+</pre><p><b>Write it to the XML file and display the file</b></p><pre class="codeinput">xml_write(<span class="string">'test1.xml'</span>, tree, <span class="string">'test'</span>);
+fprintf(<span class="string">'File Produced:\n'</span>);
+disp(textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>,<span class="string">'delimiter'</span>,<span class="string">'\n'</span>,<span class="string">'whitespace'</span>,<span class="string">''</span>))
+</pre><pre class="codeoutput">File Produced:
+    '&lt;?xml version="1.0" encoding="utf-8"?&gt;'
+    '&lt;test&gt;'
+    '   &lt;Double&gt;-314&lt;/Double&gt;'
+    '   &lt;Complex&gt;1.23+3.21i&lt;/Complex&gt;'
+    '   &lt;Empty/&gt;'
+    '   &lt;RowVec&gt;-2 -1.2 -0.4 0.4 1.2 2 2.8&lt;/RowVec&gt;'
+    '   &lt;ColVec&gt;6 7 8&lt;/ColVec&gt;'
+    '   &lt;Matrix&gt;[1 2 3; 4 5 6; 7 8 9]&lt;/Matrix&gt;'
+    '   &lt;Sparse&gt;[0 0 0; 0 0 -5]&lt;/Sparse&gt;'
+    '   &lt;Character&gt;Q&lt;/Character&gt;'
+    '   &lt;String&gt;Single String&lt;/String&gt;'
+    '   &lt;StringCellArray&gt;'
+    '      &lt;item&gt;Jack&lt;/item&gt;'
+    '      &lt;item&gt;Jill&lt;/item&gt;'
+    '      &lt;item/&gt;'
+    '      &lt;item&gt;XML Chars: &amp;lt;&amp;amp;&amp;gt;&lt;/item&gt;'
+    '      &lt;item&gt;Special Chars: !$^*()_+=-@#{}[];:,./\?'"&lt;/item&gt;'
+    '   &lt;/StringCellArray&gt;'
+    '   &lt;CharArray&gt;'
+    '      &lt;item&gt;Jack&lt;/item&gt;'
+    '      &lt;item&gt;Jill&lt;/item&gt;'
+    '      &lt;item&gt;&amp;lt;&amp;amp;'"&amp;gt;&lt;/item&gt;'
+    '   &lt;/CharArray&gt;'
+    '   &lt;Boolean&gt;0&lt;/Boolean&gt;'
+    '   &lt;Struct&gt;'
+    '      &lt;Parent&gt;'
+    '         &lt;Child1&gt;1&lt;/Child1&gt;'
+    '         &lt;Child2&gt;2&lt;/Child2&gt;'
+    '      &lt;/Parent&gt;'
+    '   &lt;/Struct&gt;'
+    '   &lt;StructArray&gt;'
+    '      &lt;item&gt;'
+    '         &lt;CellArray&gt;'
+    '            &lt;item&gt;John&lt;/item&gt;'
+    '            &lt;item&gt;3.14&lt;/item&gt;'
+    '            &lt;item&gt;0 0.11 0.22 0.33 0.44 0.55 0.66 0.77 0.88 0.99&lt;/item&gt;'
+    '            &lt;item/&gt;'
+    '            &lt;item/&gt;'
+    '            &lt;item&gt;'
+    '               &lt;item&gt;cell&lt;/item&gt;'
+    '               &lt;item&gt;1&lt;/item&gt;'
+    '               &lt;item&gt;of cells&lt;/item&gt;'
+    '            &lt;/item&gt;'
+    '         &lt;/CellArray&gt;'
+    '      &lt;/item&gt;'
+    '      &lt;item&gt;'
+    '         &lt;CellArray&gt;'
+    '            &lt;item&gt;1 2 3 4 5&lt;/item&gt;'
+    '            &lt;item&gt;Jack&lt;/item&gt;'
+    '            &lt;item&gt;[1 0 0; 0 1 0; 0 0 1]&lt;/item&gt;'
+    '            &lt;item&gt;1+2.2361i 1+2.4495i 1+2.6458i&lt;/item&gt;'
+    '            &lt;item/&gt;'
+    '         &lt;/CellArray&gt;'
+    '      &lt;/item&gt;'
+    '   &lt;/StructArray&gt;'
+    '&lt;/test&gt;'
+</pre><div>
+            <ul>
+               <li><b>Read XML file</b></li>
+               <li><b>Write it again</b></li>
+               <li><b>Make sure both files are the identical</b></li>
+            </ul>
+         </div><pre class="codeinput">tree2 = xml_read (<span class="string">'test1.xml'</span>);
+xml_write(<span class="string">'test2.xml'</span>, tree2, <span class="string">'test'</span>);
+t1=textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>);
+t2=textread(<span class="string">'test2.xml'</span>,<span class="string">'%s'</span>);
+<span class="keyword">if</span> (length(t1)==length(t2) &amp;&amp; all(strcmp(t1,t2)))
+  fprintf(<span class="string">'Files test1.xml and test2.xml are identical\n'</span>);
+<span class="keyword">else</span>
+  fprintf(<span class="string">'Files test1.xml and test2.xml are different\n'</span>);
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Files test1.xml and test2.xml are identical
+</pre><h2>Test reading/writing data structures with attributes<a name="4"></a></h2>
+         <p><b>Create data structure with attributes</b></p><pre class="codeinput">tree=[];
+tree.Double.CONTENT = -3.14e2;
+tree.Double.ATTRIBUTE.Unit = <span class="string">'cm'</span>;
+tree.Complex.CONTENT = 1.23+i*3.21;
+tree.Complex.ATTRIBUTE.Comment = <span class="string">'Complex Number'</span>;
+tree.Empty.ATTRIBUTE.Comment = <span class="string">'Empty'</span>;
+tree.Array.CONTENT  = -2:0.8:3;
+tree.Array.ATTRIBUTE.Length  = length(tree.Array.CONTENT);
+tree.Array.ATTRIBUTE.Comment = <span class="string">'Array of Doubles'</span>;
+tree.Matrix.CONTENT = [1 2 3; 4 5 6; 7 8 9];
+tree.Matrix.ATTRIBUTE.Size  = size(tree.Matrix.CONTENT);
+tree.Sparse.CONTENT = sparse(2,3,-5);
+tree.Sparse.ATTRIBUTE.Size  = size(tree.Sparse.CONTENT);
+tree.Character.CONTENT = <span class="string">'Q'</span>;
+tree.Character.ATTRIBUTE.Comment = <span class="string">'Single Character'</span>;
+tree.String.CONTENT = <span class="string">'Clothes make the man. Naked people have little or no influence on society'</span>;
+tree.String.ATTRIBUTE.QuoteBy = <span class="string">'Mark Twain'</span>;
+tree.StringCellArray.CONTENT = {<span class="string">'Jack'</span>, <span class="string">' Jill '</span>, <span class="string">''</span>, <span class="string">'XML Chars: &lt;&amp;&gt; '</span>, <span class="string">'Special Chars: !$^*()_+=-@#{}[];:,./\?''"'</span>};
+tree.StringCellArray.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.CharArray.CONTENT = [<span class="string">' Jack'</span>; <span class="string">'Jill '</span>; <span class="string">'&lt;&amp;''"&gt;'</span>];
+tree.CharArray.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.Boolean.CONTENT = (1==2);
+tree.Boolean.ATTRIBUTE.means = <span class="string">'false'</span>;
+tree.Struct.Parent.Child1 = 1;
+tree.Struct.Parent.Child2.CONTENT = 2;
+tree.Struct.Parent.Child2.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.Struct.Parent.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.Struct.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.EmptyStruct.CONTENT = struct([]);
+tree.EmptyStruct.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.StructArray(1).CellArray.CONTENT = {<span class="string">'John'</span>, 3.14, 0:0.11:1, [], <span class="string">''</span>, {<span class="string">'cell'</span>, 1, <span class="string">'of cells'</span>}};
+tree.StructArray(2).CellArray = {1:5, <span class="string">'Jack'</span>, sparse(eye(3)), 1+sqrt(-(5:7)), {}};
+fprintf(<span class="string">'Original Structure:\n'</span>);
+gen_object_display(tree) <span class="comment">% function by Ohad Gal with some minor corrections</span>
+</pre><pre class="codeoutput">Original Structure:
+             Double: [1x1 struct]
+                       CONTENT: [-314]
+                     ATTRIBUTE: [1x1 struct]
+                                Unit: 'cm'
+            Complex: [1x1 struct]
+                       CONTENT: [1.23+3.21i]
+                     ATTRIBUTE: [1x1 struct]
+                                Comment: 'Complex Number'
+              Empty: [1x1 struct]
+                     ATTRIBUTE: [1x1 struct]
+                                Comment: 'Empty'
+              Array: [1x1 struct]
+                       CONTENT: [-2        -1.2        -0.4         0.4         1.2           2         2.8]
+                     ATTRIBUTE: [1x1 struct]
+                                 Length: [7]
+                                Comment: 'Array of Doubles'
+             Matrix: [1x1 struct]
+                       CONTENT: [3x3 double]
+                     ATTRIBUTE: [1x1 struct]
+                                Size: [3  3]
+             Sparse: [1x1 struct]
+                       CONTENT: [2x3 double]
+                     ATTRIBUTE: [1x1 struct]
+                                Size: [2  3]
+          Character: [1x1 struct]
+                       CONTENT: 'Q'
+                     ATTRIBUTE: [1x1 struct]
+                                Comment: 'Single Character'
+             String: [1x1 struct]
+                       CONTENT: 'Clothes make the man. Naked people have little or no influence on society'
+                     ATTRIBUTE: [1x1 struct]
+                                QuoteBy: 'Mark Twain'
+    StringCellArray: [1x1 struct]
+                       CONTENT: [1x5 cell] = 
+                                Jack
+                                 Jill 
+                                                                XML Chars: &lt;&amp;&gt; 
+                                Special Chars: !$^*()_+=-@#{}[];:,./\?'"
+                     ATTRIBUTE: [1x1 struct]
+                                foo: 'foo'
+          CharArray: [1x1 struct]
+                       CONTENT: ' JackJill &lt;&amp;'"&gt;'
+                     ATTRIBUTE: [1x1 struct]
+                                foo: 'foo'
+            Boolean: [1x1 struct]
+                       CONTENT: false
+                     ATTRIBUTE: [1x1 struct]
+                                means: 'false'
+             Struct: [1x1 struct]
+                        Parent: [1x1 struct]
+                                   Child1: [1]
+                                   Child2: [1x1 struct]
+                                             CONTENT: [2]
+                                           ATTRIBUTE: [1x1 struct]
+                                                      foo: 'foo'
+                                ATTRIBUTE: [1x1 struct]
+                                           foo: 'foo'
+                     ATTRIBUTE: [1x1 struct]
+                                foo: 'foo'
+        EmptyStruct: [1x1 struct]
+                       CONTENT: [0x0 struct]
+                     ATTRIBUTE: [1x1 struct]
+                                foo: 'foo'
+        StructArray: [1x2 struct]
+                     CellArray: [1x1 struct]
+                                CONTENT: [1x6 cell] = 
+                                         John
+                                             3.1400
+                                                  0    0.1100    0.2200    0.3300    0.4400    0.5500    0.6600    0.7700    0.8800    0.9900
+                                                                                                                               'cell'    [1]    'of cells'
+
+                     CellArray: [1x5 cell] = 
+                                     1     2     3     4     5
+                                Jack
+                                   (1,1)        1
+   (2,2)        1
+   (3,3)        1
+                                   1.0000 + 2.2361i   1.0000 + 2.4495i   1.0000 + 2.6458i
+                                
+</pre><p><b>Write it to the XML file and display the file</b></p><pre class="codeinput">xml_write(<span class="string">'test1.xml'</span>, tree, <span class="string">'test'</span>);
+fprintf(<span class="string">'File Produced:\n'</span>);
+disp(textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>,<span class="string">'delimiter'</span>,<span class="string">'\n'</span>,<span class="string">'whitespace'</span>,<span class="string">''</span>))
+</pre><pre class="codeoutput">File Produced:
+    '&lt;?xml version="1.0" encoding="utf-8"?&gt;'
+    '&lt;test&gt;'
+    '   &lt;Double Unit="cm"&gt;-314&lt;/Double&gt;'
+    '   &lt;Complex Comment="Complex Number"&gt;1.23+3.21i&lt;/Complex&gt;'
+    '   &lt;Empty Comment="Empty"/&gt;'
+    [1x82  char]
+    '   &lt;Matrix Size="3 3"&gt;[1 2 3; 4 5 6; 7 8 9]&lt;/Matrix&gt;'
+    '   &lt;Sparse Size="2 3"&gt;[0 0 0; 0 0 -5]&lt;/Sparse&gt;'
+    '   &lt;Character Comment="Single Character"&gt;Q&lt;/Character&gt;'
+    [1x114 char]
+    '   &lt;StringCellArray foo="foo"&gt;'
+    '      &lt;item&gt;Jack&lt;/item&gt;'
+    '      &lt;item&gt;Jill&lt;/item&gt;'
+    '      &lt;item/&gt;'
+    '      &lt;item&gt;XML Chars: &amp;lt;&amp;amp;&amp;gt;&lt;/item&gt;'
+    '      &lt;item&gt;Special Chars: !$^*()_+=-@#{}[];:,./\?'"&lt;/item&gt;'
+    '   &lt;/StringCellArray&gt;'
+    '   &lt;CharArray foo="foo"&gt;'
+    '      &lt;item&gt;Jack&lt;/item&gt;'
+    '      &lt;item&gt;Jill&lt;/item&gt;'
+    '      &lt;item&gt;&amp;lt;&amp;amp;'"&amp;gt;&lt;/item&gt;'
+    '   &lt;/CharArray&gt;'
+    '   &lt;Boolean means="false"&gt;0&lt;/Boolean&gt;'
+    '   &lt;Struct foo="foo"&gt;'
+    '      &lt;Parent foo="foo"&gt;'
+    '         &lt;Child1&gt;1&lt;/Child1&gt;'
+    '         &lt;Child2 foo="foo"&gt;2&lt;/Child2&gt;'
+    '      &lt;/Parent&gt;'
+    '   &lt;/Struct&gt;'
+    '   &lt;EmptyStruct foo="foo"/&gt;'
+    '   &lt;StructArray&gt;'
+    '      &lt;item&gt;'
+    '         &lt;CellArray&gt;'
+    '            &lt;item&gt;John&lt;/item&gt;'
+    '            &lt;item&gt;3.14&lt;/item&gt;'
+    '            &lt;item&gt;0 0.11 0.22 0.33 0.44 0.55 0.66 0.77 0.88 0.99&lt;/item&gt;'
+    '            &lt;item/&gt;'
+    '            &lt;item/&gt;'
+    '            &lt;item&gt;'
+    '               &lt;item&gt;cell&lt;/item&gt;'
+    '               &lt;item&gt;1&lt;/item&gt;'
+    '               &lt;item&gt;of cells&lt;/item&gt;'
+    '            &lt;/item&gt;'
+    '         &lt;/CellArray&gt;'
+    '      &lt;/item&gt;'
+    '      &lt;item&gt;'
+    '         &lt;CellArray&gt;'
+    '            &lt;item&gt;1 2 3 4 5&lt;/item&gt;'
+    '            &lt;item&gt;Jack&lt;/item&gt;'
+    '            &lt;item&gt;[1 0 0; 0 1 0; 0 0 1]&lt;/item&gt;'
+    '            &lt;item&gt;1+2.2361i 1+2.4495i 1+2.6458i&lt;/item&gt;'
+    '            &lt;item/&gt;'
+    '         &lt;/CellArray&gt;'
+    '      &lt;/item&gt;'
+    '   &lt;/StructArray&gt;'
+    '&lt;/test&gt;'
+</pre><div>
+            <ul>
+               <li><b>Read XML file</b></li>
+               <li><b>Write it again</b></li>
+               <li><b>Make sure both files are the identical</b></li>
+            </ul>
+         </div><pre class="codeinput">tree2=xml_read (<span class="string">'test1.xml'</span>);
+xml_write(<span class="string">'test2.xml'</span>, tree2, <span class="string">'test'</span>);
+t1=textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>);
+t2=textread(<span class="string">'test2.xml'</span>,<span class="string">'%s'</span>);
+<span class="keyword">if</span> (length(t1)==length(t2) &amp;&amp; all(strcmp(t1,t2)))
+  fprintf(<span class="string">'Files test1.xml and test2.xml are identical\n'</span>);
+<span class="keyword">else</span>
+  fprintf(<span class="string">'Files test1.xml and test2.xml are different\n'</span>);
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Files test1.xml and test2.xml are identical
+</pre><h2>Another test of reading/writing data structures with attributes<a name="7"></a></h2>
+         <p><b>Create data struct</b></p><pre class="codeinput">tree = [];
+tree.StructArray(1).ATTRIBUTE.Num = 1;
+tree.StructArray(1).CellArray.CONTENT = {<span class="string">'John'</span>, 3.14};
+tree.StructArray(1).CellArray.ATTRIBUTE.foo = <span class="string">'foo'</span>;
+tree.StructArray(2).CellArray = {1:5, <span class="string">'Jack'</span>};
+tree.StructArray(2).ATTRIBUTE.Num = 2;
+tree.StructArray(3).CONTENT = {<span class="string">'Jim'</span>, 123};
+tree.StructArray(3).ATTRIBUTE.Num = 3;
+fprintf(<span class="string">'Original Structure:\n'</span>);
+gen_object_display(tree) <span class="comment">% function by Ohad Gal with some minor corrections</span>
+</pre><pre class="codeoutput">Original Structure:
+    StructArray: [1x3 struct]
+                 ATTRIBUTE: [1x1 struct]
+                            Num: [1]
+                 CellArray: [1x1 struct]
+                              CONTENT: [1x2 cell] = 
+                                       John
+                                           3.1400
+                            ATTRIBUTE: [1x1 struct]
+                                       foo: 'foo'
+                   CONTENT: [0x0 double]
+
+                 ATTRIBUTE: [1x1 struct]
+                            Num: [2]
+                 CellArray: [1x2 cell] = 
+                                 1     2     3     4     5
+                            Jack
+                   CONTENT: [0x0 double]
+
+                 ATTRIBUTE: [1x1 struct]
+                            Num: [3]
+                 CellArray: [0x0 double]
+                   CONTENT: [1x2 cell] = 
+                            Jim
+                               123
+
+</pre><p><b>Write it to the XML file and display the file</b></p><pre class="codeinput">xml_write(<span class="string">'test1.xml'</span>, tree, <span class="string">'test'</span>);
+fprintf(<span class="string">'File Produced:\n'</span>);
+disp(textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>,<span class="string">'delimiter'</span>,<span class="string">'\n'</span>,<span class="string">'whitespace'</span>,<span class="string">''</span>))
+</pre><pre class="codeoutput">File Produced:
+    '&lt;?xml version="1.0" encoding="utf-8"?&gt;'
+    '&lt;test&gt;'
+    '   &lt;StructArray Num="1"&gt;'
+    '      &lt;CellArray foo="foo"&gt;'
+    '         &lt;item&gt;John&lt;/item&gt;'
+    '         &lt;item&gt;3.14&lt;/item&gt;'
+    '      &lt;/CellArray&gt;'
+    '   &lt;/StructArray&gt;'
+    '   &lt;StructArray Num="2"&gt;'
+    '      &lt;CellArray&gt;'
+    '         &lt;item&gt;1 2 3 4 5&lt;/item&gt;'
+    '         &lt;item&gt;Jack&lt;/item&gt;'
+    '      &lt;/CellArray&gt;'
+    '   &lt;/StructArray&gt;'
+    '   &lt;StructArray Num="3"&gt;'
+    '      &lt;CellArray/&gt;'
+    '      &lt;item&gt;Jim&lt;/item&gt;'
+    '      &lt;item&gt;123&lt;/item&gt;'
+    '   &lt;/StructArray&gt;'
+    '&lt;/test&gt;'
+</pre><div>
+            <ul>
+               <li><b>Read XML file</b></li>
+               <li><b>Write it again</b></li>
+               <li><b>Make sure both files are the identical</b></li>
+            </ul>
+         </div><pre class="codeinput">tree2 = xml_read (<span class="string">'test1.xml'</span>);
+xml_write(<span class="string">'test2.xml'</span>, tree2, <span class="string">'test'</span>);
+t1=textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>);
+t2=textread(<span class="string">'test2.xml'</span>,<span class="string">'%s'</span>);
+<span class="keyword">if</span> (length(t1)==length(t2) &amp;&amp; all(strcmp(t1,t2)))
+  fprintf(<span class="string">'Files test1.xml and test2.xml are identical\n'</span>);
+<span class="keyword">else</span>
+  fprintf(<span class="string">'Files test1.xml and test2.xml are different\n'</span>);
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Files test1.xml and test2.xml are identical
+</pre><h2>Show use of ItemName preference parameter in xml_read<a name="10"></a></h2>
+         <p><b>First use default iterator 'item'</b></p><pre class="codeinput">xmlfile = fullfile(matlabroot, <span class="string">'toolbox/matlab/general/info.xml'</span>);
+tree = xml_read(xmlfile);
+fprintf(<span class="string">'tree.list: [%i struct]\n'</span>, length(tree.list));
+gen_object_display(tree.list)
+</pre><pre class="codeoutput">tree.list: [1 struct]
+    listitem: [10x1 struct]
+                                  label: 'Import Wizard'
+                               callback: 'uiimport'
+                                   icon: '$toolbox/matlab/icons/figureicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Profiler'
+                               callback: 'profile viewer'
+                                   icon: '$toolbox/matlab/icons/profiler.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'GUIDE (GUI Builder)'
+                               callback: 'guide'
+                                   icon: '$toolbox/matlab/icons/guideicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Notebook'
+                               callback: 'notebook'
+                                   icon: '$toolbox/matlab/icons/figureicon.gif'
+              unsupported_DASH_platform: 'unix'
+
+                                  label: 'Plot Tools'
+                               callback: 'figure; plottools'
+                                   icon: '$toolbox/matlab/icons/figureicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Time Series Tools'
+                               callback: 'tstool'
+                                   icon: '$toolbox/matlab/icons/figureicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Help'
+                               callback: 'doc matlab/'
+                                   icon: '$toolbox/matlab/icons/book_mat.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Demos'
+                               callback: 'demo matlab'
+                                   icon: '$toolbox/matlab/icons/demoicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'MATLAB Central (Web)'
+                               callback: 'web http://www.mathworks.com/matlabcentral_redirect -browser;'
+                                   icon: '$toolbox/matlab/icons/webicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+                                  label: 'Product Page (Web)'
+                               callback: 'web http://www.mathworks.com/products/matlab/ -browser;'
+                                   icon: '$toolbox/matlab/icons/webicon.gif'
+              unsupported_DASH_platform: [0x0 double]
+
+</pre><p><b>Then, use ItemName = 'listitem' which matches iterator used in the file</b></p><pre class="codeinput">Pref = [];
+Pref.ItemName = <span class="string">'listitem'</span>;
+tree = xml_read(xmlfile, Pref);
+fprintf(<span class="string">'tree.list: [%i struct]\n'</span>, length(tree.list));
+gen_object_display(tree.list)
+</pre><pre class="codeoutput">tree.list: [10 struct]
+                        label: 'Import Wizard'
+                     callback: 'uiimport'
+                         icon: '$toolbox/matlab/icons/figureicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Profiler'
+                     callback: 'profile viewer'
+                         icon: '$toolbox/matlab/icons/profiler.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'GUIDE (GUI Builder)'
+                     callback: 'guide'
+                         icon: '$toolbox/matlab/icons/guideicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Notebook'
+                     callback: 'notebook'
+                         icon: '$toolbox/matlab/icons/figureicon.gif'
+    unsupported_DASH_platform: 'unix'
+
+                        label: 'Plot Tools'
+                     callback: 'figure; plottools'
+                         icon: '$toolbox/matlab/icons/figureicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Time Series Tools'
+                     callback: 'tstool'
+                         icon: '$toolbox/matlab/icons/figureicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Help'
+                     callback: 'doc matlab/'
+                         icon: '$toolbox/matlab/icons/book_mat.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Demos'
+                     callback: 'demo matlab'
+                         icon: '$toolbox/matlab/icons/demoicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'MATLAB Central (Web)'
+                     callback: 'web http://www.mathworks.com/matlabcentral_redirect -browser;'
+                         icon: '$toolbox/matlab/icons/webicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+                        label: 'Product Page (Web)'
+                     callback: 'web http://www.mathworks.com/products/matlab/ -browser;'
+                         icon: '$toolbox/matlab/icons/webicon.gif'
+    unsupported_DASH_platform: [0x0 double]
+
+</pre><h2>Test reading and writing of a large XML file<a name="12"></a></h2>
+         <p><b>Read in a large Matlab file, and write it out</b> In order to get "nicest" data structure cell arrays were allowed when reading. Also in order to get output file in similar
+            format as input, preference was set to avoid the 'item' notation.
+         </p><pre class="codeinput">xmlfile = fullfile(matlabroot, <span class="string">'help/techdoc/helpindex.xml'</span>);
+Pref = [];
+Pref.Str2Num   = false;   <span class="comment">% don't convert strings that look like numbers to numbers</span>
+Pref.NoCells   = false;   <span class="comment">% allow output to have cell arrays</span>
+fprintf(<span class="string">'xml_read timing: '</span>);
+tic; tree1 = xml_read(xmlfile, Pref); toc;
+
+Pref.StructItem = false;  <span class="comment">% do not use item notation with structures</span>
+Pref.CellItem   = false;  <span class="comment">% do not use item notation with cells</span>
+fprintf(<span class="string">'xml_write timing: '</span>);
+tic; xml_write(<span class="string">'test1.xml'</span>, tree1, <span class="string">'index'</span>,Pref); toc;
+fprintf(<span class="string">'tree: \n'</span>);
+gen_object_display(tree1)
+</pre><pre class="codeoutput">xml_read timing: Elapsed time is 48.346559 seconds.
+xml_write timing: Elapsed time is 18.366443 seconds.
+tree: 
+    indexitem: [1x5249 cell]
+    ATTRIBUTE: [1x1 struct]
+               version: [1]
+</pre><div>
+            <ul>
+               <li><b>Read test1.xml file, that was just created</b></li>
+               <li><b>Compare the new data structures with the original data structure</b></li>
+            </ul>
+         </div><pre class="codeinput">tree2 = xml_read (<span class="string">'test1.xml'</span>,Pref);
+<span class="keyword">if</span> (length(tree1.indexitem)==length(tree2.indexitem))
+  fprintf(<span class="string">'tree1.indexitem and tree1.indexitem have the same length\n'</span>);
+<span class="keyword">else</span>
+  fprintf(<span class="string">'tree1.indexitem and tree1.indexitem don''t have the same length\n'</span>);
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">tree1.indexitem and tree1.indexitem have the same length
+</pre><div>
+            <ul>
+               <li><b>Write new data structures to the file</b></li>
+               <li><b>Make sure both files are the identical</b></li>
+            </ul>
+         </div><pre class="codeinput">xml_write(<span class="string">'test2.xml'</span>, tree2, <span class="string">'index'</span>,Pref);
+t1=textread(<span class="string">'test1.xml'</span>,<span class="string">'%s'</span>);
+t2=textread(<span class="string">'test2.xml'</span>,<span class="string">'%s'</span>);
+<span class="keyword">if</span> (all(strcmp(t1,t2)))
+  fprintf(<span class="string">'Files test1.xml and test2.xml are identical\n'</span>);
+<span class="keyword">else</span>
+  fprintf(<span class="string">'Files test1.xml and test2.xml are different\n'</span>);
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Files test1.xml and test2.xml are identical
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.4<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+
+%% Notebook with self test script for xml_io_tools Package
+% Created as part of package testing.
+%% 
+
+%% Test reading/writing data structures without attributes
+% *Create data structure without attributes*
+tree=[];
+tree.Double = -3.14e2;
+tree.Complex = 1.23+i*3.21;
+tree.Empty  = [];
+tree.RowVec = -2:0.8:3;
+tree.ColVec = [6;7;8];
+tree.Matrix = [1 2 3; 4 5 6; 7 8 9];
+tree.Sparse = sparse(2,3,-5);
+tree.Character = 'Q';
+tree.String = 'Single String';
+tree.StringCellArray = {'Jack', ' Jill ', '', 'XML Chars: <&> ', 'Special Chars: !$^*()_+=-@#{}[];:,./\?''"'};
+tree.CharArray = [' Jack'; 'Jill '; '<&''">'];
+tree.Boolean = (1==2);
+tree.Struct.Parent.Child1 = 1;
+tree.Struct.Parent.Child2 = 2;
+tree.EmptyStruct = struct([]);
+tree.StructArray(1).CellArray = {'John', 3.14, 0:0.11:1, [], '', {'cell', 1, 'of cells'}};
+tree.StructArray(2).CellArray = {1:5, 'Jack', sparse(eye(3)), 1+sqrt(-(5:7)), {}};
+fprintf('Original Structure:\n');
+gen_object_display(tree) % function by Ohad Gal with some minor corrections
+
+%%
+% *Write it to the XML file and display the file*
+xml_write('test1.xml', tree, 'test');
+fprintf('File Produced:\n');
+disp(textread('test1.xml','%s','delimiter','\n','whitespace',''))
+
+%%
+% * *Read XML file* 
+% * *Write it again*
+% * *Make sure both files are the identical*
+tree2 = xml_read ('test1.xml');
+xml_write('test2.xml', tree2, 'test');
+t1=textread('test1.xml','%s');
+t2=textread('test2.xml','%s');
+if (length(t1)==length(t2) && all(strcmp(t1,t2)))
+  fprintf('Files test1.xml and test2.xml are identical\n');
+else
+  fprintf('Files test1.xml and test2.xml are different\n');
+  return
+end
+
+
+
+%% Test reading/writing data structures with attributes
+% *Create data structure with attributes*
+tree=[];
+tree.Double.CONTENT = -3.14e2;
+tree.Double.ATTRIBUTE.Unit = 'cm';
+tree.Complex.CONTENT = 1.23+i*3.21;
+tree.Complex.ATTRIBUTE.Comment = 'Complex Number';
+tree.Empty.ATTRIBUTE.Comment = 'Empty';
+tree.Array.CONTENT  = -2:0.8:3;
+tree.Array.ATTRIBUTE.Length  = length(tree.Array.CONTENT);
+tree.Array.ATTRIBUTE.Comment = 'Array of Doubles';
+tree.Matrix.CONTENT = [1 2 3; 4 5 6; 7 8 9];
+tree.Matrix.ATTRIBUTE.Size  = size(tree.Matrix.CONTENT);
+tree.Sparse.CONTENT = sparse(2,3,-5);
+tree.Sparse.ATTRIBUTE.Size  = size(tree.Sparse.CONTENT);
+tree.Character.CONTENT = 'Q';
+tree.Character.ATTRIBUTE.Comment = 'Single Character';
+tree.String.CONTENT = 'Clothes make the man. Naked people have little or no influence on society';
+tree.String.ATTRIBUTE.QuoteBy = 'Mark Twain';
+tree.StringCellArray.CONTENT = {'Jack', ' Jill ', '', 'XML Chars: <&> ', 'Special Chars: !$^*()_+=-@#{}[];:,./\?''"'};
+tree.StringCellArray.ATTRIBUTE.foo = 'foo';
+tree.CharArray.CONTENT = [' Jack'; 'Jill '; '<&''">'];
+tree.CharArray.ATTRIBUTE.foo = 'foo';
+tree.Boolean.CONTENT = (1==2);
+tree.Boolean.ATTRIBUTE.means = 'false';
+tree.Struct.Parent.Child1 = 1;
+tree.Struct.Parent.Child2.CONTENT = 2;
+tree.Struct.Parent.Child2.ATTRIBUTE.foo = 'foo';
+tree.Struct.Parent.ATTRIBUTE.foo = 'foo';
+tree.Struct.ATTRIBUTE.foo = 'foo';
+tree.EmptyStruct.CONTENT = struct([]);
+tree.EmptyStruct.ATTRIBUTE.foo = 'foo';
+tree.StructArray(1).CellArray.CONTENT = {'John', 3.14, 0:0.11:1, [], '', {'cell', 1, 'of cells'}};
+tree.StructArray(2).CellArray = {1:5, 'Jack', sparse(eye(3)), 1+sqrt(-(5:7)), {}};
+fprintf('Original Structure:\n');
+gen_object_display(tree) % function by Ohad Gal with some minor corrections
+%%
+% *Write it to the XML file and display the file*
+xml_write('test1.xml', tree, 'test');
+fprintf('File Produced:\n');
+disp(textread('test1.xml','%s','delimiter','\n','whitespace',''))
+%%
+% * *Read XML file* 
+% * *Write it again*
+% * *Make sure both files are the identical*
+tree2=xml_read ('test1.xml');
+xml_write('test2.xml', tree2, 'test');
+t1=textread('test1.xml','%s');
+t2=textread('test2.xml','%s');
+if (length(t1)==length(t2) && all(strcmp(t1,t2)))
+  fprintf('Files test1.xml and test2.xml are identical\n');
+else
+  fprintf('Files test1.xml and test2.xml are different\n');
+  return
+end
+
+%% Another test of reading/writing data structures with attributes
+% *Create data struct*
+tree = [];
+tree.StructArray(1).ATTRIBUTE.Num = 1;
+tree.StructArray(1).CellArray.CONTENT = {'John', 3.14};
+tree.StructArray(1).CellArray.ATTRIBUTE.foo = 'foo';
+tree.StructArray(2).CellArray = {1:5, 'Jack'};
+tree.StructArray(2).ATTRIBUTE.Num = 2;
+tree.StructArray(3).CONTENT = {'Jim', 123};
+tree.StructArray(3).ATTRIBUTE.Num = 3;
+fprintf('Original Structure:\n');
+gen_object_display(tree) % function by Ohad Gal with some minor corrections
+%%
+% *Write it to the XML file and display the file*
+xml_write('test1.xml', tree, 'test');
+fprintf('File Produced:\n');
+disp(textread('test1.xml','%s','delimiter','\n','whitespace',''))
+%%
+% * *Read XML file* 
+% * *Write it again*
+% * *Make sure both files are the identical*
+tree2 = xml_read ('test1.xml');
+xml_write('test2.xml', tree2, 'test');
+t1=textread('test1.xml','%s');
+t2=textread('test2.xml','%s');
+if (length(t1)==length(t2) && all(strcmp(t1,t2)))
+  fprintf('Files test1.xml and test2.xml are identical\n');
+else
+  fprintf('Files test1.xml and test2.xml are different\n');
+  return
+end
+
+%% Show use of ItemName preference parameter in xml_read
+% *First use default iterator 'item'*
+xmlfile = fullfile(matlabroot, 'toolbox/matlab/general/info.xml');
+tree = xml_read(xmlfile);
+fprintf('tree.list: [%i struct]\n', length(tree.list));
+gen_object_display(tree.list)
+%%
+% *Then, use ItemName = 'listitem' which matches iterator used in the file* 
+Pref = [];
+Pref.ItemName = 'listitem';
+tree = xml_read(xmlfile, Pref);
+fprintf('tree.list: [%i struct]\n', length(tree.list));
+gen_object_display(tree.list)
+
+
+
+%% Test reading and writing of a large XML file
+% *Read in a large Matlab file, and write it out*
+% In order to get "nicest" data structure cell arrays were allowed when
+% reading. Also in order to get output file in similar format as input,
+% preference was set to avoid the 'item' notation.
+xmlfile = fullfile(matlabroot, 'help/techdoc/helpindex.xml');
+Pref = [];
+Pref.Str2Num   = false;   % don't convert strings that look like numbers to numbers
+Pref.NoCells   = false;   % allow output to have cell arrays
+fprintf('xml_read timing: ');
+tic; tree1 = xml_read(xmlfile, Pref); toc;
+
+Pref.StructItem = false;  % do not use item notation with structures
+Pref.CellItem   = false;  % do not use item notation with cells
+fprintf('xml_write timing: ');
+tic; xml_write('test1.xml', tree1, 'index',Pref); toc;
+fprintf('tree: \n');
+gen_object_display(tree1)
+%%
+% * *Read test1.xml file, that was just created* 
+% * *Compare the new data structures with the original data structure*
+tree2 = xml_read ('test1.xml',Pref);
+if (length(tree1.indexitem)==length(tree2.indexitem))
+  fprintf('tree1.indexitem and tree1.indexitem have the same length\n');
+else
+  fprintf('tree1.indexitem and tree1.indexitem don''t have the same length\n');
+  return
+end
+%%
+% * *Write new data structures to the file*
+% * *Make sure both files are the identical*
+xml_write('test2.xml', tree2, 'index',Pref);
+t1=textread('test1.xml','%s');
+t2=textread('test2.xml','%s');
+if (all(strcmp(t1,t2)))
+  fprintf('Files test1.xml and test2.xml are identical\n');
+else
+  fprintf('Files test1.xml and test2.xml are different\n');
+  return
+end
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

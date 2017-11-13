@@ -721,7 +721,11 @@ function burstStatistics(~, ~, ~)
     %h = subplot(1, 3, 1);
     h = ax(1);
     axes(h);
-    [a, b] = hist(h, bursts.IBI, sshist(bursts.IBI));
+    nbins = sshist(bursts.IBI);
+    if(nbins < 6)
+      nbins = 10;
+    end
+    [a, b] = hist(h, bursts.IBI, nbins);
     bar(b, a/trapz(b, a), 'FaceColor', [1 1 1]*0.8, 'EdgeColor', [1 1 1]*0.6);
     hold on;
     [f, xi] = ksdensity(bursts.IBI); % Not using support
@@ -736,7 +740,11 @@ function burstStatistics(~, ~, ~)
     %h = subplot(1, 3, 2);
     h = ax(2);
     axes(h);
-    [a, b] = hist(h, bursts.duration, sshist(bursts.duration));
+    nbins = sshist(bursts.duration);
+    if(nbins < 6)
+      nbins = 10;
+    end
+    [a, b] = hist(h, bursts.duration, nbins);
     bar(b, a/trapz(b, a), 'FaceColor', [1 1 1]*0.8, 'EdgeColor', [1 1 1]*0.6);
     hold on;
     [f, xi] = ksdensity(bursts.duration);
@@ -751,7 +759,11 @@ function burstStatistics(~, ~, ~)
     %h = subplot(1, 3, 3);
     h = ax(3);
     axes(h);
-    [a, b] = hist(h, bursts.amplitude, sshist(bursts.amplitude));
+    nbins = sshist(bursts.amplitude);
+    if(nbins < 6)
+      nbins = 10;
+    end
+    [a, b] = hist(h, bursts.amplitude, nbins);
     bar(b, a/trapz(b, a), 'FaceColor', [1 1 1]*0.8, 'EdgeColor', [1 1 1]*0.6);
     hold on;
     [f, xi] = ksdensity(bursts.amplitude);

@@ -375,7 +375,7 @@ function menuViewProfile(~, ~, ~)
   
   bins = 512;
   pixelsRadius = 50;
-  averageBins = 72;
+  averageBins = 128;
   
   network.X = ROIcenters(:,1);
   network.Y = ROIcenters(:,2);
@@ -398,6 +398,8 @@ function menuViewProfile(~, ~, ~)
   mz = mz/(nansum(mz(:))*(network.totalSizeX/bins)^2);
 
   hFig = figure;
+  h = fspecial('gaussian', [10 10], 3);
+  mz = filter2(h, mz);
   pcolor(mx, my, mz);
   %contourf(mx, my, mz, 7);
   axis equal;

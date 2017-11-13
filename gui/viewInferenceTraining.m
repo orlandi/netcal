@@ -38,6 +38,14 @@ if(~isfield(experiment, 'inferenceTrainingData'))
 end
 ROIid = getROIid(experiment.ROI);
 experiment = loadTraces(experiment, 'all');
+if(isfield(experiment, 'traces'))
+  traces = experiment.traces;
+  t = experiment.t;
+else
+  traces = experiment.rawTraces;
+  t = experiment.rawT;
+end
+  
 originalExperiment = experiment;
 experiment = checkGroups(experiment);
 [~, curOptions] = preloadOptions(experiment, inferenceTrainingOptions, gui, false, false);
@@ -204,12 +212,11 @@ end
 
 %--------------------------------------------------------------------------
 function exportData(hObject, hEvent)
-  selectedROI = ROIid == experiment.peelingOptionsCurrent.trainingROI;
-  selectedTrace = find(selectedROI);
-  currentTrace = experiment.traces(:, selectedTrace);
+  selectedROI = find(ROIid == experiment.peelingOptionsCurrent.trainingROI);
+  currentTrace = traces(:, selectedROI);
   inferenceTrainingData = experiment.inferenceTrainingData;
-  exportData = [experiment.t(:), currentTrace(:), inferenceTrainingData.model(:)];
-  exportDataSpikes = [experiment.t(1)+inferenceTrainingData.spikes(:)];
+  exportData = [t(:), currentTrace(:), inferenceTrainingData.model(:)];
+  exportDataSpikes = [t(1)+inferenceTrainingData.spikes(:)];
    
   fullFile = exportDataCallback(hObject, hEvent, {'*.csv'}, ...
                                [experiment.folder 'peelingTrainingData'], ...
@@ -242,66 +249,44 @@ end
 function inferenceTraining(hObject, eventData, mode)
   switch mode
     case 'peeling'
-      [success, peelingOptionsCurrent] = preloadOptions(experiment, peelingOptions, gcbf, true, false);
-      if(~success)
-        return;
-      end
-      selectedTrace = find(ROIid == peelingOptionsCurrent.trainingROI);
-      [experiment, inferenceTrainingData] = spikeInferencePeeling(experiment, peelingOptionsCurrent, 'subset', selectedTrace, 'training', true);
-      experiment.inferenceTrainingData = inferenceTrainingData;
-
-      experiment.peelingOptionsCurrent = peelingOptionsCurrent;
-      setappdata(gui, 'peelingOptionsCurrent', peelingOptionsCurrent);
+      optionsClass = peelingOptions;
+      inferenceHandle = 'spikeInferencePeeling';
       trainingMode = 'peeling';
     case 'foopsi'
-      [success, foopsiOptionsCurrent] = preloadOptions(experiment, foopsiOptions, gcbf, true, false);
-      if(~success)
-        return;
-      end
-      selectedTrace = find(ROIid == foopsiOptionsCurrent.trainingROI);
-      [experiment, inferenceTrainingData] = spikeInferenceFoopsi(experiment, foopsiOptionsCurrent, 'subset', selectedTrace, 'training', true);
-      experiment.inferenceTrainingData = inferenceTrainingData;
-      
-      experiment.foopsiOptionsCurrent = foopsiOptionsCurrent;
-      setappdata(gui, 'foopsiOptionsCurrent', foopsiOptionsCurrent);
+      optionsClass = foopsiOptions;
+      inferenceHandle = 'spikeInferenceFoopsi';
       trainingMode = 'foopsi';
     case 'schmitt'
-      trainingMode = 'schmitt';
-      [success, schmittOptionsCurrent] = preloadOptions(experiment, schmittOptions, gcbf, true, false);
-      if(~success)
-        return;
-      end
-      selectedTrace = find(ROIid == schmittOptionsCurrent.trainingROI);
-      experiment = spikeInferenceSchmitt(experiment, schmittOptionsCurrent, 'subset', selectedTrace, 'training', true);
-
-      experiment.schmittOptionsCurrent = schmittOptionsCurrent;
-      setappdata(gui, 'schmittOptionsCurrent', schmittOptionsCurrent);
+      optionsClass = schmittOptions;
+      inferenceHandle = 'spikeInferenceSchmitt';
       trainingMode = 'schmitt';
     case 'oasis'
-      [success, oasisOptionsCurrent] = preloadOptions(experiment, oasisOptions, gcbf, true, false);
-      if(~success)
-        return;
-      end
-      selectedTrace = find(ROIid == oasisOptionsCurrent.trainingROI);
-      [experiment, inferenceTrainingData] = spikeInferenceOasis(experiment, oasisOptionsCurrent, 'subset', selectedTrace, 'training', true);
-      experiment.inferenceTrainingData = inferenceTrainingData;
-      
-      experiment.oasisOptionsCurrent = oasisOptionsCurrent;
-      setappdata(gui, 'oasisOptionsCurrent', oasisOptionsCurrent);
+      optionsClass = oasisOptions;
+      inferenceHandle = 'spikeInferenceOasis';
       trainingMode = 'oasis';
     case 'MLspike'
-      [success, MLspikeOptionsCurrent] = preloadOptions(experiment, MLspikeOptions, gcbf, true, false);
-      if(~success)
-        return;
-      end
-      selectedTrace = find(ROIid == MLspikeOptionsCurrent.trainingROI);
-      [experiment, inferenceTrainingData] = spikeInferenceMLspike(experiment, MLspikeOptionsCurrent, 'subset', selectedTrace, 'training', true);
-      experiment.inferenceTrainingData = inferenceTrainingData;
-      
-      experiment.MLspikeOptionsCurrent = MLspikeOptionsCurrent;
-      setappdata(gui, 'MLspikeOptionsCurrent', MLspikeOptionsCurrent);
+      optionsClass = MLspikeOptions;
+      inferenceHandle = 'spikeInferenceMLspike';
       trainingMode = 'MLspike';
   end
+  
+  [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, gcbf, true, false);
+  if(~success)
+    return;
+  end
+  if(~isempty(optionsClassCurrent.trainingROI))
+    selectedROI = find(ROIid == optionsClassCurrent.trainingROI);
+  else
+    members = getExperimentGroupMembers(experiment, optionsClassCurrent.group);
+    selectedROI = members(randperm(length(members), 1));
+    optionsClassCurrent.trainingROI = experiment.ROI{selectedROI}.ID;
+  end
+  
+  [experiment, inferenceTrainingData] = feval(inferenceHandle, experiment, optionsClassCurrent, 'subset', selectedROI, 'training', true);
+  experiment.inferenceTrainingData = inferenceTrainingData;
+
+  experiment.([class(optionsClass) 'Current']) = optionsClassCurrent;
+  setappdata(gui, [class(optionsClass) 'Current'], optionsClassCurrent);
   updateImage();
 end
 
@@ -329,64 +314,64 @@ function updateImage(varargin)
     case 'peeling'
       inferenceTrainingData = experiment.inferenceTrainingData;
       if(~isempty(inferenceTrainingData) && isfield(experiment, 'peelingOptionsCurrent'))
-        selectedROI = ROIid == experiment.peelingOptionsCurrent.trainingROI;
-        selectedTrace = find(selectedROI);
-        currentTrace = experiment.traces(:, selectedTrace);
+        selectedROI = find(ROIid == experiment.peelingOptionsCurrent.trainingROI);
+        currentTrace = traces(:, selectedROI);
 
-        plot(experiment.t, currentTrace);
+        plot(t, currentTrace);
         hold on;
         if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-          plot(experiment.t, inferenceTrainingData.model)  
+          plot(t, inferenceTrainingData.model)  
         end
         yl = ylim;
-        plot(experiment.t(1)+inferenceTrainingData.spikes, ones(size(inferenceTrainingData.spikes))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+        plot(t(1)+inferenceTrainingData.spikes, ones(size(inferenceTrainingData.spikes))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
         Nspikes = length(inferenceTrainingData.spikes);
-        peelingCorrelation = corr(inferenceTrainingData.model', experiment.traces(:, selectedTrace));
+        peelingCorrelation = corr(inferenceTrainingData.model', traces(:, selectedROI));
         title(sprintf('ROI: %d - Peeling correlation: %.3f - # spikes: %d', experiment.ROI{selectedROI}.ID, peelingCorrelation, Nspikes));
 
         ylim([yl(1) yl(2)*1.2]);
       else
-        currentTrace = experiment.traces(:, selectedROI);
-        plot(experiment.t, currentTrace);
+        currentTrace = traces(:, selectedROI);
+        plot(t, currentTrace);
         title(['Spike inference training on ROI: ' num2str(experiment.ROI{selectedROI}.ID)]);
       end
     case 'foopsi'
       inferenceTrainingData = experiment.inferenceTrainingData;
       %if(~isempty(inferenceTrainingData) && isfield(experiment, 'peelingOptionsCurrent'))
       if(~isempty(inferenceTrainingData))
-        selectedROI = ROIid == experiment.foopsiOptionsCurrent.trainingROI;
-        selectedTrace = find(selectedROI);
+        if(~isempty(experiment.foopsiOptionsCurrent.trainingROI))
+          selectedROI = find(ROIid == experiment.foopsiOptionsCurrent.trainingROI);
+        end
         switch experiment.foopsiOptionsCurrent.tracesType
             case 'raw'
-                currentTrace = experiment.rawTraces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.rawTraces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model+min(currentTrace))
+                  plot(t, inferenceTrainingData.model+min(currentTrace))
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
             otherwise
-                currentTrace = experiment.traces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.traces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model)
+                  plot(t, inferenceTrainingData.model)
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
         end
         
         %plot(t(1)+data2.spikes, ones(length(data2.spikes))*ca_p2.amp1,'o');
         yl = ylim;
-        %plot(experiment.t(1)+inferenceTrainingData.spikes, ones(size(inferenceTrainingData.spikes))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+        %plot(t(1)+inferenceTrainingData.spikes, ones(size(inferenceTrainingData.spikes))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
         
 
         Nspikes = length(inferenceTrainingData.spikes);
          switch experiment.foopsiOptionsCurrent.tracesType
             case 'raw'
-                foopsiCorrelation = corr(inferenceTrainingData.model', experiment.rawTraces(:, selectedTrace));
+                foopsiCorrelation = corr(inferenceTrainingData.model', experiment.rawTraces(:, selectedROI));
                 ylim([min(currentTrace), max(currentTrace)*1.1]);
             otherwise
-                foopsiCorrelation = corr(inferenceTrainingData.model', experiment.traces(:, selectedTrace));
+                foopsiCorrelation = corr(inferenceTrainingData.model', experiment.traces(:, selectedROI));
                 ylim([yl(1) yl(2)*1.2]);
         end
         
@@ -394,92 +379,95 @@ function updateImage(varargin)
 
         
       else
-        currentTrace = experiment.traces(:, selectedROI);
-        plot(experiment.t, currentTrace);
+        currentTrace = traces(:, selectedROI);
+        plot(t, currentTrace);
         title(['Spike inference training on ROI: ' num2str(experiment.ROI{selectedROI}.ID)]);
       end
     case 'oasis'
       inferenceTrainingData = experiment.inferenceTrainingData;
       
       if(~isempty(inferenceTrainingData))
-        selectedROI = ROIid == experiment.oasisOptionsCurrent.trainingROI;
-        selectedTrace = find(selectedROI);
+        if(~isempty(experiment.oasisOptionsCurrent.trainingROI))
+          selectedROI = find(ROIid == experiment.oasisOptionsCurrent.trainingROI);
+        end
           switch experiment.oasisOptionsCurrent.tracesType
             case 'raw'
-                currentTrace = experiment.rawTraces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.rawTraces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model+min(currentTrace))
+                  plot(t, inferenceTrainingData.model+min(currentTrace))
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
             otherwise
-                currentTrace = experiment.traces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.traces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model)
+                  plot(t, inferenceTrainingData.model)
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
           end
 
         yl = ylim;
         Nspikes = length(inferenceTrainingData.spikes);
-        oasisCorrelation = corr(inferenceTrainingData.model, experiment.traces(:, selectedTrace));
+        oasisCorrelation = corr(inferenceTrainingData.model, traces(:, selectedROI));
         title(sprintf('ROI: %d - Oasis correlation: %.3f - # spikes: %d', experiment.ROI{selectedROI}.ID, oasisCorrelation, Nspikes));
 
         ylim([yl(1) yl(2)*1.2]);
       else
-        currentTrace = experiment.traces(:, selectedROI);
-        plot(experiment.t, currentTrace);
+        currentTrace = traces(:, selectedROI);
+        plot(t, currentTrace);
         title(['Spike inference training on ROI: ' num2str(experiment.ROI{selectedROI}.ID)]);
       end
     case 'MLspike'
       inferenceTrainingData = experiment.inferenceTrainingData;
       
       if(~isempty(inferenceTrainingData))
-        selectedROI = ROIid == experiment.MLspikeOptionsCurrent.trainingROI;
-        selectedTrace = find(selectedROI);
+        if(~isempty(experiment.MLspikeOptionsCurrent.trainingROI))
+          selectedROI = find(ROIid == experiment.MLspikeOptionsCurrent.trainingROI);
+        end
           switch experiment.MLspikeOptionsCurrent.tracesType
             case 'raw'
-                currentTrace = experiment.rawTraces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.rawTraces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model)
+                  plot(t, inferenceTrainingData.model)
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
             otherwise
-                currentTrace = experiment.traces(:, selectedTrace);
-                plot(experiment.t, currentTrace);
+                currentTrace = experiment.traces(:, selectedROI);
+                plot(t, currentTrace);
                 hold on;
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
-                  plot(experiment.t, inferenceTrainingData.model)
+                  plot(t, inferenceTrainingData.model)
                 end
-                plot(experiment.t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
           end
 
         yl = ylim;
         Nspikes = length(inferenceTrainingData.spikes);
-        MLspikeCorrelation = corr(inferenceTrainingData.model, experiment.traces(:, selectedTrace));
+        MLspikeCorrelation = corr(inferenceTrainingData.model, traces(:, selectedROI));
         title(sprintf('ROI: %d - MLspike correlation: %.3f - # spikes: %d', experiment.ROI{selectedROI}.ID, MLspikeCorrelation, Nspikes));
 
         ylim([yl(1) yl(2)*1.2]);
       else
-        currentTrace = experiment.traces(:, selectedROI);
-        plot(experiment.t, currentTrace);
+        currentTrace = traces(:, selectedROI);
+        plot(t, currentTrace);
         title(['Spike inference training on ROI: ' num2str(experiment.ROI{selectedROI}.ID)]);
       end
     case 'schmitt'
       if(isfield(experiment, 'schmittOptionsCurrent'))
-        selectedROI = ROIid == experiment.schmittOptionsCurrent.trainingROI;
-        selectedTrace = find(selectedROI);
-        currentTrace = experiment.traces(:, selectedTrace);
+        if(~isempty(experiment.schmittOptionsCurrent.trainingROI))
+          selectedROI = find(ROIid == experiment.schmittOptionsCurrent.trainingROI);
+        end
+        currentTrace = traces(:, selectedROI);
 
-        plot(experiment.t, currentTrace);
+        plot(t, currentTrace);
         hold on;
         yl = ylim;
-        plot(experiment.t(1)+experiment.spikes{selectedTrace}, ones(size(experiment.spikes{selectedTrace}))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+        plot(t(1)+experiment.spikes{selectedTrace}, ones(size(experiment.spikes{selectedTrace}))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
         xl = xlim;
         switch experiment.schmittOptionsCurrent.thresholdType
           case 'relative'
@@ -494,12 +482,12 @@ function updateImage(varargin)
 
         ylim([yl(1) yl(2)*1.2]);
       else
-        currentTrace = experiment.traces(:, selectedROI);
-        plot(experiment.t, currentTrace);
+        currentTrace = traces(:, selectedROI);
+        plot(t, currentTrace);
         title(['Spike inference training on ROI: ' num2str(experiment.ROI{selectedROI}.ID)]);
       end
   end
-  xlim(round([experiment.t(1) experiment.t(end)]));
+  xlim(round([t(1) t(end)]));
 
   xlabel('time (s)');
   ylabel('Fluoresence (a.u.)');

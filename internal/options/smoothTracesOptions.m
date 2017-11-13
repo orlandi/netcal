@@ -58,7 +58,7 @@ classdef smoothTracesOptions < baseOptions
     % - 'block' - data will be shifted upwards so the baseline is at ~0 at each block (see blockSize)
     % - 'moving average' - will substract at each point the result of a moving average with a given blockLength (see blocKLength)
     % - 'none' - no baseline correction
-    baseLineCorrection = {'mean', 'block', 'moving average', 'none'};
+    baseLineCorrection = {'block', 'mean', 'moving average', 'none'};
 
     % Length of blocks (in seconds) for baseLine correction (if baseLine = block or moving average) (positive integer)
     blockLength = 25;
@@ -78,9 +78,15 @@ classdef smoothTracesOptions < baseOptions
       if(~isempty(experiment) && isstruct(experiment))
         try
           obj.splineDivisionLength = min([25 round(round(experiment.totalTime)/2)]);
-          obj.blockLength = min([25 round(round(experiment.totalTime)/2)]);
+          obj.blockLength = round(experiment.totalTime);
         catch ME
             logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+        end
+      elseif(~isempty(experiment) && exist(experiment, 'file'))
+        exp = load(experiment, '-mat', 'totalTime');
+        if(isfield(exp, 'totalTime'))
+          obj.splineDivisionLength = min([25 round(round(experiment.totalTime)/2)]);
+          obj.blockLength = round(experiment.totalTime);
         end
       end
     end

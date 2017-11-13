@@ -98,7 +98,7 @@ if(exist(fullSaveFile, 'file') == 2)
   copyfile(fullSaveFile, backupFile, 'f');
   % If the hourly backup file doesn't exist, create it
   if(exist(backupHourlyFile, 'file') ~= 2)
-    copyfile(fullSaveFile, backupHourlyFile);
+    copyfile(fullSaveFile, backupHourlyFile, 'f');
   else
     fileInfo = dir(backupHourlyFile);
     % If the old bkh file is more than 1h old, update it with the previous

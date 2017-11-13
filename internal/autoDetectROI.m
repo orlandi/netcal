@@ -35,7 +35,7 @@ end
 switch params.automaticType
   case 'threshold'
   if(params.pbar > 0)
-    ncbar.setAutomaticBar()
+    ncbar.setAutomaticBar();
   end
     % Remove dead pixels
     if(params.removeDeadPixels)
@@ -191,7 +191,7 @@ switch params.automaticType
     ROI = ROI';
   case 'splitThreshold'
     if(params.pbar > 0)
-      ncbar.setAutomaticBar()
+      ncbar.setAutomaticBar();
     end
     % Remove dead pixels
     if(params.removeDeadPixels)

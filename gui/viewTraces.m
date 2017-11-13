@@ -205,18 +205,6 @@ hs.bgColor = [hs.bgColor; uimenu(hs.menuPreferencesBackgroundColor, 'Label', 'wh
 hs.bgColor = [hs.bgColor; uimenu(hs.menuPreferencesBackgroundColor, 'Label', 'black', 'Callback', @changeBackgroundColor)];
 hs.bgColor = [hs.bgColor; uimenu(hs.menuPreferencesBackgroundColor, 'Label', 'grey', 'Callback', @changeBackgroundColor)];
 hs.menuPreferencesDisplay = uimenu(hs.menuPreferences, 'Label', 'Display', 'Callback', @changeDisplay);
-if(isfield(experiment, 'spikes'))
-  hs.menuPreferencesShowSpikes = uimenu(hs.menuPreferences, 'Label', 'Show spikes', 'Callback', @menuPreferencesShowSpikes);
-end
-hs.menuPreferencesShowPatterns = uimenu(hs.menuPreferences, 'Label', 'Show patterns', 'Callback', @menuPreferencesShowPatterns);
-if(isfield(experiment, 'validPatterns'))
-  hs.menuPreferencesShowPatterns.Visible = 'on';
-else
-  hs.menuPreferencesShowPatterns.Visible = 'off';
-end
-if(isfield(experiment, 'baseLine'))
-  hs.menuPreferencesShowBaseLine = uimenu(hs.menuPreferences, 'Label', 'Show baseline', 'Callback', @menuPreferencesShowBaseLine);
-end
 
 hs.menuView = uimenu(hs.mainWindow, 'Label', 'View');
 hs.menuViewRaster = uimenu(hs.menuView, 'Label', 'Fluorescence raster', 'Callback', @menuViewRaster);
@@ -233,6 +221,19 @@ hs.menuViewPositionsWholeSelection = uimenu(hs.menuViewPositions, 'Label', 'Full
 hs.menuViewPositionsOnScreen = uimenu(hs.menuViewPositions, 'Label', 'Current traces', 'Callback', @viewPositionsOnScreen);
 hs.menuViewPositionsOnScreenMovie = uimenu(hs.menuViewPositions, 'Label', 'Current traces (movie)', 'Callback', @viewPositionsOnScreenMovie);
 
+hs.menuPreferencesShowSpikes = uimenu(hs.menuView, 'Label', 'Show spikes', 'Callback', @menuPreferencesShowSpikes, 'Enable', 'off');
+hs.menuPreferencesShowPatterns = uimenu(hs.menuView, 'Label', 'Show patterns', 'Callback', @menuPreferencesShowPatterns, 'Enable', 'off');
+hs.menuPreferencesShowBaseLine = uimenu(hs.menuView, 'Label', 'Show baseline', 'Callback', @menuPreferencesShowBaseLine, 'Enable', 'off');
+
+if(isfield(experiment, 'spikes'))
+  hs.menuPreferencesShowSpikes.Enable = 'on';
+end
+if(isfield(experiment, 'validPatterns'))
+  hs.menuPreferencesShowPatterns.Enable = 'on';
+end
+if(isfield(experiment, 'baseLine'))
+  hs.menuPreferencesShowBaseLine.Enable = 'on';
+end
 
 hs.menuClassification = uimenu(hs.mainWindow, 'Label', 'Classification');
 hs.menuClassificationFeatureSelection = uimenu(hs.menuClassification, 'Label', 'Feature Selection', 'Enable', 'on', 'Callback', @menuFeatureSelection);
@@ -2927,7 +2928,7 @@ function updateMenu()
     hs.menuClassificationEventPredefined.Checked = 'off';
   end
   if(isfield(experiment, 'validPatterns'))
-    hs.menuPreferencesShowPatterns.Visible = 'on';
+    hs.menuPreferencesShowPatterns.Enable = 'on';
   end
 end
 

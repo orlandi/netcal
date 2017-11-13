@@ -86,6 +86,6 @@ if(allowChanges)
 else
   curOptions = curOptions.setDefaults;
 end
-if(success)
+if(success && isstruct(experiment))
   experiment.([optionsClassName 'Current']) = curOptions;
 end

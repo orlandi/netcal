@@ -534,10 +534,10 @@ function updateShowGroups(checkedPatterns)
   legend('off');
   nameList = {};
   h = [];
+  cmap = parula(length(checkedPatterns)+1);
   for it = 1:length(checkedPatterns)
     currentPattern = patterns{checkedPatterns{it}};
-    
-    h = [h; plot(hs.mainWindowFramesAxes, currentPattern.t, (currentPattern.F-min(currentPattern.F))/(max(currentPattern.F)-min(currentPattern.F)))];
+    h = [h; plot(hs.mainWindowFramesAxes, currentPattern.t, (currentPattern.F-min(currentPattern.F))/(max(currentPattern.F)-min(currentPattern.F)), 'Color', cmap(it, :))];
     nameList{end+1} = currentPattern.fullName;
   end
   
@@ -1026,7 +1026,7 @@ function printPatternInfo(varargin)
     %logMessage(hlog, sprintf('Name: %s', pattern.name));
     logMessage(hlog, sprintf('Full name: %s', pattern.fullName));
     %logMessage(hlog, sprintf('base pattern: %s', pattern.basePattern));
-    logMessage(hlog, sprintf('Tpe: %s', pattern.type));
+    logMessage(hlog, sprintf('Type: %s', pattern.type));
     logMessage(hlog, sprintf('Duration: %.2f s', length(pattern.t)/experiment.fps));
     logMessage(hlog, sprintf('Threshold: %.2f', pattern.threshold));
   end

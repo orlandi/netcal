@@ -127,39 +127,60 @@ end
 
 hs.menu.preferences.root = uimenu(hs.mainWindow, 'Label', 'Preferences', 'Enable', 'on');
 hs.menu.preferences.realSize = uimenu(hs.menu.preferences.root, 'Label', 'Real Size', 'Enable', 'on', 'Callback', @menuPreferencesRealSize);
-if(isfield(experiment, 't') && ~isfield(experiment, 'avgTraceLower') && ~isfield(experiment, 'avgTraceUpper'))
-  hs.menu.preferences.avgTraceCorrection.avg = uimenu(hs.menu.preferences.root, 'Label', 'Average trace correction', 'Enable', 'on', 'Callback', {@menuPreferencesAvgTraceCorrection, 'average'}, 'tag', 'avgTraceCorrection');
-elseif(isfield(experiment, 't'))
-  hs.menu.preferences.avgTraceCorrection.root = uimenu(hs.menu.preferences.root, 'Label', 'Average trace correction', 'Enable', 'on');
-  hs.menu.preferences.avgTraceCorrection.avg = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Average', 'Enable', 'on', 'Callback', {@menuPreferencesAvgTraceCorrection, 'average'}, 'tag', 'avgTraceCorrection');
-  if(isfield(experiment, 'avgTraceLower'))
-    hs.menu.preferences.avgTraceCorrection.lower = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Lower quartile', 'Enable', 'on', 'Callback', {@menuPreferencesAvgTraceCorrection, 'lower'}, 'tag', 'avgTraceCorrection');
-  end
-  if(isfield(experiment, 'avgTraceUpper'))
-    hs.menu.preferences.avgTraceCorrection.lower = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Upper quartile', 'Enable', 'on', 'Callback', {@menuPreferencesAvgTraceCorrection, 'upper'}, 'tag', 'avgTraceCorrection');
-  end
+
+%%% Create menus that are only enabled if requisites are met
+hs.menu.preferences.avgTraceCorrection.root = uimenu(hs.menu.preferences.root, 'Label', 'Average trace correction', 'Enable', 'off');
+hs.menu.preferences.avgTraceCorrection.avg = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Average', 'Enable', 'off', 'Callback', {@menuPreferencesAvgTraceCorrection, 'average'}, 'tag', 'avgTraceCorrection');
+hs.menu.preferences.avgTraceCorrection.lower = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Lower quartile', 'Enable', 'off', 'Callback', {@menuPreferencesAvgTraceCorrection, 'lower'}, 'tag', 'avgTraceCorrection');
+hs.menu.preferences.avgTraceCorrection.upper = uimenu(hs.menu.preferences.avgTraceCorrection.root, 'Label', 'Upper quartile', 'Enable', 'off', 'Callback', {@menuPreferencesAvgTraceCorrection, 'upper'}, 'tag', 'avgTraceCorrection');
+hs.menu.preferences.regionCorrection = uimenu(hs.menu.preferences.root, 'Label', 'Baseline correction', 'Enable', 'off', 'Callback', @menuPreferencesBaselineCorrection, 'tag', 'baseLineCorrection');
+hs.menu.preferences.selectedMovie.root = uimenu(hs.menu.preferences.root, 'Label', 'Selected movie', 'Enable', 'off');
+hs.menu.preferences.selectedMovie.original = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Original', 'Enable', 'off', 'Checked', 'on', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'original'});
+hs.menu.preferences.selectedMovie.denoised = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Denoised', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'denoised'});
+hs.menu.preferences.selectedMovie.both = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Both', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'both'});
+  
+if(isfield(experiment, 't'))
+  hs.menu.preferences.avgTraceCorrection.root.Enable = 'on';
+  hs.menu.preferences.avgTraceCorrection.avg.Enable = 'on';
 end
+if(isfield(experiment, 'avgTraceLower'))
+  hs.menu.preferences.avgTraceCorrection.lower.Enable = 'on';
+end
+if(isfield(experiment, 'avgTraceUpper'))
+  hs.menu.preferences.avgTraceCorrection.upper.Enable = 'on';
+end
+
 if(isfield(experiment, 'baseLine'))
-  hs.menu.preferences.regionCorrection = uimenu(hs.menu.preferences.root, 'Label', 'Baseline correction', 'Enable', 'on', 'Callback', @menuPreferencesBaselineCorrection, 'tag', 'baseLineCorrection');
+  hs.menu.preferences.regionCorrection.Enable = 'on';
 end
+
 if(isfield(experiment, 'denoisedData'))
-  hs.menu.preferences.selectedMovie.root = uimenu(hs.menu.preferences.root, 'Label', 'Selected movie', 'Enable', 'on');
-  hs.menu.preferences.selectedMovie.original = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Original', 'Enable', 'on', 'Checked', 'on', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'original'});
-  hs.menu.preferences.selectedMovie.denoised = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Denoised', 'Enable', 'on', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'denoised'});
-  hs.menu.preferences.selectedMovie.both = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Both', 'Enable', 'on', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'both'});
+  hs.menu.preferences.selectedMovie.root.Enable = 'on';
+  hs.menu.preferences.selectedMovie.original.Enable = 'on';
+  hs.menu.preferences.selectedMovie.denoised.Enable = 'on';
+  hs.menu.preferences.selectedMovie.both.Enable = 'on';
   currentMovie = 1;
   denoisedBlocksPerFrame = [];
 else
   currentMovie = 1;
 end
 
+hs.menu.show.root = uimenu(hs.mainWindow, 'Label', 'Show', 'Visible', 'on');
+hs.menu.show.populations = generateSelectionMenu(experiment, hs.menu.show.root);
+hs.menu.show.populations.root.Label = 'Groups';
+hs.menu.show.populations.root.Enable = 'off';
 
+hs.menu.show.bursts = generateSelectionMenu(experiment, hs.menu.show.root);
+hs.menu.show.bursts.root.Label = 'Bursts';
+hs.menu.show.bursts.root.Enable = 'off';
 
-hs.menu.show.root = uimenu(hs.mainWindow, 'Label', 'Show', 'Visible', 'off');
+hs.menu.show.spikes = generateSelectionMenu(experiment, hs.menu.show.root);
+hs.menu.show.spikes.root.Label = 'Spikes';
+hs.menu.show.spikes.root.Enable = 'off';
+
 % Menu to show spikes
 if(isfield(experiment, 'spikes'))
-  hs.menu.show.spikes = generateSelectionMenu(experiment, hs.menu.show.root);
-  hs.menu.show.spikes.root.Label = 'Spikes';
+  hs.menu.show.spikes.root.Enable = 'on';
   spikesHandles = assignRecursiveCallback(hs.menu.show.spikes, @updateShowSpikes);
   groupNames = fieldnames(hs.menu.show.spikes);
   for i = 1:length(groupNames)
@@ -177,13 +198,11 @@ if(isfield(experiment, 'spikes'))
   end
   spikesMembers = cell(length(spikesHandles), 1);
   spikesColor = cell(length(spikesHandles), 1);
-  hs.menu.show.root.Visible = 'on';
 end
 
 % Menu to show populations
-if(isfield(experiment, 'traceGroups'))
-  hs.menu.show.populations = generateSelectionMenu(experiment, hs.menu.show.root);
-  hs.menu.show.populations.root.Label = 'Populations';
+if(isfield(experiment, 'traceGroups') && isfield(experiment, 'ROI') && ~isempty(experiment.ROI))
+  hs.menu.show.populations.root.Enable = 'on';
   populationsHandles = assignRecursiveCallback(hs.menu.show.populations, @updateShowPopulations);
   groupNames = fieldnames(hs.menu.show.populations);
   for i = 1:length(groupNames)
@@ -201,13 +220,10 @@ if(isfield(experiment, 'traceGroups'))
   end
   framePopulationsColor = cell(length(populationsHandles), 1);
   populationsPixels = cell(length(populationsHandles), 1);
-  hs.menu.show.root.Visible = 'on';
 end
 
 % Menu to show bursts
 if(isfield(experiment, 'traceBursts'))
-  hs.menu.show.bursts = generateSelectionMenu(experiment, hs.menu.show.root);
-  hs.menu.show.bursts.root.Label = 'Bursts';
   burstHandles = assignRecursiveCallback(hs.menu.show.bursts, @updateShowBursts);
   groupNames = fieldnames(hs.menu.show.bursts);
   for i = 1:length(groupNames)
@@ -226,13 +242,11 @@ if(isfield(experiment, 'traceBursts'))
   frameBurstsIdx = cell(length(burstHandles), 1);
   frameBurstsColor = cell(length(burstHandles), 1);
   burstsPixels = cell(length(burstHandles), 1);
-  hs.menu.show.root.Visible = 'on';
 end
 
 hs.menu.export.root = uimenu(hs.mainWindow, 'Label', 'Export');
 hs.menu.export.current = uimenu(hs.menu.export.root, 'Label', 'Current image', 'Callback', @exportCurrentImage);
 hs.menu.export.currentMovie = uimenu(hs.menu.export.root, 'Label', 'Current movie', 'Callback', @exportCurrentMovie);
-
 
 % Main grid
 hs.mainWindowSuperBox = uix.VBox('Parent', hs.mainWindow);
@@ -403,20 +417,6 @@ set(hs.mainWindowSuperBox, 'Heights', [-1 65], 'Padding', 0, 'Spacing', 0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %imData.Parent.Children
 colormap(currentCmap);
-%set(hs.mainWindowGrid, 'Widths', [minGridBorder -1 25 200 minGridBorder],...
-%  'Heights', [minGridBorder -1 100 minGridBorder]);
-
-%hFigW.Visible = 'on';
-% realRatio = size(currFrame,2)/size(currFrame,1);
-% curPos = hs.mainWindowFramesAxes.Parent.Position;
-% curRatio = curPos(3)/curPos(4);
-% 
-% if(curRatio > realRatio)
-%   set(hs.mainWindowGrid, 'Widths', [-1 curPos(4)*realRatio 25 200 -1], 'Heights', [-1 max(curPos(4),400) 100 -1]);
-% else
-%   set(hs.mainWindowGrid, 'Widths', [-1 curPos(3) 25 200 -1], 'Heights', [-1 max(curPos(3)/realRatio,400) 100 -1]);
-% end
-%set(hs.mainWindowGrid, 'Widths', [size(currFrame,2) 25 -1], 'Heights', [size(currFrame,1) -1]);
 
 cleanMenu();
 
@@ -480,7 +480,6 @@ end
 if(isempty(gui))
   waitfor(hFigW);
 end
-
 
 %--------------------------------------------------------------------------
 function mainWindowResize(~, ~)
@@ -715,7 +714,9 @@ function updateShowSpikes(hObject, eventData, type)
   if(showSpikes)
       siz = size(currFrame);
       siz = siz(1:2);
+      hold on;
       spikesOverlay = imagesc(zeros([siz 3]), 'HitTest', 'off');
+      hold off;
       % Create the full spike list
       fullSpikingNeuronsList = [];
       firingNeuronColor = zeros(length(experiment.spikes), 3);
@@ -1252,7 +1253,6 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
       set(hs.mainWindowFramesAxes, 'LooseInset', [0,0,0,0]);
       box on;
       
-      %overlayData = imagesc(ones(size(currFrame)), 'HitTest', 'off');
       hs.mainWindowFramesAxes.UIContextMenu = hs.rightClickMenu.root;
       
     case 3
@@ -1512,7 +1512,9 @@ function plotBursts()
     return;
   end
   axes(hs.mainWindowFramesAxes);
+  hold on;
   burstsOverlay = imagesc(zeros([experiment.height experiment.width 3]), 'HitTest', 'off');
+  hold off;
   set(burstsOverlay, 'AlphaData', zeros([experiment.height experiment.width]));
   overlayFrameA = zeros([experiment.height experiment.width]);
   overlayFrameR = zeros([experiment.height experiment.width]);
@@ -1539,7 +1541,9 @@ function plotPopulations()
   delete(populationsOverlay);
   
   axes(hs.mainWindowFramesAxes);
+  hold on;
   populationsOverlay = imagesc(zeros([experiment.height experiment.width 3]), 'HitTest', 'off');
+  hold off;
   set(populationsOverlay, 'AlphaData', zeros([experiment.height experiment.width]));
   overlayFrameA = zeros([experiment.height experiment.width]);
   overlayFrameR = zeros([experiment.height experiment.width]);
@@ -1562,9 +1566,9 @@ function plotPopulations()
   overlayFrameP = ~~overlayFrameA;
   overlayFrameP = bwperim(overlayFrameP,4);
   overlayFrameA(overlayFrameP) = 1;
-
   set(populationsOverlay, 'CData', cat(3, overlayFrameR, overlayFrameG, overlayFrameB));
   set(populationsOverlay, 'AlphaData', overlayFrameA);
+  
 end
 
 %--------------------------------------------------------------------------
@@ -1599,7 +1603,9 @@ function plotSpikeEvents()
     siz = siz(1:2);
     if(isempty(spikesOverlay))
       axes(hs.mainWindowFramesAxes);
+      hold on;
       spikesOverlay = imagesc(zeros([siz 3]), 'HitTest', 'off');
+      hold off;
     end
     if(~isempty(spikesOverlay))
       set(spikesOverlay, 'CData', zeros([siz 3]));

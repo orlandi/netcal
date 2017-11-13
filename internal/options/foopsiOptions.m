@@ -23,10 +23,14 @@ classdef foopsiOptions < baseOptions
     % Type of threshold to use for spike detection:
     % - relative: X, where X is mean+X standard deviation of the firing probability distribution
     % - absolute: absolute threshold for the firing probability
-    probabilityThresholdType = {'relative', 'absolute'};
+    % - time varying: will compute a new relative threshold based on the local standard deviation (see probabilityThresholdBlockSize)
+    probabilityThresholdType = {'relative', 'absolute', 'time varying'};
     
     % Probability threshold for spike detection (see probabilityThresholdType)
     probabilityThreshold = 1.96;
+    
+    % Number of seconds within a point to use to estimate the local mean and standard deviation (if threshold type = time varying)
+    probabilityThresholdBlockSize = 5;
     
     % True to also store the model trace
     storeModelTrace = false;

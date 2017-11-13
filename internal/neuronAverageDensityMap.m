@@ -67,7 +67,11 @@ for i=1:size(my,1)
         
         %%%%% Do the average
         if(strcmp(params.averageType,'perNeuron'))
+          if(~isempty(neighbours))
             coarseMeasure(i,j) = coarseMeasure(i,j)/(length(neighbours)-sum(isnan(measure(neighbours))));
+          else
+            coarseMeasure(i,j) = 0;
+          end
         elseif(strcmp(params.averageType,'perArea'))
             if(~params.periodic)
                 if(params.circularNetwork)

@@ -1,1 +1,1 @@
-gs
+C:\Program Files\gs\gs9.21\bin\gswin64c.exe

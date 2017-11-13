@@ -495,7 +495,9 @@ function showMovie(~, ~)
   dummyExperiment = experiment;
   dummyExperiment.virtual = true;
   dummyExperiment.tag = 'dummy';
-  dummyExperiment = rmfield(dummyExperiment, 'denoisedData');
+  if(isfield(dummyExperiment, 'denoisedData'))
+    dummyExperiment = rmfield(dummyExperiment, 'denoisedData');
+  end
   dummyExperiment.denoisedData(1) = experiment.denoisedDataTraining(1);
   dummyExperiment.numFrames = dummyExperiment.denoisedData(1).frames(2)-dummyExperiment.denoisedData(1).frames(1)+1;
   viewRecording(dummyExperiment);

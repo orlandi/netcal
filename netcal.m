@@ -13,7 +13,7 @@ function netcal(varargin)
 % EXAMPLE:
 %    netcal
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2017, Javier G. Orlandi
 
 %#ok<*AGROW>
 %#ok<*ASGLU>
@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '6.2.0';
+currVersion = '7.0.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -84,6 +84,7 @@ hs.mainWindow = figure('Visible','off',...
                        'DockControls','off',...
                        'NumberTitle', 'off',...
                        'ResizeFcn', @resizeCallback, ...
+                       'WindowKeyPressFcn', @keyPressCallback, ...
                        'MenuBar', 'none',...
                        'Name', [appName ' v' currVersion],...
                        'Position', [100 100 900 700],...
@@ -837,6 +838,24 @@ function menuExperimentAddBatch(~, ~, ~)
 end
 
 %--------------------------------------------------------------------------
+function keyPressCallback(hObject, eventData)
+  switch eventData.Key
+    case '1'
+      if(strcmp(eventData.Modifier, 'control'))
+        experimentMode([], [], 'single');
+      end
+    case '2'
+      if(strcmp(eventData.Modifier, 'control'))
+        experimentMode([], [], 'multiple');
+      end
+    case '3'
+      if(strcmp(eventData.Modifier, 'control'))
+        experimentMode([], [], 'pipeline');
+      end
+  end
+end
+
+%--------------------------------------------------------------------------
 function resizeCallback(hObject, ~, varargin)
   if(~isempty(varargin) && strcmp(varargin{1}, 'full'))
     updateMenu();
@@ -1048,19 +1067,32 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
         saveExperiment(experiment, 'verbose', false);
       end
     case 'multiple'
-      if(sum(project.checkedExperiments) == 0)
+      checkedExperiments = find(project.checkedExperiments);
+      if(sum(checkedExperiments) == 0)
         logMsg('No checked experiments found', 'e');
         return;
       end
-
+      runMode = 'experiment';
+      
       % Define the options
       if(~isempty(optionsClass))
-        [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, allowOptionsChanges, false);
+        % Load using the first checked exp
+        experimentName = project.experiments{checkedExperiments(1)};
+        exp = [project.folderFiles experimentName '.exp'];
+        [success, optionsClassCurrent] = preloadOptions(exp, optionsClass, netcalMainWindow, allowOptionsChanges, false);
         if(~success)
           return;
         end
+        if(isprop(optionsClassCurrent, 'pipelineMode'))
+          switch optionsClassCurrent.pipelineMode
+            case 'experiment'
+              runMode = 'experiment';
+            case 'project'
+              runMode = 'project';
+          end
+        end
       end
-      checkedExperiments = find(project.checkedExperiments);
+      
       if(populationSelection)
         % Preload the groups from the first experiment and select the appropiate one
         experimentName = project.experiments{checkedExperiments(1)};
@@ -1075,86 +1107,94 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
         selectedPopulations = groupNames(selectedPopulations);
       end
       % Iterate through the experiments
-      
-      logMsgHeader(sprintf('Running %s on %d experiments', hObject.Label, sum(project.checkedExperiments)), 'start');
-      % Define the progress bar
-      ncbar('Processing experiments', '');
-      p = 2;
-      ncbar.setSequentialBar(false);
-      for it = 1:length(checkedExperiments)
-        % Load the experiment
-        experimentName = project.experiments{checkedExperiments(it)};
-        experimentFile = [project.folderFiles experimentName '.exp'];
-        ncbar.setCurrentBar(1);
-        ncbar.setCurrentBarName(sprintf('Processing: %s (%d/%d)', experimentName, it, length(checkedExperiments)));
-        ncbar.update((it-1)/length(checkedExperiments), 1, 'force');
-        ncbar.increaseCurrentBar();
-        
-        ncbar.setCurrentBarName('Loading experiment...');
-        experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', p);
-        
-        if(isempty(experiment))
-            logMsg(['Something went wrong loading experiment ' experimentName], 'e');
-            continue;
-        end
-        % Do the analysis
-        if(~isempty(optionsClass))
-          if(populationSelection)
-            subset = [];
-            % This assumes that it can process all elements of different pops at once, i.e., each analysis on a given element is independent on the rest of the population
-            for k = 1:length(selectedPopulations)
-              subset = [subset; getExperimentGroupMembers(experiment, selectedPopulations{k})];
+      switch runMode
+        case 'experiment'
+          logMsgHeader(sprintf('Running %s on %d experiments', hObject.Label, sum(project.checkedExperiments)), 'start');
+          % Define the progress bar
+          ncbar('Processing experiments', '');
+          p = 2;
+          ncbar.setSequentialBar(false);
+          for it = 1:length(checkedExperiments)
+            % Load the experiment
+            experimentName = project.experiments{checkedExperiments(it)};
+            experimentFile = [project.folderFiles experimentName '.exp'];
+            ncbar.setCurrentBar(1);
+            ncbar.setCurrentBarName(sprintf('Processing: %s (%d/%d)', experimentName, it, length(checkedExperiments)));
+            ncbar.update((it-1)/length(checkedExperiments), 1, 'force');
+            ncbar.increaseCurrentBar();
+
+            ncbar.setCurrentBarName('Loading experiment...');
+            experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', p);
+
+            if(isempty(experiment))
+                logMsg(['Something went wrong loading experiment ' experimentName], 'e');
+                continue;
             end
-            try
-              experiment = analysisFunction(experiment, optionsClassCurrent, 'subset', subset, 'pbar', p, varargin{:});
-            catch ME
-              logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-              logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
+            % Do the analysis
+            if(~isempty(optionsClass))
+              if(populationSelection)
+                subset = [];
+                % This assumes that it can process all elements of different pops at once, i.e., each analysis on a given element is independent on the rest of the population
+                for k = 1:length(selectedPopulations)
+                  subset = [subset; getExperimentGroupMembers(experiment, selectedPopulations{k})];
+                end
+                try
+                  experiment = analysisFunction(experiment, optionsClassCurrent, 'subset', subset, 'pbar', p, varargin{:});
+                catch ME
+                  logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+                  logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
+                end
+              else
+                try
+                  experiment = analysisFunction(experiment, optionsClassCurrent, 'pbar', p, varargin{:});
+                catch ME
+                  logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+                  logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
+                end
+              end
+              experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+              project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+            else
+              if(populationSelection)
+                subset = [];
+                % This assumes that it can process all elements of different pops at once, i.e., each analysis on a given element is independent on the rest of the population
+                for k = 1:length(selectedPopulations)
+                  subset = [subset; getExperimentGroupMembers(experiment, selectedPopulations{k})];
+                end
+                try
+                  experiment = analysisFunction(experiment, 'subset', subset, 'pbar', p, varargin{:});
+                catch ME
+                  logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+                  logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
+                end
+              else
+                try
+                  experiment = analysisFunction(experiment, 'pbar', p, varargin{:});
+                catch ME
+                  logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+                  logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
+                end
+              end
             end
-          else
-            try
-              experiment = analysisFunction(experiment, optionsClassCurrent, 'pbar', p, varargin{:});
-            catch ME
-              logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-              logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
-            end
+            ncbar.setCurrentBarName('Saving experiment...');
+            saveExperiment(experiment, 'verbose', false, 'pbar', p);
+            ncbar.update(it/length(checkedExperiments), 1, 'force');
           end
-          experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
-          project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
-        else
-          if(populationSelection)
-            subset = [];
-            % This assumes that it can process all elements of different pops at once, i.e., each analysis on a given element is independent on the rest of the population
-            for k = 1:length(selectedPopulations)
-              subset = [subset; getExperimentGroupMembers(experiment, selectedPopulations{k})];
-            end
-            try
-              experiment = analysisFunction(experiment, 'subset', subset, 'pbar', p, varargin{:});
-            catch ME
-              logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-              logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
-            end
-          else
-            try
-              experiment = analysisFunction(experiment, 'pbar', p, varargin{:});
-            catch ME
-              logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-              logMsg(sprintf('Something went wrong when performing on experiment %s', experiment.name), 'e');
-            end
+        case 'project'
+          try
+            project = analysisFunction(project, optionsClassCurrent, varargin{:});
+          catch ME
+            logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
           end
-        end
-        ncbar.setCurrentBarName('Saving experiment...');
-        saveExperiment(experiment, 'verbose', false, 'pbar', p);
-        ncbar.update(it/length(checkedExperiments), 1, 'force');
       end
       if(~isempty(optionsClass))
-        %setappdata(netcalMainWindow, [class(optionsClassCurrent) 'Current'], optionsClassCurrent);
         project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
       end
       updateProjectTree();
       ncbar.close();
       logMsgHeader('Done!', 'finish');
   end
+  printSavedExperimentInfo();
   setappdata(netcalMainWindow, 'project', project);
   updateMenu();
 end
@@ -1319,11 +1359,14 @@ function success = menuExperimentRename(experiment)
     % Rename all files
     fileList = rdir([experiment.folder , '**', filesep, '**']);
     for it = 1:length(fileList)
+      fileList(it)
       if(exist(fileList(it).name, 'file') & ~exist(fileList(it).name, 'dir') & strfind(fileList(it).name, oldName))
         [fpa, fpb, fpc ] = fileparts(fileList(it).name);
         nfpb = strrep(fpb, oldName, experiment.name);
         if(~strcmp(fpb, nfpb))
+          fileList(it).name
           newName = [fpa filesep nfpb fpc];
+          newName
           movefile(fileList(it).name, newName);
         end
       end
@@ -1380,7 +1423,7 @@ function success = menuExperimentDuplicate(experiment)
     experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
     ncbar.automatic('Copying files');
     % Copy all project files
-    copyfile(oldFolder, experiment.folder);
+    copyfile(oldFolder, experiment.folder, 'f');
     % Rename all files
     fileList = rdir([experiment.folder , '**', filesep, '**']);
 
@@ -1390,7 +1433,7 @@ function success = menuExperimentDuplicate(experiment)
         nfpb = strrep(fpb, oldName, experiment.name);
         if(~strcmp(fpb, nfpb))
           newName = [fpa filesep nfpb fpc];
-          movefile(fileList(it).name, newName);
+          movefile(fileList(it).name, newName, 'f');
         end
       end
     end
@@ -1824,194 +1867,6 @@ function menuAggregatedPopulationStatistics(~, ~, groupType)
   setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
 end
 
-%--------------------------------------------------------------------------
-function menuAggregatedBursts(~, ~, statistic)
-  
-  project = getappdata(netcalMainWindow, 'project');
-  fullNames = namesWithLabels();
-  if(sum(project.checkedExperiments) == 0)
-    logMsg('No checked experiments found', 'e');
-    return;
-  else
-    checkedExperiments = find(project.checkedExperiments);
-  end
-
-  % Define the options
-  optionsClass = aggregatedOptions;
-  if(~isempty(optionsClass))
-    [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, true, false);
-    if(~success)
-      return;
-    end
-  end
-  aggregatedOptionsCurrent = optionsClassCurrent;
-  
-  % Preload the groups from the first checked experiment and select the appropiate one
-  experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
-  groupNames = getExperimentGroupsNames(experiment);
-  % Select the population
-  [selectedPopulations, success] = listdlg('PromptString', 'Select groups', 'SelectionMode', 'single', 'ListString', groupNames);
-  if(~success)
-    return;
-  end
-  selectedPopulations = groupNames(selectedPopulations);
-  
-  % Define required data
-  statMean = zeros(length(checkedExperiments), length(selectedPopulations));
-  statStd = zeros(length(checkedExperiments), length(selectedPopulations));
-  statCount = zeros(length(checkedExperiments), length(selectedPopulations));
-  fullStatCell = cell(length(selectedPopulations), length(checkedExperiments));
-  % Load the data
-  ncbar('Processing experiments');
-  for it = 1:length(checkedExperiments)
-    experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
-    experiment = checkGroups(experiment);
-    if(~isfield(experiment, 'traceBursts'))
-      logMsg(['No burst data found in experiment ' experiment.name], 'e');
-      ncbar.close();
-      return;
-    end
-    for it2 = 1:length(selectedPopulations)
-      try
-        bursts = getExperimentGroupBursts(experiment, selectedPopulations{it2});
-      catch ME
-        logMsg(sprintf('Something was wrong getting loading bursts from %s in experiment %s', selectedPopulations{it2}, experiment.name), 'e');
-        logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
-        continue;
-      end
-      % Change for each statistic
-      switch statistic
-        case 'IBI'
-          currentStat = bursts.IBI;
-        case 'Duration'
-          currentStat = bursts.duration;
-        case 'Amplitude'
-          currentStat = bursts.amplitude;
-        otherwise
-          logMsg('Invalid statistics', 'e');
-          ncbar.close();
-          return;
-      end
-      statMean(it, it2) = mean(currentStat);
-      statStd(it, it2) = std(currentStat);
-      statCount(it, it2) = length(currentStat);
-      fullStatCell{it2, it} = currentStat;
-    end
-    ncbar.update(it/length(checkedExperiments));
-  end
-  ncbar.close();
-
-	% Now the plot
-  hfig = figure;
-  ax = axes('Parent',hfig);
-  Npopulations = length(selectedPopulations); 
-  currentColormap = eval(['@' aggregatedOptionsCurrent.colormap]);
-  cmap = currentColormap(length(checkedExperiments)+1);
-  cmap = cmap(2:end, :);
-  hold on;
-  lh = [];
-  for rt = 1:length(selectedPopulations)
-    pc = fullStatCell(rt,:);
-    switch aggregatedOptionsCurrent.distributionType
-      case 'violin'
-        edgeCol = cmap(rt, :)*1.1;
-        edgeCol(edgeCol>1) = 1;
-        [h, L] = violin(pc, 'facecolor', cmap(rt, :), 'edgecolor', edgeCol, 'facealpha', 0.2, 'medc', []);
-        lh = [lh; h(1)];
-      case 'boxplot'
-        rowData = [];
-        groupData = [];
-        for kr = 1:length(checkedExperiments)
-          if(isempty(pc{kr}))
-            rowData = [rowData; NaN];
-            groupData = [groupData; kr];
-          else
-            rowData = [rowData; pc{kr}(:)];
-            groupData = [groupData; ones(length(pc{kr}),1)*kr];
-          end
-        end
-        h = boxplot(rowData, groupData); 
-        lh = [lh; h];
-      case 'notboxplot'
-        rowData = [];
-        groupData = [];
-        for kr = 1:length(checkedExperiments)
-          if(isempty(pc{kr}))
-            rowData = [rowData; NaN];
-            groupData = [groupData; kr];
-          else
-            rowData = [rowData; pc{kr}(:)];
-            groupData = [groupData; ones(length(pc{kr}),1)*kr];
-          end
-        end
-        h = notBoxPlotv2(rowData, groupData);
-        lh = [lh; h];
-      case 'univarscatter'
-        rowData = [];
-        groupData = [];
-        for kr = 1:length(checkedExperiments)
-          if(isempty(pc{kr}))
-            rowData = [rowData; NaN];
-            groupData = [groupData; kr];
-          else
-            rowData = [rowData; pc{kr}(:)];
-            groupData = [groupData; ones(length(pc{kr}),1)*kr];
-          end
-        end
-        c = table(rowData(:), arrayfun(@(x){num2str(x)}, groupData(:)));
-        edgeCol = cmap*1.3;
-        edgeCol(edgeCol>1) = 1;
-        UnivarScatter(c, 'MarkerFaceColor',cmap,'SEMColor', edgeCol,'StdColor',edgeCol/2);
-
-        %lh = [lh; h];
-    end
-  end
-  legend('off');
-  xlim(ax, [0.5 length(checkedExperiments)+0.5]);
-  yl = ylim(ax);
-  ylim(ax, [yl(1) yl(2)*1.1]);
-  ui = uimenu(hfig, 'Label', 'Export');
-  switch statistic
-      case 'IBI'
-          ylabel(ax, 'Interburst interval IBI (s)');
-          title(ax,['IBI statistics per experiment - Project : ' project.name]);
-          figNameShortcut = 'aggregatedBurstsIBI';
-          uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder figNameShortcut]});
-          uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-                  [project.folder 'Data' figNameShortcut], ...
-                  fullStatCell(1,:), ...
-                  strrep(fullNames(checkedExperiments),'_','\_')', ...
-                  figNameShortcut});
-      case 'Duration'
-          ylabel(ax, 'Burst duration (s)');
-          title(ax,['Burst duration statistics per experiment - Project : ' project.name]);
-          figNameShortcut = 'aggregatedBurstsDuration';
-          uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder figNameShortcut]});
-          uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-                  [project.folder 'Data' figNameShortcut], ...
-                  fullStatCell(1,:), ...
-                  project.experiments(checkedExperiments)', ...
-                  figNameShortcut});
-      case 'Amplitude'
-          ylabel('Burst amplitude (au)');
-          title(ax,['Burst amplitude statistics per experiment - Project : ' project.name]);
-          figNameShortcut = 'aggregatedBurstsAmplitude';
-          uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder figNameShortcut]});
-          uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-                  [project.folder 'Data' figNameShortcut], ...
-                  fullStatCell(1,:), ...
-                  project.experiments(checkedExperiments)', ...
-                  figNameShortcut});
-  end
-  strrep(fullNames(checkedExperiments),'_','\_')
-  set(ax, 'XTick', 1:length(checkedExperiments));
-  set(ax, 'XTickLabel', strrep(fullNames(checkedExperiments),'_','\_'));
-  set(ax, 'XTickLabelRotation', aggregatedOptionsCurrent.xLabelsRotation);
-  box on;
-  project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-  setappdata(netcalMainWindow, 'project', project);
-  setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-end
 
 %--------------------------------------------------------------------------
 function menuAggregatedCompareExperiments(~, ~)
@@ -2067,194 +1922,6 @@ function menuAggregatedCompareExperiments(~, ~)
 
 end
 
-%--------------------------------------------------------------------------
-function menuAggregatedSpikes(~, ~, type)
-  project = getappdata(netcalMainWindow, 'project');
-  fullNames = namesWithLabels();
-  if(sum(project.checkedExperiments) == 0)
-    logMsg('No checked experiments found', 'e');
-    return;
-  else
-    checkedExperiments = find(project.checkedExperiments);
-  end
-
-  % Define the options
-  optionsClass = aggregatedOptions;
-  if(~isempty(optionsClass))
-    [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, true, false);
-    if(~success)
-      return;
-    end
-  end
-  aggregatedOptionsCurrent = optionsClassCurrent;
-
-  % Preload the groups from the first checked experiment and select the appropiate one
-  experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames', 'spikeFeaturesNames');
-  groupNames = getExperimentGroupsNames(experiment);
-  % Select the population
-  [selectedPopulations, success] = listdlg('PromptString', 'Select groups', 'SelectionMode', 'single', 'ListString', groupNames);
-  if(~success)
-    return;
-  end
-  selectedPopulations = groupNames(selectedPopulations);
-  
-  % Now select the feature
-  if(~isfield(experiment, 'spikeFeaturesNames') || isempty(experiment.spikeFeaturesNames))
-    logMsg('No features found', 'e');
-    return;
-  end
-  [selectedFeature, success] = listdlg('PromptString', 'Select a feature', 'SelectionMode', 'single', 'ListString', experiment.spikeFeaturesNames);
-  if(~success)
-      return;
-  end
-  
-  Npopulations = length(selectedPopulations);
-  Nexperiments = length(checkedExperiments);
-
-  statMean = zeros(Nexperiments, Npopulations);
-  statStd = zeros(Nexperiments, Npopulations);
-  statCount = zeros(Nexperiments, Npopulations);
-  fullStatCell = cell(Npopulations, Nexperiments);
-
-  % Load the data
-  ncbar('Processing experiments');
-  for it = 1:length(checkedExperiments)
-    experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
-    if(~isfield(experiment, 'spikeFeatures'))
-      logMsg(['No spike features found in experiment ' experiment.name], 'e');
-      ncbar.close();
-      return;
-    end
-    for it2 = 1:length(selectedPopulations)
-      members = getExperimentGroupMembers(experiment, selectedPopulations{it2});
-      currentStat = experiment.spikeFeatures(members, selectedFeature);
-      statMean(it, it2) = mean(currentStat);
-      statStd(it, it2) = std(currentStat);
-      statCount(it, it2) = length(currentStat);
-      fullStatCell{it2, it} = currentStat;
-    end
-    ncbar.update(it/length(checkedExperiments));
-  end
-  ncbar.close();
-  
-
-  % Now the plot  
-  hfig = figure;
-  ax = axes('Parent',hfig);
-
-  currentColormap = eval(['@' aggregatedOptionsCurrent.colormap]);
-  cmap = currentColormap(Nexperiments+1);
-  
-  hold on;
-  lh = [];
-  for rt = 1:Npopulations
-    pc = fullStatCell(rt,:);
-    switch type
-      case 'mean'
-        switch aggregatedOptionsCurrent.distributionType
-          case 'violin'
-          edgeCol = cmap(rt, :)*1.1;
-          edgeCol(edgeCol>1) = 1;
-          [h, L] = violin(pc, 'facecolor', cmap(rt, :), 'edgecolor', edgeCol, 'facealpha', 0.2, 'medc', []);
-          lh = [lh; h(1)];
-          case 'boxplot'
-            rowData = [];
-            groupData = [];
-            for kr = 1:Nexperiments
-                if(isempty(pc{kr}))
-                    rowData = [rowData; NaN];
-                    groupData = [groupData; kr];
-                else
-                    rowData = [rowData; pc{kr}];
-                    groupData = [groupData; ones(size(pc{kr}))*kr];
-                end
-            end
-            h = boxplot(rowData, groupData); 
-            lh = [lh; h];
-        case 'notboxplot'
-            rowData = [];
-            groupData = [];
-            for kr = 1:Nexperiments
-                if(isempty(pc{kr}))
-                    rowData = [rowData; NaN];
-                    groupData = [groupData; kr];
-                else
-                    rowData = [rowData; pc{kr}];
-                    groupData = [groupData; ones(size(pc{kr}))*kr];
-                end
-            end
-            h = notBoxPlotv2(rowData, groupData);
-            lh = [lh; h];
-        case 'univarscatter'
-          rowData = [];
-          groupData = [];
-          for kr = 1:length(checkedExperiments)
-            if(isempty(pc{kr}))
-              rowData = [rowData; NaN];
-              groupData = [groupData; kr];
-            else
-              rowData = [rowData; pc{kr}];
-              groupData = [groupData; ones(size(pc{kr}))*kr];
-            end
-          end
-          c = table(rowData(:), arrayfun(@(x){num2str(x)}, groupData(:)));
-          edgeCol = cmap*1.3;
-          edgeCol(edgeCol>1) = 1;
-          UnivarScatter(c, 'MarkerFaceColor',cmap,'SEMColor', edgeCol,'StdColor',edgeCol/2);
-        end
-      case 'distribution'
-        pc = fullStatCell(rt,:);
-        for kr = 1:Nexperiments
-          [f, xi] = ksdensity(pc{kr}); % Not using support
-          valid = find(xi > 0);
-          h = plot(xi(valid), f(valid), 'LineWidth', 2, 'Color', cmap(kr, :));
-          lh = [lh; h(1)];
-        end 
-    end
-  end
-  switch type
-    case 'mean'
-      legend('off');
-      xlim(ax, [0.5 Nexperiments+0.5]);
-      yl = ylim(ax);
-      ylim(ax, [yl(1) yl(2)*1.1]);
-      ui = uimenu(hfig, 'Label', 'Export');
-
-
-      ylabel(ax, experiment.spikeFeaturesNames{selectedFeature});
-      title(ax,[experiment.spikeFeaturesNames{selectedFeature} ' statistics']);
-      figNameShortcut = 'aggregatedSpikesFeatures';
-      uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder 'aggregatedSpikesFeatures']});
-      uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-              [project.folder 'Data' figNameShortcut], ...
-              fullStatCell(1,:), ...
-              strrep(fullNames(checkedExperiments),'_','\_')', ...
-              figNameShortcut});
-
-      set(ax, 'XTick', 1:Nexperiments);
-      set(ax, 'XTickLabel', strrep(project.experiments(checkedExperiments),'_','\_'));
-      ax.XTickLabelRotation = aggregatedOptionsCurrent.xLabelsRotation;
-      box on;
-    case 'distribution'
-      legend(fullNames(checkedExperiments));
-
-      ui = uimenu(hfig, 'Label', 'Export');
-      ylabel('Distribution function');
-      xlabel(experiment.spikeFeaturesNames{selectedFeature});
-      box on;
-      title(ax,[experiment.spikeFeaturesNames{selectedFeature} ' statistics']);
-      figNameShortcut = 'aggregatedSpikesFeaturesDistribution';
-      uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder 'aggregatedSpikesFeaturesDistribution']});
-      uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-              [project.folder 'Data' figNameShortcut], ...
-              fullStatCell(1,:), ...
-              strrep(fullNames(checkedExperiments),'_','\_')', ...
-              figNameShortcut});
-  end
-  project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-  setappdata(netcalMainWindow, 'project', project);
-  setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-end
 
 %--------------------------------------------------------------------------
 function menuAggregatedPreferences(~, ~, ~)
@@ -2366,7 +2033,6 @@ function menuAggregatedPCA(~, ~, ~)
   updateProjectTree();
 end
 
-
 %--------------------------------------------------------------------------
 function menuAggregatedStimulationPCA(~, ~, ~)
   featuresField = 'KClProtocolData';
@@ -2476,8 +2142,8 @@ function menuAggregatedStimulationPCA(~, ~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuAcknowledgements(~, ~)
-  hFig = figure('name', 'Acknowledgements', 'NumberTitle', 'off',...
+function menuAbout(~, ~)
+  hFig = figure('name', 'About', 'NumberTitle', 'off',...
     'toolbar','none','menubar','none');
   hFig.Position = setFigurePosition(gcbf, 'width', 600, 'height', 700);
   %%% Message starts here
@@ -2498,12 +2164,12 @@ function menuAcknowledgements(~, ~)
                  license, ...
                  '</p>'];
   
-  thanks = '<b>Thanks</b><p>Thanks to a lot of people.. that will appear here at some point.<p/>';
+  thanks = '<b>Thanks</b><p>Many people should appear here, but for now you can check the list of people involved in this project <a href="http://www.itsnetcal.com/people/">here</a>.</p>';
   
   fundingLogos = round([1257 259]/3.5);
   fundingLogosURL = ['file://' appFolder '/gui/images/funding_logos.jpg'];
   fundingLogosURL = fixURL(fundingLogosURL);
-  funding = ['<b>Funding</b><p>This project has been partially funded by<p/>',...
+  funding = ['<b>Funding</b><p>This project has been partially funded by</p>',...
              '<center>',...
              '<img width=' num2str(logosTogether(1)) ' height=' num2str(logosTogether(2)) ' src="' logosURL '">',...  
              '</img><br/>', ...
@@ -3155,7 +2821,7 @@ function updateCheckConsistency(~, ~)
   % Now check for unknown .m files
   folders = {'*.m', 'internal', 'external', 'gui', 'installDependencies'}; % Not plugins
   if(DEVELOPMENT)
-    folders{end+1} = 'internalDevelopment';
+    folders{end+1} = 'development';
   end
   for i = 1:length(folders)
     % This is for folders and subfolders
@@ -3330,6 +2996,7 @@ function saveOptions()
         %end
         % I hate regexp... so much - and jsonlab is reinterpretting the
         % strings as it sees fit - still buggy on samba shares
+        newDir = strjoin(regexp(newDir, '(\\/+)','split'), filesep);
         newDir = strjoin(regexp(newDir, '(\\\\+)','split'),'\');
         newDir = strjoin(regexp(newDir, '(//+)','split'),'/');
         netcalOptionsCurrent.recentProjectsList{it} = newDir;
@@ -3385,6 +3052,7 @@ function loadOptions()
           newDir = optionsData.recentProjectsList{it};
           % I hate regexp... so much - and jsonlab is reinterpretting the
           % strings as it sees fit
+          newDir = strjoin(regexp(newDir, '(\\/+)','split'), filesep);
           newDir = strjoin(regexp(newDir, '(\\\\+)','split'),'\');
           newDir = strjoin(regexp(newDir, '(//+)','split'),'/');
           optionsData.recentProjectsList{it} = newDir;
@@ -3477,7 +3145,7 @@ function menu = initializeMenu(~, ~)
   
   % Now help
   menu.help.root = uimenu(netcalMainWindow, 'Label', 'Help');
-  menu.help.acknowledgements = uimenu(menu.help.root, 'Label', 'Acknowledgements', 'Callback', @menuAcknowledgements);
+  menu.help.about = uimenu(menu.help.root, 'Label', 'About', 'Callback', @menuAbout);
   menu.help.changelog = uimenu(menu.help.root, 'Label', 'Changelog', 'Callback', @menuChangelog);
 end
 
@@ -3577,7 +3245,8 @@ function updateModulesMenu()
     end
     % Disable development modules
     if(~DEVELOPMENT)
-      if(any(strcmp(moduleTag, {'gliaAnalysis', 'networkInference', 'viewGlia'})))
+      %if(any(strcmp(moduleTag, {'gliaAnalysis', 'networkInference', 'viewGlia'})))
+      if(any(strcmp(moduleTag, {'gliaAnalysis', 'viewGlia', 'networkInferenceTDMI', 'networkInferenceGTE', 'networkInferenceGC'})))
         currentMenu.Enable = 'off';
         if(~strcmp(currentMenu.Label(end), '*'))
           currentMenu.Label = [currentMenu.Label '*'];
@@ -3592,7 +3261,9 @@ function updateModulesMenu()
     if(any(strcmp(experimentFields, moduleDepends)))
       currentMenu.Enable = 'on';
     end
-    if(any(strcmp(experimentFields, moduleCompletion)))
+    if(~isempty(moduleCompletion) && iscell(moduleCompletion) && any(cellfun(@(x)strcmp(experimentFields, x), moduleCompletion)))
+      currentMenu.Checked = 'on';
+    elseif(~isempty(moduleCompletion) && ischar(moduleCompletion) && any(strcmp(experimentFields, moduleCompletion)))
       currentMenu.Checked = 'on';
     end
     if(length(currentModule) >= 8)
@@ -4998,10 +4669,13 @@ function savePipeline(~, ~, pipelineFile)
   for it = 1:length(completeList)
     % First pass to see if some element is bad
     try
+      if(it == 24)
+        %completeList(it).options.backgroundImageCorrection.file = 'bla'
+      end
        savejson([], completeList(it), 'ParseLogical', true);
     catch ME
       logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
-      logMsg(sprintf('There was a problem saving pipeline function %d. %s. Try setting it back to its default values', completeList(it).ID, completeList(it).name), netcalMainWindow, 'e');
+      logMsg(sprintf('There was a problem saving pipeline function %d. %s. Try setting it back to its default values', it, completeList(it).name), netcalMainWindow, 'e');
       return;
     end
   end
@@ -5024,18 +4698,18 @@ function savePipeline(~, ~, pipelineFile)
   
   
   % Transpose cell lists if they are column-based before saving
-  function curStruct = fixNestedFields(curStruct)
-    fields = fieldnames(curStruct);
-    for idx = 1:length(fields)
-     curField = curStruct.(fields{idx});
-     if isstruct(curField)
-       curField = fixNestedFields(curField);
-     elseif(iscell(curField) && size(curField, 1) ~= 1 && size(curField, 2) == 1)
-         curField = curField';
-     end
-     curStruct.(fields{idx}) = curField;
-    end
-  end
+%   function curStruct = fixNestedFields(curStruct)
+%     fields = fieldnames(curStruct);
+%     for idx = 1:length(fields)
+%      curField = curStruct.(fields{idx});
+%      if isstruct(curField)
+%        curField = fixNestedFields(curField);
+%      elseif(iscell(curField) && size(curField, 1) ~= 1 && size(curField, 2) == 1)
+%          curField = curField';
+%      end
+%      curStruct.(fields{idx}) = curField;
+%     end
+%   end
 
 end
 
@@ -5169,18 +4843,22 @@ function loadPipeline(~, ~, pipelineFile)
     logMsgHeader('Done!', 'finish');
   end
   
-  % Transpose fields back
-  function curStruct = fixNestedFields(curStruct)
-    fields = fieldnames(curStruct);
-    for idx = 1:length(fields)
-     curField = curStruct.(fields{idx});
-     if isstruct(curField)
-       curField = fixNestedFields(curField);
-     elseif(iscell(curField) && size(curField, 2) ~= 1 && size(curField, 1) == 1)
-         curField = curField';
-     end
-     curStruct.(fields{idx}) = curField;
-    end
+end
+% Transpose fields back
+%--------------------------------------------------------------------------
+function curStruct = fixNestedFields(curStruct)
+  fields = fieldnames(curStruct);
+  for idx = 1:length(fields)
+   curField = curStruct.(fields{idx});
+   if isstruct(curField)
+     curField = fixNestedFields(curField);
+   elseif(iscell(curField) && size(curField, 2) ~= 1 && size(curField, 1) == 1)
+       curField = curField';
+   end
+   curStruct.(fields{idx}) = curField;
+   if(strcmpi(class(curStruct.(fields{idx})), 'java.io.File'))
+     curStruct.(fields{idx}) = char(curField);
+   end
   end
 end
 
@@ -5189,29 +4867,32 @@ function modules = loadModules()
   % Name, Tag (unique), Predecesor Tag, Function callback, Field it depends on, Field on completion, separator  (optional true,false), experiment selection mode (single/multiple), default both
   modules = {...
   ...
-  {'Analysis', 'analysis', [], [], [], [], [], {'single','multiple'}}, ...
+  {'Analysis', 'analysis', [], [], [], [], [], {'single', 'multiple'}}, ...
     {'Fluorescence', 'fluorescence', 'analysis', [], 'handle', []}, ...
-      {'Preprocessing', 'preprocessing', 'fluorescence', [], 'handle', []}, ...
+      {'Preprocessing', 'preprocessing', 'fluorescence', [], 'handle', 'avgImg'}, ...
         {'Standard', 'preprocessingStandard', 'preprocessing', {@menuExperimentGlobalAnalysis, @preprocessExperiment, preprocessExperimentOptions}, 'handle', 'avgImg'}, ...
         {'Percentile', 'preprocessingPercentile', 'preprocessing', {@menuExperimentGlobalAnalysis, @preprocessExperimentPercentile, preprocessExperimentPercentileOptions}, 'avgImg', 'percentileImg'}, ...
         {'Denoising', 'preprocessingDenoising', 'preprocessing', {@menuExperimentGlobalAnalysis, @denoiseRecording, denoiseRecordingOptions}, 'handle', 'denoisedData'}, ...
       {'ROI detection', 'roiSelection', 'fluorescence', [], 'avgImg', []}, ...
-        {'Manual ROI detection', 'manualROIdetection', 'roiSelection', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI'}, ...
+        {'Supervised ROI detection', 'manualROIdetection', 'roiSelection', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI', false, 'single'}, ...
         {'Automatic ROI detection', 'automaticROIdetection', 'roiSelection', {@menuExperimentGlobalAnalysis, @automaticROIdetection, ROIautomaticOptions}, 'avgImg', 'ROI'}, ...
       {'Extract traces', 'extractTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @extractTraces, extractTracesOptions}, 'ROI', 'rawTraces'}, ...
       {'Smooth traces', 'smoothTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @smoothTraces, smoothTracesOptions}, 'rawTraces', 'traces'}, ...
       {'Similarity', 'similarity', 'fluorescence', {@menuExperimentGlobalAnalysis, @fluorescenceAnalysisSimilarity, similarityOptions}, 'traces', 'similarityOrder'}, ...
       {'q-Complexity-entropy', 'qcec', 'fluorescence', {@menuExperimentGlobalAnalysis, @measureTracesQCEC, measureTracesQCECoptions}, 'traces', 'qCEC'}, ...
+      {'Bursts', 'bursts', 'fluorescence', [], 'rawTraces', []}, ...
+        {'Supervised detection', 'manualBursts', 'bursts', {@menuNewGuiWindow, @viewBursts}, 'rawTraces', 'traceBursts', false, 'single'}, ...
+        {'Automatic detection', 'automaticBursts', 'bursts', {@menuExperimentGlobalAnalysis, @burstDetection, burstDetectionOptions}, 'rawTraces', 'traceBursts'}, ...
       {'Cut traces', 'cut', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisCutTraces []}, 'rawTraces', [], true}, ...
       {'Rebase time', 'rebase', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisRebaseTime []}, 'rawTraces', []}, ...
-    {'Spike inference', 'spikeInference', 'analysis', [], [], []}, ...
-      {'Training', 'spikeInferenceTraining', 'spikeInference', {@menuNewGuiWindow, @viewInferenceTraining}, 'traces', 'spikes', false, 'single'}, ...
-      {'Run', 'spikeInferenceRun', 'spikeInference', [], 'traces', []}, ...
-        {'Peeling', 'spikeInferencePeeling', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferencePeeling, peelingOptions, 'population'}, 'traces', 'spikes'}, ...
-        {'Foopsi', 'spikeInferenceFoopsi', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceFoopsi, foopsiOptions}, 'traces', 'spikes'}, ...
-        {'Oasis', 'spikeInferenceOasis', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceOasis, oasisOptions}, 'traces', 'spikes'}, ...
-        {'MLspike', 'spikeInferenceMLspike', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceMLspike, MLspikeOptions}, 'traces', 'spikes'}, ...
-        {'Schmitt', 'spikeInferenceSchmitt', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceSchmitt, schmittOptions, 'population'}, 'traces', 'spikes'}, ...
+    {'Spike inference', 'spikeInference', 'analysis', [], 'rawTraces', []}, ...
+      {'Training', 'spikeInferenceTraining', 'spikeInference', {@menuNewGuiWindow, @viewInferenceTraining}, 'rawTraces', 'spikes', false, 'single'}, ...
+      {'Run', 'spikeInferenceRun', 'spikeInference', [], 'rawTraces', []}, ...
+        {'Fast Peeling', 'spikeInferencePeeling', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferencePeeling, peelingOptions}, 'rawTraces', 'spikes'}, ...
+        {'Foopsi', 'spikeInferenceFoopsi', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceFoopsi, foopsiOptions}, 'rawTraces', 'spikes'}, ...
+        {'Oasis', 'spikeInferenceOasis', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceOasis, oasisOptions}, 'rawTraces', 'spikes'}, ...
+        {'MLspike', 'spikeInferenceMLspike', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceMLspike, MLspikeOptions}, 'rawTraces', 'spikes'}, ...
+        {'Schmitt', 'spikeInferenceSchmitt', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceSchmitt, schmittOptions, 'population'}, 'rawTraces', 'spikes'}, ...
       {'Features', 'spikeInferenceFeatures', 'spikeInference', {@menuExperimentGlobalAnalysis, @getSpikesFeatures, spikeFeaturesOptions}, 'spikes', 'spikeFeatures'}, ...
       {'q-Complexity-entropy', 'qcecSpikes', 'spikeInference', {@menuExperimentGlobalAnalysis, @measureTracesQCEC, measureTracesQCECoptions}, 'spikes', 'qCEC'}};
     if(DEVELOPMENT)
@@ -5223,9 +4904,9 @@ function modules = loadModules()
     else
       modules = {modules{:}, ...
       {'Glia analysis', 'gliaAnalysis', 'analysis', [], 'handle', []}, ...
-        {'Average movie', 'gliaAverageMovie', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @gliaAverageMovie, []} , 'handle', 'gliaAverageFrame'}, ...
-        {'Optic flow', 'gliaOpticFlow', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @gliaOpticFlow, []}, 'gliaAverageFrame', 'gliaOpticFlowAverage'}, ...
-        {'Identify events', 'gliaIdentifyEvents', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @identifyGlialEvents, []}, 'gliaOpticFlowAverage', 'glialEvents'}};
+        {'Average movie', 'gliaAverageMovie', 'gliaAnalysis', [] , 'handle', 'gliaAverageFrame'}, ...
+        {'Optic flow', 'gliaOpticFlow', 'gliaAnalysis', [], 'gliaAverageFrame', 'gliaOpticFlowAverage'}, ...
+        {'Identify events', 'gliaIdentifyEvents', 'gliaAnalysis', [], 'gliaOpticFlowAverage', 'glialEvents'}};
     end
     modules = {modules{:}, ...
     {'Avalanche analysis', 'avalancheAnalysis', 'analysis', [], 'spikes', []}, ...
@@ -5233,11 +4914,19 @@ function modules = loadModules()
       {'Branching ratio', 'avalancheBranchingRatio', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisBranchingRatio, avalancheOptions, 'population'}, 'spikes', []}, ...
       {'Exponents', 'avalancheExponents', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisExponents, avalancheOptions}, 'avalanches', []}, ...
     {'Network inference', 'networkInference', 'analysis', [], 'traces', []}, ...
-      {'Fluorescence based', 'networkInferenceFluorescence', 'networkInference', [], 'traces', []}, ...
-      {'Generalized Transfer Entropy', 'networkInferenceFluorescenceGTE', 'networkInferenceFluorescence', [], 'traces', []}, ...
-      {'Spikes based', 'networkInferenceSpikes', 'networkInference', [], 'spikes', []}, ...
-      {'Generalized Transfer Entropy', 'networkInferenceSpikesGTE', 'networkInferenceSpikes', [], 'spikes', []}, ...
-  ...
+      {'Partial correlation', 'networkInferenceXcorr', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceXcorr, networkInferenceXcorrOptions}, 'spikes', []}};
+    if(DEVELOPMENT)
+      modules = {modules{:}, ...
+      {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceTMDI, networkInferenceTMDIOptions}, 'spikes', []}, ...
+      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTE, networkInferenceGTEOptions}, 'spikes', []}, ...
+      {'Granger Causality', 'networkInferenceGC', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGC, networkInferenceGCOptions}, 'spikes', []}};
+    else
+      modules = {modules{:}, ...
+      {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', [], 'spikes', []}, ...
+      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', [], 'spikes', []}, ...
+      {'Granger Causality', 'networkInferenceGC', 'networkInference', [], 'spikes', []}};
+    end
+  modules = {modules{:}, ...
   {'View', 'view', [], [], [], [], false, 'single'}, ...
     {'Recording', 'viewRecording', 'view', {@menuNewGuiWindow, @viewRecording}, 'handle', []}, ...
     {'ROI', 'viewROI', 'view', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI'}, ...
@@ -5245,24 +4934,22 @@ function modules = loadModules()
     {'Trace fixer', 'viewTraceFixer', 'view', {@menuNewGuiWindow, @traceFixer}, 'rawTraces', []}, ...
     {'Bursts', 'viewBursts', 'view', {@menuNewGuiWindow, @burstAnalysis}, 'rawTraces', 'traceBursts'}, ...
     {'Spikes (raster)', 'viewSpikes', 'view', {@menuNewGuiWindow, @viewSpikes}, 'spikes', []}, ...
-    {'Groups', 'viewGroups', 'view', {@menuNewGuiWindow, @viewGroups}, 'traceGroups', []}, ...
+    {'Groups', 'viewGroups', 'view', {@menuNewGuiWindow, @viewGroups}, 'ROI', []}, ...
     {'Glia', 'viewGlia', 'view', {@menuNewGuiWindow, @viewGlia}, 'gliaAverageFrame', []}, ...
     {'Denoiser', 'viewDenoiser', 'view', {@menuNewGuiWindow, @viewDenoiser}, 'avgImg', 'denoisedData'}, ...
   ...
   {'Statistics', 'statistics', [], [], [], [], false, 'multiple'}, ...
-    {'Populations', 'populationStatistics', 'statistics', [], [], []}, ...
-      {'Group by experiments', 'populationStatisticsExperiments', 'populationStatistics', {@menuAggregatedPopulationStatistics, 'experiments'}, [], []}, ...
-      {'Group by populations', 'populationStatisticsPopulations', 'populationStatistics', {@menuAggregatedPopulationStatistics, 'populations'}, [], []}, ...
-    {'Bursts', 'burstStatistics', 'statistics', [], [], []}, ...
-      {'IBI', 'burstStatisticsIBI', 'burstStatistics', {@menuAggregatedBursts, 'IBI'}, [], []}, ...
-      {'Duration', 'burstStatisticsDuration', 'burstStatistics', {@menuAggregatedBursts, 'Duration'}, [], []}, ...
-      {'Amplitude', 'burstStatisticsAmplitude', 'burstStatistics', {@menuAggregatedBursts, 'Amplitude'}, [], []}, ...
-    {'Spikes features', 'spikeStatistics', 'statistics', [], [], []}, ...
-      {'Average', 'spikeStatisticsAverageFeature', 'spikeStatistics', {@menuAggregatedSpikes, 'mean'}, [], []}, ...
-      {'Distribution', 'spikeStatisticsDistributionFeature', 'spikeStatistics', {@menuAggregatedSpikes, 'distribution'}, [], []}, ...
-    {'Spikes PCA', 'spikesPCA', 'statistics', @menuAggregatedPCA, [], []}, ...
-    {'Stimulation PCA', 'stimulationPCA', 'statistics', @menuAggregatedStimulationPCA, [], []}, ...
-    {'Compare experiments', 'compareExperiments', 'statistics', @menuAggregatedCompareExperiments, [], []}, ...
+    {'Populations', 'populationStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotPopulationsStatistics, plotPopulationsStatisticsOptions}, 'ROI', []}, ...
+    {'Bursts', 'burstStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatistics, plotFluorescenceBurstStatisticsOptions}, 'traceBursts', []}, ...
+    {'Spikes', 'spikeStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikes', []}, ...
+    {'Treatments', 'statisticsTreatments', 'statistics', [], [], [], false, 'multiple'}, ...
+      {'Populations', 'populationStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotPopulationsStatisticsTreatment, plotPopulationsStatisticsTreatmentOptions}, 'ROI', []}, ...
+      {'Bursts', 'burstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatisticsTreatment, plotFluorescenceBurstStatisticsTreatmentOptions}, 'traceBursts', []}, ...
+      {'Spikes', 'spikeStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikeStatisticsTreatment, plotSpikeStatisticsTreatmentOptions}, 'spikes', []}, ...
+    {'Principal Component Analysis', 'PCA', 'statistics', [], [], []}, ...
+      {'Spikes features', 'spikesPCA', 'PCA', @menuAggregatedPCA, [], []}, ...
+      {'Stimulation protocols', 'stimulationPCA', 'PCA', @menuAggregatedStimulationPCA, [], []}, ...
+    {'Populations changes between treatments', 'compareExperiments', 'statistics', @menuAggregatedCompareExperiments, [], []}, ...
     {'Preferences', 'statisticsPreferences', 'statistics', {@menuAggregatedPreferences, 'mean'}, [], [], true}, ...
   ...
   {'Pipeline', 'pipeline', [], [], [], [], false, 'pipeline'}, ...

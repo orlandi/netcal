@@ -15,5 +15,8 @@ classdef plotPopulationsStatisticsOptions < plotStatisticsOptions & baseOptions
       obj.statistic = {'absolute count', 'relative count'};
       obj = setExperimentDefaults@plotStatisticsOptions(obj, experiment);
     end
+     function obj = setProjectDefaults(obj, project)
+      obj = setProjectDefaults@plotStatisticsOptions(obj, project);
+    end
   end
 end

@@ -1,0 +1,332 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>fn_4Dview</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="help_fn_4Dview.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>fn_4Dview</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Source</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>fn_4Dview(option1,optionArgs1,...)
+varargout = fn_4Dview(action,actionArgs)</pre><h2>Description<a name="2"></a></h2><pre>displays spatial or temporal slices of multi-dimensional data
+by default: data is considered to be 3D, 4D or 5D (dimensions ordered as
+x-y-z-t-m) and is displayed as 3 spatial sections at a given time point
+use option flags for other display types</pre><pre>type 'fn_4Dview demo' to see a demo</pre><pre>Input:
+- option..        string - specify an option (see below)
+- optionArgs..    argument of option
+- action..        specific usage of fn_4Dview, does not create a new
+                  interface (see below)</pre><pre>Options:
+DATA
+- 'data',data     array, by default, dimensions should be x - y - z - t - m
+                  (m is used for multiple data or channels)
+                  [the 'data' flag can be omitted]
+                  [default: data=0 or zeros(appropriate size)]
+- 'options',{options}     some display types allow additional options like
+                  'xxxplot' -&gt; same option possibilities as the Matlab plot function,
+                  'quiver'...
+                  [the 'options' flag can be omitted] [default: {}]
+TYPE OF DISPLAY
+- '3d'            data is three-dimensional (dimensions are x - y - z - t - m)
+                  and will be spatially displayed as three cross
+                  sections, for a given time point
+                  [default]
+- '3dplot'        data is three-dimensional (dimensions are x - y - z - t - m)
+                  and will be temporally displayed as a time course, for
+                  a given space point
+- '2d'            data is two-dimensional (dimensions are x - y - t - m)
+                  and will be spatially displayed as a single image
+- '2dplot'        data is two-dimensional (dimensions are x - y - t - m)
+                  and will be displayed temporally
+- '0d',tidx       [deprecated]
+- 'quiver'        data is a 2D vector field, plus possibly 2D image
+                  (dimensions are x - y - t - [2 vector components +
+                  image component])
+                  this is only applicable for spatial display
+- 'mesh',mesh     data is one-dimensional (dimensions are i - t - m),
+                  where i refers to the ith vertex of a 3D mesh specified
+                  as a cell array or struct following the 'mesh' flag
+                  {[3 x nv vertices],[3 x nt triangles]},
+                  and will be spatially displayed as a surface
+- 'meshplot',mesh data is one-dimensional (dimensions are i - t - m) as
+                  for 'mesh', and will be displayed temporally
+- 'ind',indices   data is one-dimensional (dimensions are i - t - m),
+                  indices is a 2D or 3D image which entails indices of
+                  the first data component (see example)
+                  this is only applicable for temporal display
+- 'timeslider',tidx
+                  creates a slider control to move in time array tidx
+- 'ext',{@updatefcn,par1,par2,...}
+  'ext',{'command','infoname'}
+                  fn_4Dview does not display anything, but it links the
+                  execution of function updatefcn to other objects
+                  handled by fn_4Dview. The function prototype should be:
+                      updatefcn = function(info,par1,par2,...)
+                  with info being the structure described in fn_4Dview code.
+                  Alternatively, one can use a string command; each time
+                  before the command is executed, info is stored in the
+                  base workspace with the name 'infoname', so that the
+                  command can access to the informations it encloses.
+                  Attention, the information concerning these updates
+                  needs to be stored in a graphical object; if none is
+                  specified (using 'in'), one is automatically created,
+                  but one should delete it later on using 'fn_4Dview
+                  unregister' (see below)
+BEHAVIOR
+- 'active'        allows callbacks (e.g. selecting point with mouse) [default]
+- 'passive'       disallows callbacks
+- 'key',k         use this to have independent links between windows
+                  [default: all windows are linked using same key k=1]
+DATA TRANSFORM
+- 'mat',M         defines a spatial linear transformation between
+                  data and world coordinates [default = eye(4)] (pixel
+                  indices start at 1)
+                  can be a 4x4 or 3x4 matrix (rotation+translation) or
+                  3x3 matrix (rotation only) or 3x1 vector (translation
+                  only) or 1x3,1x2,1x1 vector (special: scaling, first
+                  pixel at [0 0 0])
+- 'tidx',[t0 dt]  time of first frame and interval between successive
+                  frames [default: t0-=1, dt=1]
+- 'tidx',tidx     alternatively, one can define every sampling points
+                  time coordinates (tidx should not have 2 elements);
+                  it is necessary that they are equally spaced then
+- 'heeginv',H     provides a matrix to multiply data with before using it
+                  this is only applicable for spatial mesh display
+- 'applyfun',fun  function handler or {function handler, additional arguments, ...}
+                  data will be transformed according to fun before every
+                  display - NOT IMPLEMENTED YET
+DISPLAY
+- 'in',handle     forces display in figure, axes or uicontrol specified by handle
+                  [the 'in' flag can be ommited]
+                  [default: in active figure or axes]
+- 'channel',f       if data has a 'multiple data' component (dimension m is
+                  non-singleton), specifies which one to use for spatial
+                  display [default: f=1]
+- 'clip',[m M]    specify a clipping for image display
+- 'xyzperm',[a b c] defines a permutation of the dimensions before
+                  visualizing the 3 cross-sections of the data
+- 'zfact',r       ratio between z and xy resolutions for 3D display
+- 'labels',{xlabel,ylabel,zlabel} axis labels (ylabel and zlabel can be omitted)</pre><pre>Actions:
+- 'demo'                  run the demo
+- 'changexyz',key,xyz     update space coordinates for objects linked by the key
+- 'changet',key,t         update time coordinate for objects linked by the key
+- 'unregister'[,@updatefcn][,key]
+                          unregister external functions which were
+                          previously registered (type 'ext') by deleting
+                          the associated objects;
+                          this unregistration can be filtered by which
+                          function handles and/or which linking key</pre><pre>How to use the mouse to select points and draw selections:
+- point with left button          -&gt; change cursor
+- area with left button           -&gt; zoom to region
+- double-click with left button   -&gt; zoom reset
+  (or point with middle button outside of axis)
+- point/area with middle button   -&gt; add point/area to current selection
+- double-click with middle button -&gt; cancel current selection
+  (or point with middle button outside of axis)
+- point/area with right button    -&gt; add new selection
+- double-click with right button  -&gt; cancel all selections
+  (or point with right button outside of axis)</pre><h2>Source<a name="3"></a></h2><p>Thomas Deneux</p><p>Copyright 2004-2017</p><p>last modification: September 20th, 2007</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% fn_4Dview
+
+%% Syntax
+%  fn_4Dview(option1,optionArgs1,...)
+%  varargout = fn_4Dview(action,actionArgs)
+
+%% Description
+%  displays spatial or temporal slices of multi-dimensional data
+%  by default: data is considered to be 3D, 4D or 5D (dimensions ordered as
+%  x-y-z-t-m) and is displayed as 3 spatial sections at a given time point
+%  use option flags for other display types
+% 
+%  type 'fn_4Dview demo' to see a demo
+% 
+%  Input:
+%  - option..        string - specify an option (see below)
+%  - optionArgs..    argument of option
+%  - action..        specific usage of fn_4Dview, does not create a new
+%                    interface (see below)
+% 
+%  Options:
+%  DATA
+%  - 'data',data     array, by default, dimensions should be x - y - z - t - m 
+%                    (m is used for multiple data or channels)   
+%                    [the 'data' flag can be omitted]
+%                    [default: data=0 or zeros(appropriate size)]
+%  - 'options',{options}     some display types allow additional options like 
+%                    'xxxplot' -> same option possibilities as the Matlab plot function, 
+%                    'quiver'...     
+%                    [the 'options' flag can be omitted] [default: {}]
+%  TYPE OF DISPLAY
+%  - '3d'            data is three-dimensional (dimensions are x - y - z - t - m)
+%                    and will be spatially displayed as three cross
+%                    sections, for a given time point
+%                    [default]
+%  - '3dplot'        data is three-dimensional (dimensions are x - y - z - t - m)
+%                    and will be temporally displayed as a time course, for
+%                    a given space point
+%  - '2d'            data is two-dimensional (dimensions are x - y - t - m)
+%                    and will be spatially displayed as a single image
+%  - '2dplot'        data is two-dimensional (dimensions are x - y - t - m)
+%                    and will be displayed temporally
+%  - '0d',tidx       [deprecated]
+%  - 'quiver'        data is a 2D vector field, plus possibly 2D image
+%                    (dimensions are x - y - t - [2 vector components +
+%                    image component])
+%                    this is only applicable for spatial display
+%  - 'mesh',mesh     data is one-dimensional (dimensions are i - t - m),
+%                    where i refers to the ith vertex of a 3D mesh specified
+%                    as a cell array or struct following the 'mesh' flag 
+%                    {[3 x nv vertices],[3 x nt triangles]},
+%                    and will be spatially displayed as a surface
+%  - 'meshplot',mesh data is one-dimensional (dimensions are i - t - m) as
+%                    for 'mesh', and will be displayed temporally
+%  - 'ind',indices   data is one-dimensional (dimensions are i - t - m),  
+%                    indices is a 2D or 3D image which entails indices of
+%                    the first data component (see example)
+%                    this is only applicable for temporal display
+%  - 'timeslider',tidx   
+%                    creates a slider control to move in time array tidx
+%  - 'ext',{@updatefcn,par1,par2,...}
+%    'ext',{'command','infoname'}
+%                    fn_4Dview does not display anything, but it links the
+%                    execution of function updatefcn to other objects
+%                    handled by fn_4Dview. The function prototype should be:
+%                        updatefcn = function(info,par1,par2,...)
+%                    with info being the structure described in fn_4Dview code.
+%                    Alternatively, one can use a string command; each time
+%                    before the command is executed, info is stored in the
+%                    base workspace with the name 'infoname', so that the
+%                    command can access to the informations it encloses.
+%                    Attention, the information concerning these updates
+%                    needs to be stored in a graphical object; if none is
+%                    specified (using 'in'), one is automatically created,
+%                    but one should delete it later on using 'fn_4Dview
+%                    unregister' (see below)
+%  BEHAVIOR
+%  - 'active'        allows callbacks (e.g. selecting point with mouse) [default]
+%  - 'passive'       disallows callbacks
+%  - 'key',k         use this to have independent links between windows
+%                    [default: all windows are linked using same key k=1]
+%  DATA TRANSFORM
+%  - 'mat',M         defines a spatial linear transformation between
+%                    data and world coordinates [default = eye(4)] (pixel
+%                    indices start at 1)
+%                    can be a 4x4 or 3x4 matrix (rotation+translation) or
+%                    3x3 matrix (rotation only) or 3x1 vector (translation
+%                    only) or 1x3,1x2,1x1 vector (special: scaling, first
+%                    pixel at [0 0 0])
+%  - 'tidx',[t0 dt]  time of first frame and interval between successive
+%                    frames [default: t0-=1, dt=1]
+%  - 'tidx',tidx     alternatively, one can define every sampling points 
+%                    time coordinates (tidx should not have 2 elements);
+%                    it is necessary that they are equally spaced then
+%  - 'heeginv',H     provides a matrix to multiply data with before using it
+%                    this is only applicable for spatial mesh display
+%  - 'applyfun',fun  function handler or {function handler, additional arguments, ...}
+%                    data will be transformed according to fun before every
+%                    display - NOT IMPLEMENTED YET
+%  DISPLAY
+%  - 'in',handle     forces display in figure, axes or uicontrol specified by handle
+%                    [the 'in' flag can be ommited] 
+%                    [default: in active figure or axes]
+%  - 'channel',f       if data has a 'multiple data' component (dimension m is
+%                    non-singleton), specifies which one to use for spatial
+%                    display [default: f=1]
+%  - 'clip',[m M]    specify a clipping for image display
+%  - 'xyzperm',[a b c] defines a permutation of the dimensions before
+%                    visualizing the 3 cross-sections of the data
+%  - 'zfact',r       ratio between z and xy resolutions for 3D display
+%  - 'labels',{xlabel,ylabel,zlabel} axis labels (ylabel and zlabel can be omitted)
+% 
+%  Actions:
+%  - 'demo'                  run the demo
+%  - 'changexyz',key,xyz     update space coordinates for objects linked by the key       
+%  - 'changet',key,t         update time coordinate for objects linked by the key
+%  - 'unregister'[,@updatefcn][,key] 
+%                            unregister external functions which were
+%                            previously registered (type 'ext') by deleting
+%                            the associated objects;
+%                            this unregistration can be filtered by which
+%                            function handles and/or which linking key
+% 
+%  How to use the mouse to select points and draw selections:
+%  - point with left button          -> change cursor
+%  - area with left button           -> zoom to region
+%  - double-click with left button   -> zoom reset
+%    (or point with middle button outside of axis)
+%  - point/area with middle button   -> add point/area to current selection
+%  - double-click with middle button -> cancel current selection
+%    (or point with middle button outside of axis)
+%  - point/area with right button    -> add new selection
+%  - double-click with right button  -> cancel all selections
+%    (or point with right button outside of axis)
+
+%% Source
+% Thomas Deneux
+%
+% Copyright 2004-2017
+%
+% last modification: September 20th, 2007
+%
+
+##### SOURCE END #####
+--></body></html>

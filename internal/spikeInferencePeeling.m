@@ -1,5 +1,5 @@
 function [experiment, trainingData] = spikeInferencePeeling(experiment, varargin)
-% SPIKEINFERENCEPEELING Does spike detection using the peeling algorithm
+% SPIKEINFERENCEPEELING # Spike detection using a modified version (for speed) of the peeling algorithm
 %
 % USAGE:
 %   experiment = spikeInferencePeeling(experiment, options)
@@ -26,7 +26,7 @@ function [experiment, trainingData] = spikeInferencePeeling(experiment, varargin
 % See also peelingOptions
 
 % EXPERIMENT PIPELINE
-% name: peeling inference
+% name: peeling (fast) inference
 % parentGroups: spikes: inference
 % optionsClass: peelingOptions
 % requiredFields: traces, rawTraces, t, fps
@@ -41,35 +41,55 @@ params.subset = [];
 params.training = false;
 % Parse them
 params = parse_pv_pairs(params, var);
-if(~params.training);
+if(~params.training)
   params = barStartup(params, 'Performing peeling');
 end
 %--------------------------------------------------------------------------
 
-experiment = loadTraces(experiment, 'all');
+% Fix in case for some reason the group is a cell
+if(iscell(params.group))
+  mainGroup = params.group{1};
+else
+  mainGroup = params.group;
+end
+
+members = getAllMembers(experiment, mainGroup);
+
+switch params.tracesType
+  case 'smoothed'
+    experiment = loadTraces(experiment, 'normal');
+    traces = experiment.traces;
+  case 'raw'
+    experiment = loadTraces(experiment, 'raw');
+    traces = experiment.rawTraces;
+  case 'denoised'
+    experiment = loadTraces(experiment, 'rawTracesDenoised');
+    traces = experiment.rawTracesDenoised;
+end
+
 if(isempty(params.subset))
-  subset = size(experiment.traces, 2);
+  subset = members;
 else
   subset = params.subset;
 end
   
-if(~isfield(experiment, 'spikes') || length(experiment.spikes) ~= size(experiment.rawTraces, 2) && ~params.training)
-  experiment.spikes = cell(size(experiment.traces,2), 1);
+if(~isfield(experiment, 'spikes') || length(experiment.spikes) ~= size(traces, 2) && ~params.training)
+  experiment.spikes = cell(size(traces,2), 1);
   for it = 1:length(experiment.spikes)
     experiment.spikes{it} = nan(1, 1);
   end
 end    
 
 % Configure the peeling
-[ca_p, peel_p, exp_p] = configurePeeling(experiment, experiment.traces, ...
+[ca_p, peel_p, exp_p] = configurePeeling(experiment, traces, ...
                                            'amp1', params.amplitude, ...,
                                            'amp2', params.secondAmplitude, ...
                                            'tau1', params.tau, ...
                                            'tau2', params.secondTau, ...
                                            'verbose', false);
 
-peelingSpikeTrains = zeros(size(experiment.traces(:, length(subset))));
-peelingModelTraces = zeros(size(experiment.traces(:, length(subset))));
+peelingSpikeTrains = zeros(size(traces(:, length(subset))));
+peelingModelTraces = zeros(size(traces(:, length(subset))));
 peelingSpikes = cell(length(subset), 1);
 
 if(isempty(params.pbar) && params.verbose && ~params.training)
@@ -82,7 +102,7 @@ end
 % Do the actual peeling
 for it = 1:length(subset)
   selectedTrace = subset(it);
-  [~, ~, ~, peelingData] = Peeling(experiment.traces(:, selectedTrace)', ...
+  [~, ~, ~, peelingData] = Peeling(traces(:, selectedTrace)', ...
                            experiment.fps, ca_p, exp_p, peel_p);
   peelingSpikeTrains(:, it) = peelingData.spiketrain';
   peelingModelTraces(:, it) = peelingData.model';

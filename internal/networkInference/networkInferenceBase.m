@@ -1,9 +1,9 @@
 classdef networkInferenceBase < handle
-  % Base class to perform any network inference measure
-  %
-  %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
-  %
-  %   See also networkInferenceOptions
+% Base class to perform any network inference measure
+%
+%   Copyright (C) 2016-2017, Javier G. Orlandi
+%
+%   See also networkInferenceOptions
 
   properties
     mainGroup;
@@ -67,6 +67,33 @@ classdef networkInferenceBase < handle
       for i = 1:length(members)
         raster(asdf2.raster{members(i)}, i) = 1;
       end
+      % Now the global conditioning
+      % Easy peasie
+      G = nanmean(raster, 2);
+      if(obj.params.globalConditioning.enable)
+        
+        % Check kind of estimation
+        if(ischar(obj.params.globalConditioning.levelEstimation) && strcmpi(obj.params.globalConditioning.levelEstimation, 'auto'))
+          Grange = [0, median(G)+4*std(G)];
+        else
+          Grange = eval(obj.params.globalConditioning.levelEstimation);
+        end
+        figure;
+        hist(G, 100);
+        hold on;
+        yl = ylim;
+        h1 = plot([1,1]*Grange(1), yl, 'k--');
+        h2 = plot([1,1]*Grange(end), yl, 'k--');
+        legend([h1 h2], 'Lower conditioning threshold', 'Upper conditioning threshold');
+        xlabel('Global signal G');
+        ylabel('PDF(G)');
+        
+        G(G > Grange(end)) = 0;
+        G(G < Grange(1)) = 0;
+      else
+        G = ones(asdf2.nbins, 1);
+      end
+      
       % Normalize data
       raster = feval(normFunc, raster, varargin{:});
       if(obj.params.pbar > 0)
@@ -112,7 +139,7 @@ classdef networkInferenceBase < handle
               end
               
               % The actual computation
-              inferenceDataCol(j) = feval(inferFunc, I, J, varargin{:});
+              inferenceDataCol(j) = feval(inferFunc, I, J, G, varargin{:});
             end
             curIteration = curIteration + length(members) - 1;
             if(s == 0)
@@ -144,7 +171,7 @@ classdef networkInferenceBase < handle
             end
             
             % The actual computation
-            inferenceDataFullSurrogates = feval(inferFunc, fullSurrogates, J, varargin{:});
+            inferenceDataFullSurrogates = feval(inferFunc, fullSurrogates, J, G, varargin{:});
             inferenceData(i, j) = inferenceDataFullSurrogates(1);
             if(Nsurrogates > 0)
               inferenceDataSurrogates(i, j, :) = inferenceDataFullSurrogates(2:end);

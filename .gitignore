@@ -7,6 +7,7 @@ internal/hacks/*
 tmp/*
 *.mat
 *sublime*
+development/*
 
 # Tmp files #
 #############
@@ -29,3 +30,4 @@ external/toolbox_image/tests/*
 *.svn*
 external/exportfig/\.ignore/
 *.gexf
+.DS_Store

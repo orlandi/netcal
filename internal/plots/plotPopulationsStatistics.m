@@ -35,6 +35,7 @@ obj.cleanup();
 
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)
+    data = [];
     members = getExperimentGroupMembers(experiment, groupName);
     if(~isempty(members))
       switch stat

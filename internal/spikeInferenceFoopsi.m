@@ -145,6 +145,23 @@ for it = 1:length(subset)
       %valid = pks > 1e-3; % Somewhat of a hack
       %[nanmean(pks(valid)) nanstd(pks(valid)) nanmedian(pks(valid))]
       firings = find(pks > nanmean(pks(valid))+parameters.probability*nanstd(pks(valid)));
+    case 'time varying'
+      %blockSize = [round(params.probabilityThresholdBlockSize*experiment.fps), 1];
+%       StDevFilterFunction = @(theBlockStructure) nanstd(double(theBlockStructure.data(:)));
+%       blockStd = blockproc(pks(:), blockSize, StDevFilterFunction);
+%       meanFilterFunction = @(theBlockStructure) nanmean(double(theBlockStructure.data(:)));
+%       blockMean = blockproc(pks(:), blockSize, meanFilterFunction);
+%       closestFrame = ceil((1:length(pks))/blockSize(1));
+      %firings = find(pks > blockMean(closestFrame)+parameters.probability*blockStd(closestFrame));
+      %threshold = blockMean(closestFrame)+parameters.probability*blockStd(closestFrame);
+      pks(isnan(pks)) = 0; % Just in case
+      blockSize = round(params.probabilityThresholdBlockSize*experiment.fps/2);
+      blockSize = round((blockSize(1)-1)/2)*2+1;
+      blockMean = filter(ones(blockSize(1), 1)/(blockSize(1)*2), 1, pks(:));
+      blockStd = stdfilt([nan(floor(blockSize(1)/2), 1); pks(:)], ones(blockSize, 1));
+      blockStd = blockStd((floor(blockSize(1)/2)+1):end);
+      firings = find(pks > blockMean+parameters.probability*blockStd);
+      threshold = blockMean+parameters.probability*blockStd;
   end
   if(params.spikeRasterTrain)
     subsetSpikes{it} = firings;
@@ -198,6 +215,8 @@ if(params.training && params.showFiringProbability)
     case 'relative'
       valid = trainingData.pks > 1e-9; % Somewhat of a hack
       plot(xl, [1,1]*(nanmean(trainingData.pks(valid))+parameters.probability*nanstd(trainingData.pks(valid))),'-');
+    case 'time varying'
+      plot(experiment.t, threshold, '-');
   end
   
   plot(experiment.t(trainingData.spikes), ones(size(trainingData.spikes))*yl(2)*1.1, 'o');

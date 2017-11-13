@@ -1,6 +1,7 @@
 ![logo](gui/images/logo_netcal.png)
 
 # Installation instructions
+- You can find [here](http://www.itsnetcal.com/getting-started/) the latest installation instructions.
 - Install additional MATLAB toolboxes: Go to the installDependencies folder and execute the mltbx files (or drag and drop in MATLAB).
 - Change default MAT-Files version: Go to MATLAB Preferences -> General -> MAT-Files to v7.3
 - To be able to export figures to pdf and eps you need ghostscript installed.
@@ -21,6 +22,13 @@
 - Computer Vision System Toolbox (6.2) [vision]
 
 # Change Log
+## [7.0.0] - 2017-11-12
+
+### Added
+- Open beta release
+
+### Known Bugs
+- There is an ongoing bug where several pipeline functions are not being correctly loaded from their json files
 
 ## [6.3.0] - 2017-11-03
 
