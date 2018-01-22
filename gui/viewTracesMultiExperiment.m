@@ -1,5 +1,5 @@
-function [hFigW, experiment] = viewTraces(experiment)
-% VIEWTRACES plots the traces from a given experiment
+function [hFigW, project] = viewTracesMultiExperiment(project)
+% VIEWTRACESMULTIEXPERIMENT plots the traces from a given set of experiments
 %
 % USAGE:
 %    viewTraces(gui, experiment)
@@ -7,13 +7,15 @@ function [hFigW, experiment] = viewTraces(experiment)
 % INPUT arguments:
 %    gui - gui handle
 %
-%    experiment - experiment structure from loadExperiment
+%    project - project structure
 %
 % OUTPUT arguments:
 %    hFigW - figure handle
 %
+%    project - project structure
+%
 % EXAMPLE:
-%    hFigW = viewTraces(gui, experiment)
+%    [hFigW, project] = viewTracesMultiExperiment(project)
 %
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
@@ -26,17 +28,39 @@ function [hFigW, experiment] = viewTraces(experiment)
 %% Initialization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%%% Things to keep track of
+% experiment, oldExperiment, currentExperiment
+% ROIid, firstTrace, lastTrace
+% selectedTraces = [];
+% selectedT = [];
+% currentOrder = [];
+% traces = [];
+% totalPages = 1;
+% experiment = checkGroups(experiment);
+% hFigW.name  'Name', ['Trace explorer: ' experiment.name]);
+%%%
+
 gui = gcbf;
 hFigW = [];
-if(~isempty(gui))
-  project = getappdata(gui, 'project');
-else
-  project = [];
-end
 
 textFontSize = 10;
 minGridBorder = 1;
 
+checkedExperiments = find(project.checkedExperiments);
+if(sum(checkedExperiments) == 0)
+  logMsg('No checked experiments found', 'e');
+  return;
+end
+
+% Create buffers to store previously loaded traces
+% rawTracesBuffer = cell(length(checkedExperiments), 1);
+% tracesBuffer = cell(length(checkedExperiments), 1);
+% rawTracesDenoisedBuffer = cell(length(checkedExperiments), 1);
+experimentBuffer = cell(length(checkedExperiments), 1);
+
+% This sets experiment, oldExperimennt and currentExperiment
+[experiment, currentExperiment] = loadSelectedExperiment();
 originalExperiment = experiment;
 
 [success, curOptions] = preloadOptions(experiment, viewTracesOptions, gui, false, false);
@@ -49,13 +73,6 @@ normalizationMultiplier = experiment.viewTracesOptionsCurrent.normalizationMulti
 ROIid = getROIid(experiment.ROI);
 firstTrace = 1;
 lastTrace = 1;
-
-% if(~success)
-%   logMsg('Consistency checks failed', 'e');
-%   return;
-% else
-%   experiment = exp;
-% end
 
 cmapName = 'parula';
 cmap = parula(numberTraces+1);
@@ -70,15 +87,8 @@ traceHandles = [];
 traceGuideHandles = [];
 showSpikes = false;
 showPatterns = false;
-showPeaks = false;
-showDyingCells = false;
 showBaseLine = false;
-additionalExperiments = false;
-additionalExperimentsList = {};
-additionalExperimentsPanelList = [];
-additionalAxesList = [];
-additionalValidIdx = {};
-additionalValidID = {};
+
 rectangleStart = [];
 rectangleEnd = [];
 rectangleH = [];
@@ -101,6 +111,7 @@ totalPages = 1;
 experiment = checkGroups(experiment);
 
 lastID = 0;
+blockImageUpdates = false;
 
 % More handles
 hs.wholeScreenSelectionWindow = [];
@@ -127,7 +138,6 @@ hs.mainWindow = figure('Visible','off',...
                        'WindowScrollWheelFcn', @wheelFcn, ...
                        'KeyPressFcn', @KeyPress, ...
                        'Name', ['Trace explorer: ' experiment.name]);
-
 hFigW = hs.mainWindow;
 hFigW.Position = setFigurePosition(gui, 'width', 1000, 'height', 650);
 setappdata(hFigW, 'experiment', experiment);
@@ -146,6 +156,14 @@ uimenu(hs.menu.file.root, 'Label', 'Exit and discard changes', 'Callback', {@clo
 uimenu(hs.menu.file.root, 'Label', 'Exit and save changes', 'Callback', {@closeCallback, true});
 uimenu(hs.menu.file.root, 'Label', 'Exit (default)', 'Callback', @closeCallback);
 
+hs.menu.exp.root = uimenu(hs.mainWindow, 'Label', 'Experiment');
+for it = 1:length(checkedExperiments)
+  m = uimenu(hs.menu.exp.root, 'Label', project.experiments{checkedExperiments(it)}, 'Tag', 'experimentList', 'Callback', {@changeExperiment, it});
+  if(it == 1)
+    m.Checked = 'on';
+  end
+end
+
 hs.menu.traces.root = uimenu(hs.mainWindow, 'Label', 'Trace selection');
 hs.menu.traces.type = uimenu(hs.menu.traces.root, 'Label', 'Type');
 if(isfield(experiment, 'rawTraces'))
@@ -157,6 +175,8 @@ end
 if(isfield(experiment, 'traces'))
   hs.menu.traces.typeSmoothed = uimenu(hs.menu.traces.type, 'Label', 'Smoothed', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'smoothed'});
 end
+
+
 
 
 % This order due to cross references
@@ -189,10 +209,8 @@ if(isfield(experiment, 'qCEC'))
 end
 
 
-%hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences', 'Callback', @menuPreferences);
 hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences');
 hs.menuPreferencesColormap = uimenu(hs.menuPreferences, 'Label', 'Colormap');
-%colormapList = {'parula', 'jet', 'hsv', 'hot', 'cool', 'gray', 'ametrine', 'morgenstemning', 'isolum', 'bone', 'colorcube'};
 
 colormapList = getHtmlColormapNames({'parula', 'morgenstemning', 'jet', 'isolum'}, 150, 15);
 
@@ -226,8 +244,6 @@ hs.menuViewPositionsOnScreenMovie = uimenu(hs.menuViewPositions, 'Label', 'Curre
 
 hs.menuPreferencesShowSpikes = uimenu(hs.menuView, 'Label', 'Show spikes', 'Callback', @menuPreferencesShowSpikes, 'Enable', 'off');
 hs.menuPreferencesShowPatterns = uimenu(hs.menuView, 'Label', 'Show patterns', 'Callback', @menuPreferencesShowPatterns, 'Enable', 'off');
-hs.menuPreferencesShowPeaks = uimenu(hs.menuView, 'Label', 'Show peaks', 'Callback', @menuPreferencesShowPeaks, 'Enable', 'off');
-hs.menuPreferencesShowDyingCells = uimenu(hs.menuView, 'Label', 'Show dying cells', 'Callback', @menuPreferencesShowDyingCells, 'Enable', 'off');
 hs.menuPreferencesShowBaseLine = uimenu(hs.menuView, 'Label', 'Show baseline', 'Callback', @menuPreferencesShowBaseLine, 'Enable', 'off');
 
 if(isfield(experiment, 'spikes'))
@@ -235,12 +251,6 @@ if(isfield(experiment, 'spikes'))
 end
 if(isfield(experiment, 'validPatterns'))
   hs.menuPreferencesShowPatterns.Enable = 'on';
-end
-if(isfield(experiment, 'peaks'))
-  hs.menuPreferencesShowPeaks.Enable = 'on';
-end
-if(isfield(experiment, 'dyingCells'))
-  hs.menuPreferencesShowDyingCells.Enable = 'on';
 end
 if(isfield(experiment, 'baseLine'))
   hs.menuPreferencesShowBaseLine.Enable = 'on';
@@ -266,9 +276,7 @@ hs.menuClassificationEventLearningFinish = uimenu(hs.menuClassificationEventLear
 hs.menuClassificationEventView = uimenu(hs.menuClassificationEvent, 'Label', 'View Patterns', 'Callback', @menuViewPatterns);
 hs.menuClassificationEventSelectionPatterns = uimenu(hs.menuClassificationEvent, 'Label', 'Detect patterns', 'Enable', 'on', 'Callback', {@menuDetectPatterns, false});
 hs.menuClassificationEventSelectionPatternsUnsupervised = uimenu(hs.menuClassificationEvent, 'Label', 'Unsupervised event detection', 'Enable', 'on', 'Callback', @menuUnsupervisedEventDetection);
-%hs.menuClassificationEventSelectionPatternsParallel = uimenu(hs.menuClassificationEvent, 'Label', 'Detect patterns (parallel)', 'Enable', 'on', 'Callback', {@menuDetectPatterns, true});
 hs.menuClassificationEventCountClassifier = uimenu(hs.menuClassificationEvent, 'Label', 'Pattern Count classifier', 'Callback', {@eventCountClassifier});
-hs.menuClassificationDetectPeaks = uimenu(hs.menuClassificationEvent, 'Label', 'Detect Peaks', 'Callback', {@eventDetectPeaks});
 
 hs.menuClassificationManual = uimenu(hs.menuClassification, 'Label', 'Manual');
 hs.menuClassificationManualStart = uimenu(hs.menuClassificationManual, 'Label', 'Start', 'Callback', @learningManualStart);
@@ -278,15 +286,8 @@ hs.menuClassificationManualFinish = uimenu(hs.menuClassificationManual, 'Label',
 hs.menuClassificationHCG = uimenu(hs.menuClassification, 'Label', 'Highly correlated groups', 'Callback', @menuIdentifyHCG);
 
 hs.menuClassificationUnsupervised = uimenu(hs.menuClassification, 'Label', 'Unsupervised fuzzy sets', 'Callback', @fuzzyClassification);
-hs.menuClassificationDying = uimenu(hs.menuClassification, 'Label', 'Dying Cells', 'Callback', @menuDyingCells);
 
 hs.menuClassificationReset = uimenu(hs.menuClassification, 'Label', 'Reset ALL classifications', 'Separator', 'on', 'Callback', {@learningReset, 'all'});
-
-hs.menuCompare = uimenu(hs.mainWindow, 'Label', 'Compare Experiments');
-hs.menuCompareAdd = uimenu(hs.menuCompare, 'Label', 'Add Experiment', 'Callback', @menuPreferencesCompareExperiments);
-hs.menuCompareTransitions = uimenu(hs.menuCompare, 'Label', 'Show population transitions (circular)', 'Callback', {@menuPreferencesCompareExperimentsTransitions, 'circular'});
-hs.menuCompareTransitions = uimenu(hs.menuCompare, 'Label', 'Show population transitions (linear)', 'Callback', {@menuPreferencesCompareExperimentsTransitions, 'linear'});
-hs.menuCompareReset = uimenu(hs.menuCompare, 'Label', 'Reset', 'Callback', @menuPreferencesCompareExperimentsReset, 'Separator', 'on');
 
 hs.menu.modules.root = uimenu(hs.mainWindow, 'Label', 'Modules');
 hs.menu.modules.KCl.root = uimenu(hs.menu.modules.root, 'Label', 'Acute KCl');
@@ -321,11 +322,7 @@ uix.Empty('Parent', hs.mainWindowGrid);
 % Plot --------------------------------------------------------------------
 hs.mainWindowPlotsHBox = uix.HBox('Parent', hs.mainWindowGrid);
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowPlotsHBox, 'Padding', 5, 'BorderType', 'none');
-%hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
 hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFramesPanel));
-if(isfield(experiment, 'virtual'))
-  hs.mainWindowFramesAxes.Color = 'r';
-end
 set(hs.mainWindowPlotsHBox, 'Widths', -1, 'Padding', 0, 'Spacing', 0);
 
 
@@ -373,7 +370,6 @@ set(hs.mainWindowLearningButtons, 'Widths', [100 125 125 10 100 50 100 50 100 50
 
 set(hs.mainWindowBottom, 'Heights', [35 70], 'Padding', 5, 'Spacing', 10);
 
-%set(hs.mainWindowBottomButtons, 'ButtonSize', [150 15], 'Padding', 0, 'Spacing', 15);
 
 % Now the log panel
 hs.logPanelParent = uix.Panel('Parent', hs.mainWindowGrid, ...
@@ -441,7 +437,6 @@ else
   setappdata(hFigW, 'logHandle', hs.logPanelEditBox);
 end
 
-%hs.mainWindowFramesAxes.ButtonDownFcn = @rightClick;
 
 updateImage();
 
@@ -451,7 +446,7 @@ if(isa(resizeHandle,'function_handle'))
 end
 
 consistencyChecks(experiment);
-
+setappdata(hFigW, 'experiment', experiment);
 if(isempty(gui))
   waitfor(hFigW);
 end
@@ -493,30 +488,29 @@ function menuTracesType(hObject, ~, type)
   
   switch type
     case 'raw'
-      if(ischar(experiment.rawTraces))
-        ncbar.automatic('Loading raw traces');
-        [experiment, success] = loadTraces(experiment, 'raw');
-        ncbar.close();
-      end
-      selectedTraces = experiment.rawTraces;
-      selectedT = experiment.rawT;
+      trName = 'rawTraces';
+      selectedT  = experiment.rawT;
     case 'rawDenoised'
-      if(ischar(experiment.rawTracesDenoised))
-        ncbar.automatic('Loading rawDenoised traces');
-        [experiment, success] = loadTraces(experiment, 'rawTracesDenoised');
-        ncbar.close();
-      end
-      selectedTraces = experiment.rawTracesDenoised;
+      trName = 'rawTracesDenoised';
       selectedT = experiment.rawTDenoised;
     case 'smoothed'
-      if(ischar(experiment.traces))
-        ncbar.automatic('Loading smoothed traces');
-        [experiment, success] = loadTraces(experiment, 'smoothed');
-        ncbar.close();
-      end
-      selectedTraces = experiment.traces;
+      trName = 'traces';
       selectedT = experiment.t;
   end
+  
+  % Going to use experiment buffer instead
+  if(ischar(experiment.(trName)))
+    %if(isempty(eval([trName 'Buffer{currentExperiment}'])))
+      ncbar.automatic('Loading selected traces');
+      [experiment, success] = loadTraces(experiment, trName);
+     % eval([trName 'Buffer{currentExperiment} = experiment.(trName);']);
+      ncbar.close();
+    %else
+    %  experiment.(trName) = eval([trName 'Buffer{currentExperiment}']);
+    %end
+  end
+  selectedTraces = experiment.(trName);
+
   if(isempty(currentOrder) || length(currentOrder) ~= size(selectedTraces, 1))
     currentOrder = 1:size(selectedTraces, 1);
   end
@@ -594,36 +588,6 @@ function menuPreferencesShowSpikes(~, ~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuPreferencesShowPeaks(~, ~)
-  if(strcmp(hs.menuPreferencesShowPeaks.Checked,'on'))
-    hs.menuPreferencesShowPeaks.Checked = 'off';
-    showPeaks = false;
-    updateImage(true);
-  else
-    hs.menuPreferencesShowPeaks.Checked = 'on';
-    if(isfield(experiment,'peaks') && ~isempty(experiment.peaks))
-      showPeaks = true;
-    end
-    updateImage(true);
-  end
-end
-
-%--------------------------------------------------------------------------
-function menuPreferencesShowDyingCells(~, ~)
-  if(strcmp(hs.menuPreferencesShowDyingCells.Checked,'on'))
-    hs.menuPreferencesShowDyingCells.Checked = 'off';
-    showDyingCells = false;
-    updateImage(true);
-  else
-    hs.menuPreferencesShowDyingCells.Checked = 'on';
-    if(isfield(experiment,'dyingCells') && ~isempty(experiment.dyingCells))
-      showDyingCells = true;
-    end
-    updateImage(true);
-  end
-end
-
-%--------------------------------------------------------------------------
 function menuPreferencesShowPatterns(~, ~)
   if(strcmp(hs.menuPreferencesShowPatterns.Checked,'on'))
     hs.menuPreferencesShowPatterns.Checked = 'off';
@@ -657,11 +621,7 @@ end
 function exportTraces(~, ~)
   [fileName, pathName] = uiputfile({'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, 'Save figure', [experiment.folder 'traces']); 
   if(fileName ~= 0)
-    if(~isempty(additionalAxesList))
-      export_fig([pathName fileName], '-r300', gcf);
-    else
-      export_fig([pathName fileName], '-r300', hs.mainWindowFramesAxes);
-    end
+    export_fig([pathName fileName], '-r300', hs.mainWindowFramesAxes);
   end
 end
 
@@ -701,93 +661,6 @@ function menuViewRasterNonNormalized(~, ~, ~)
   ncbar.close();
 end
 
-%--------------------------------------------------------------------------
-function menuPreferencesCompareExperiments(~, ~, ~)
-  [selection, ok] = listdlg('PromptString', 'Select experiment to compare to', 'ListString', namesWithLabels(), 'SelectionMode', 'single');
-  if(~ok)
-    return;
-  end
-  experimentFile = [project.folderFiles project.experiments{selection} '.exp'];
-  newExperiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
-  % Only allo to compare experiments with the same number of ROIs
-  %if(length(experiment.ROI) ~= length(newExperiment.ROI))
-  %  logMsg('Number of ROI between the 2 experiments differ. Cannot compare them', 'e');
-  %  return;
-  %end
-
-  newExperiment = checkGroups(newExperiment);
-  newExperiment = loadTraces(newExperiment, 'all');
-  [additionalValidIdx, additionalValidID, success] = findValidROI(experiment, additionalExperimentsList{:}, newExperiment);
-  if(~success)
-    return;
-  end
-  additionalExperimentsList(end+1) = {newExperiment};
-  additionalExperiments = true;
-  
-  updateImage();
-end
-
-%--------------------------------------------------------------------------
-function menuPreferencesCompareExperimentsReset(~, ~, ~)
-  if(additionalExperiments)
-     additionalExperiments = false;
-     for i = 1:length(additionalExperimentsList)
-       if(~isempty(additionalAxesList))
-         delete(additionalAxesList(i));
-         delete(additionalExperimentsPanelList(i));
-       end
-     end
-     additionalExperimentsList = {};
-     additionalExperimentsPanelList = [];
-     additionalAxesList = [];
-     updateImage();
-  end
-end
-
-%--------------------------------------------------------------------------
-function menuPreferencesCompareExperimentsTransitions(~, ~, type)
-
-  if(length(additionalExperimentsList) > 1 || isempty(additionalExperimentsList))
-    logMsg('Flow only possible with 1 additional experiment', 'e');
-    return;
-  end
-  populationsBefore = zeros(size(experiment.traceGroups.classifier))';
-  for i = 1:length(experiment.traceGroups.classifier)
-    populationsBefore(i) = numel(intersect(additionalValidIdx{1},experiment.traceGroups.classifier{i}));
-  end
-  populationsAfter = zeros(size(additionalExperimentsList{1}.traceGroups.classifier))';
-  for i = 1:length(additionalExperimentsList{1}.traceGroups.classifier)
-    populationsAfter(i) = numel(intersect(additionalValidIdx{2},additionalExperimentsList{1}.traceGroups.classifier{i}));
-  end
-  populationsTransitions = zeros(numel(populationsBefore), numel(populationsAfter));
-  for i = 1:length(experiment.traceGroups.classifier)
-    for j= 1:length(additionalExperimentsList{1}.traceGroups.classifier)
-      groupPrev = intersect(additionalValidIdx{1},experiment.traceGroups.classifier{i});
-      groupAfter = intersect(additionalValidIdx{2},additionalExperimentsList{1}.traceGroups.classifier{j});
-      repeats = ismember(groupPrev, groupAfter);
-      populationsTransitions(i,j) = sum(repeats);
-    end
-  end
-
-  switch type
-    case 'circular'
-      [success, circularTransitionsOptionsCurrent] = preloadOptions(experiment, circularTransitionsOptions, gui, true, false);
-      if(success)
-        experiment.circularTransitionsOptionsCurrent = circularTransitionsOptionsCurrent;
-        hFig = plotCircularTransitions(populationsBefore, populationsTransitions, circularTransitionsOptionsCurrent);
-        ui = uimenu(hFig, 'Label', 'Export');
-        uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.png';'*.tiff';'*.pdf'}, [experiment.folder 'circular']});
-      end
-    case 'linear'
-      [success, linearTransitionsOptionsCurrent] = preloadOptions(experiment, linearTransitionsOptions, gui, true, false);
-      if(success)
-        experiment.linearTransitionsOptionsCurrent = linearTransitionsOptionsCurrent;
-        hFig = plotLinearTransitions(populationsBefore, populationsTransitions, linearTransitionsOptionsCurrent);
-        ui = uimenu(hFig, 'Label', 'Export');
-        uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.png';'*.tiff';'*.pdf'}, [experiment.folder 'linear']});
-      end
-  end
-end
 
 %--------------------------------------------------------------------------
 function KClAnalysisMenu(~, ~)
@@ -1017,51 +890,6 @@ function generatePredefinedPatternsMenu(~, ~)
     updateMenu();
   end
 end
-
-%--------------------------------------------------------------------------
-function eventDetectPeaks(~, ~)
-  [success, detectPeaksOptionsCurrent] = preloadOptions(experiment, detectPeaksOptions, gui, true, false);
-  
-  if(success)
-    experiment.detectPeaksOptionsCurrent = detectPeaksOptionsCurrent;
-    experiment = detectPeaks(experiment, detectPeaksOptionsCurrent);
-    if(~isempty(gui))
-      setappdata(gui, 'obtainPatternBasedFeaturesOptionsCurrent', detectPeaksOptionsCurrent);
-    end
-    updateMenu();
-    updateImage(true);
-    if(strcmpi(hs.menuPreferencesShowPeaks.Checked, 'on'))
-      hs.menuPreferencesShowPeaks.Checked = 'off';
-      menuPreferencesShowPeaks([], []);
-    end
-    if(isfield(experiment, 'peaks'))
-      hs.menuPreferencesShowPeaks.Enable = 'on';
-    end
-  end
-end
-
-%--------------------------------------------------------------------------
-function menuDyingCells(~, ~)
-  [success, detectDyingCellsOptionsCurrent] = preloadOptions(experiment, detectDyingCellsOptions, gui, true, false);
-  
-  if(success)
-    experiment.detectDyingCellsOptionsCurrent = detectDyingCellsOptionsCurrent;
-    experiment = detectDyingCells(experiment, detectDyingCellsOptionsCurrent);
-    if(~isempty(gui))
-      setappdata(gui, 'detectDyingCellsOptionsCurrent', detectDyingCellsOptionsCurrent);
-    end
-    updateMenu();
-    updateImage(true);
-    if(strcmpi(hs.menuPreferencesShowDyingCells.Checked, 'on'))
-      hs.menuPreferencesShowDyingCells.Checked = 'off';
-      menuPreferencesShowDyingCells([], []);
-    end
-    if(isfield(experiment, 'dyingCells'))
-      hs.menuPreferencesShowDyingCells.Enable = 'on';
-    end
-  end
-  
-end    
 
 %--------------------------------------------------------------------------
 function menuDetectPatterns(~, ~, parallelMode)
@@ -1306,7 +1134,7 @@ function importGroups(~, ~, type)
          return;
       end
     case 'project'
-      [selection, ok] = listdlg('PromptString', 'Select experiment to compare to', 'ListString', namesWithLabels(), 'SelectionMode', 'single');
+      [selection, ok] = listdlg('PromptString', 'Select experiment to import from', 'ListString', namesWithLabels(), 'SelectionMode', 'single');
       if(~ok)
         return;
       end
@@ -1654,9 +1482,10 @@ function rightClickUp(hObject, eventData, ~)
       %[~, closestT] = max(eventTraceF(range));
       %closestT = closestT + range(1) - 1;
       closestT = round(mean(range));
-      meanF = mean(eventTraceF(range));
-      stdF = std(eventTraceF(range));
-      threshold = meanF+stdF*experiment.learningEventOptionsCurrent.eventLearningThreshold;
+%       meanF = mean(eventTraceF(range));
+%       stdF = std(eventTraceF(range));
+%       threshold = meanF+stdF*experiment.learningEventOptionsCurrent.eventLearningThreshold;
+      threshold = prctile(eventTraceF(range), experiment.learningEventOptionsCurrent.eventLearningThreshold);
       aboveThreshold = eventTraceF >= threshold;
       for i = closestT-1:-1:1
         if(~aboveThreshold(i))
@@ -1810,7 +1639,8 @@ function rightClick(hObject, eventData, ~)
       range = range(1):range(2);
       meanF = mean(eventTraceF(range));
       stdF = std(eventTraceF(range));
-      threshold = meanF+stdF*experiment.learningEventOptionsCurrent.eventLearningThreshold;
+      %threshold = meanF+stdF*experiment.learningEventOptionsCurrent.eventLearningThreshold;
+      threshold = prctile(eventTraceF(range), experiment.learningEventOptionsCurrent.eventLearningThreshold);
       aboveThreshold = eventTraceF >= threshold;
       for i = closestT-1:-1:1
         if(~aboveThreshold(i))
@@ -3135,13 +2965,6 @@ function [traces, valSubs, valMult, valAdd] = alignTraces(originalTraces, norm)
           valSubs(it) = 0;
           valMult(it) = mult/max(traces(:,it));
           valAdd(it) = it;
-        case 'fixedValue'
-          if(mult == 0)
-            mult = 1;
-          end
-          valSubs(it) = 0;
-          valMult(it) = 1/mult;
-          valAdd(it) = it;
         otherwise
           if(mult == 0)
             mult = 1;
@@ -3161,6 +2984,9 @@ end
 
 %--------------------------------------------------------------------------
 function updateImage(varargin)
+  if(blockImageUpdates)
+    return;
+  end
   if(nargin < 1)
     keepAxis = false;
   else
@@ -3173,15 +2999,7 @@ function updateImage(varargin)
     oldYL = hs.mainWindowFramesAxes.YLim;
   end
   currentOrder = getappdata(hFigW, 'currentOrder');
-  if(additionalExperiments)
-    ROIid = getROIid(experiment.ROI);
-    originalOrder = currentOrder;
-    currentOrder = intersect(originalOrder, additionalValidIdx{1});
-    currentOrderAdditional = cell(length(additionalExperimentsList), 1);
-    for i = 1:length(additionalExperimentsList)
-      currentOrderAdditional{i} = intersect(originalOrder, additionalValidIdx{1+i});
-    end
-  end
+  
     
   totalPages = ceil(length(currentOrder)/numberTraces);
   %hs.totalPagesText.String = ['/' num2str(totalPages)];
@@ -3189,45 +3007,14 @@ function updateImage(varargin)
   traceHandles = [];
   traceGuideHandles = [];
   % Delete everything
-  if(additionalExperiments)
-    for i = 1:length(additionalAxesList)
-      if(~isempty(additionalAxesList))
-        delete(additionalAxesList(i));
-        delete(additionalExperimentsPanelList(i));
-      end
-    end
-    delete(hs.mainWindowFramesAxes);
-    delete(hs.mainWindowFramesPanel);
-    hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowPlotsHBox, 'Padding', 0, 'BorderType', 'none');
-    %hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
-    hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFramesPanel));
-    if(isfield(experiment, 'virtual'))
-  hs.mainWindowFramesAxes.Color = 'r';
-end
-  end
+  
   
   hs.mainWindowFramesAxes.Units = 'normalized';
   hs.mainWindowFramesAxes.OuterPosition = [0 0 1 1];
   
-  if(additionalExperiments)
-    additionalAxesList = [];
-    additionalExperimentsPanelList = [];
-    for i = 1:length(additionalExperimentsList)
-      additionalExperimentsPanelList = [additionalExperimentsPanelList; uix.Panel('Parent', hs.mainWindowPlotsHBox, 'Padding', 0, 'BorderType', 'none')];
-      additionalAxesList = [additionalAxesList; axes('Parent', additionalExperimentsPanelList(i), 'Units', 'normalized')];
-      cla(additionalAxesList(i),'reset');
-      axis(additionalAxesList(i), 'manual');
-      additionalAxesList(i).Units = 'normalized';
-      additionalAxesList(i).OuterPosition = [0 0 1 1];
-    end
-    for i = 1:length(additionalExperimentsList)
-      additionalAxesList(i).Units = 'normalized';
-    end
-    %hs.mainWindowPlotsHBox.Children
-    set(hs.mainWindowPlotsHBox, 'Widths', -1*ones(1,1+length(additionalAxesList)), 'Padding', 0, 'Spacing', 0);
-  else
-    set(hs.mainWindowPlotsHBox, 'Widths', -1, 'Padding', 0, 'Spacing', 0);
-  end
+  
+  set(hs.mainWindowPlotsHBox, 'Widths', -1, 'Padding', 0, 'Spacing', 0);
+  
   if(~keepAxis)
     cla(hs.mainWindowFramesAxes,'reset');
   else
@@ -3350,26 +3137,6 @@ end
      end
    end
   end
-  if(showPeaks)
-    for i = 1:size(traces, 2)
-      curNeuron = currentOrder(firstTrace+i-1);
-      cpeaks = experiment.peaks{curNeuron};
-      for j = 1:length(cpeaks)
-        if(isfield(cpeaks(j), 'frame'))
-          plot(hs.mainWindowFramesAxes, t(cpeaks(j).frame), traces(cpeaks(j).frame, i)+0.2, 'v', 'HitTest', 'off', 'MarkerFaceColor', cmap(i, :), 'MarkerEdgeColor', cmap(i, :)*0.5);
-        end
-      end
-    end
-  end
-   if(showDyingCells)
-    for i = 1:size(traces, 2)
-      curNeuron = currentOrder(firstTrace+i-1);
-      cpeaks = experiment.dyingCellsData{curNeuron};
-      for j = 1:length(cpeaks)
-        plot(hs.mainWindowFramesAxes, t(cpeaks(j)), traces(cpeaks(j), i)+0.2, '^', 'HitTest', 'off', 'MarkerFaceColor', cmap(i, :), 'MarkerEdgeColor', cmap(i, :)*0.5);
-      end
-    end
-  end
   if(showPatterns)
     if(isempty(basePatternList) && isfield(experiment, 'traceUnsupervisedEventDetectionOptionsCurrent'))
       cmapPatterns = lines(experiment.traceUnsupervisedEventDetectionOptionsCurrent.numberGroups+1);
@@ -3413,61 +3180,7 @@ end
     movieLineH = plot([1 1]*frameT/experiment.fps, yl, 'k--');
   end
 
-  if(additionalExperiments)
-    %hs.mainWindowFramesAxes.Position(1) = hs.mainWindowFramesAxes.TightInset(1);
-    %hs.mainWindowFramesAxes.Position(3) = 1-hs.mainWindowFramesAxes.Position(1)-hs.mainWindowFramesAxes.TightInset(3);
-    defaultPosition = hs.mainWindowFramesAxes.Position;
-    for it = 1:length(additionalAxesList)
-      set(hs.mainWindow,'CurrentAxes', additionalAxesList(it));
-      %selectedTraces2 = additionalExperimentsList{it}.traces(:, 1:size(selectedTraces,2));
-      selectedTraces2 = additionalExperimentsList{it}.traces;
-
-      [traces2, valSubs2, valMult2, valAdd2] = alignTraces(selectedTraces2(:, currentOrderAdditional{it}(firstTrace:lastTrace)), normalization);
-      t = additionalExperimentsList{it}.t;
-      ROIid = getROIid(additionalExperimentsList{it}.ROI);
-      traceGuideHandles2 = [];
-      traceHandles2 = [];
-      if(strcmp(hs.menu.traces.typeRaw.Checked, 'on'))
-        traceGuideHandles2 = [traceGuideHandles2; plot(additionalAxesList(it), t, repmat(1:size(traces2,2), [length(t) 1])','k--', 'HitTest', 'off')];
-      else
-        traceGuideHandles2 = [traceGuideHandles2; plot(additionalAxesList(it), t, repmat(valAdd2'-valSubs2'.*valMult2', [length(t) 1])','k--', 'HitTest', 'off')];
-      end
-      hold(additionalAxesList(it), 'on');
-      traceHandles2 = [traceHandles2; plot(additionalAxesList(it), t, traces2, 'HitTest', 'off')];
-
-      for j = 1:length(traceHandles2)
-          currentColor = cmap(j, :);
-          set(traceHandles2(j), 'Color', currentColor, 'Visible', 'on');
-          set(traceGuideHandles2(j), 'Color', get(traceHandles2(j), 'Color'));
-      end
-      box(additionalAxesList(it), 'on');
-      %axis(additionalAxesList(it), 'tight');
-
-      xlim(additionalAxesList(it), [t(1) t(end)]);
-      ylim(additionalAxesList(it), [0 numberTraces+1]);
-      set(additionalAxesList(it), 'YTick', 1:size(traces2,2));
-
-      %set(additionalAxesList(it),'YTickLabel', []);
-      if(iscell(ROIid))
-        set(additionalAxesList(it), 'YTickLabel', ROIid(currentOrderAdditional{it}(firstTrace:lastTrace)));
-      else
-        set(additionalAxesList(it), 'YTickLabel', num2str(ROIid(currentOrderAdditional{it}(firstTrace:lastTrace))));
-      end
-      xlabel(additionalAxesList(it), 'time (s)');
-      ylabel(additionalAxesList(it), 'Fluorescence (a.u.)');
-      %additionalAxesList(it).YAxisLocation = 'right';
-      title(hs.mainWindowFramesAxes, strrep(experiment.name,'_','\_'));
-      title(additionalAxesList(it), strrep(additionalExperimentsList{it}.name,'_','\_'));
-      %additionalAxesList(it).Parent =  hs.mainWindowFramesPanel;
-      additionalAxesList(it).Visible = 'on';
-      additionalAxesList(it).Position = defaultPosition;
-    end
-    if(all(isvalid(additionalAxesList(:))) && isvalid(hs.mainWindowFramesAxes))
-      try
-        linkaxes([hs.mainWindowFramesAxes additionalAxesList(:)']);
-      end
-    end
-  end
+  
   set(hs.mainWindow,'CurrentAxes', hs.mainWindowFramesAxes);
   if(strcmp(learningMode, 'trace'))
     hs.mainWindowLearningGroupSelectionNtraces.String = sprintf('%d traces assigned', sum(experiment.learningGroup == hs.mainWindowLearningGroupSelection.Value));
@@ -3501,7 +3214,7 @@ end
       legendText{end+1} = 'window of interest end';
     end
    
-    %% Now for each trace
+    % Now for each trace
     
     for it = 1:size(traces, 2)
       curNeuron = currentOrder(firstTrace+it-1);
@@ -3526,7 +3239,7 @@ end
       plot(t(curData.protocolEndFrame), traces(curData.protocolEndFrame, it), 'co', 'MarkerSize', 8, 'MarkerFaceColor', 'c');
       
       
-      %% Now the fits
+      % Now the fits
       if(~isempty(curData.fitRiseCurve))
         x = curData.fitRiseCurve(:, 1);
         y = curData.fitRiseCurve(:, 2);
@@ -3538,14 +3251,7 @@ end
         plot(x, (y-valSubs(it))*valMult(it)+valAdd(it), 'r');
       end
     end
-    %legend(p, legendText);
-  else
-    %legend('off');
   end
-  
-  %hs.mainWindowFramesAxes.Position([2,4]) = hs.mainWindowFramesAxes.OuterPosition([2, 4]);
-  
-  
 end
 
 %--------------------------------------------------------------------------
@@ -3726,4 +3432,94 @@ function data = getFeatures(featureType)
   end
 end
 
+  function [exp, number] = loadSelectedExperiment(number)
+    if(nargin < 1 || isempty(number))
+      number = 1;
+    end
+    % Load from the existing buffer if available
+    if(isempty(experimentBuffer{number}))
+      exp = loadExperiment([project.folderFiles project.experiments{checkedExperiments(number)} '.exp']);
+    else
+      exp = experimentBuffer{number};
+    end
+    logMsg(sprintf('Switched to experiment %s', exp.name));
+  end
+
+  function changeExperiment(~, ~, expNumber)
+    if(nargin < 1 || isempty(expNumber) || expNumber < 1)
+      expNumber = 1;
+    elseif(expNumber > length(checkedExperiments))
+      expNumber = length(checkedExperiments);
+    end
+    % Do nothing
+    if(expNumber == currentExperiment)
+      return;
+    end
+    % Now, since we are changing experiment look for modifications and save if needed
+    % Since the bigFields might have been loaded (but shouldn't have changed), let's reassign them
+    bigFields = {'rawTraces', 'traces', 'baseLine', 'modelTraces', 'denoisedData', 'rawTracesDenoised', 'validPatterns'};
+    for i = 1:length(bigFields)
+      if(isfield(experiment, bigFields{i}) && ~ischar(experiment.(bigFields{i})))
+        originalExperiment.(bigFields{i}) = experiment.(bigFields{i});
+      end
+    end
+    if(isequaln(originalExperiment, experiment))
+      experimentChanged = false;
+    else
+      experimentChanged = true;
+    end
+    guiSave(experiment, experimentChanged);
+    
+    % Get current page
+    curPage = str2double(hs.currentPageText.String);
+        
+    % Update buffer
+    experimentBuffer{currentExperiment} = experiment;
+    % Now the actual change
+    [groupType, idx] = getCurrentGroup();
+    [experiment, currentExperiment] = loadSelectedExperiment(expNumber);
+    setappdata(hFigW, 'experiment', experiment);
+    originalExperiment = experiment;
+    % And update everything
+    blockImageUpdates = true;
+    hFigW.Name =  ['Trace explorer: ' experiment.name];
+    currentOrder = [];
+    ROIid = getROIid(experiment.ROI);
+    setappdata(hFigW, 'currentOrder', currentOrder);
+    %hs.menu.traces.selection = generateSelectionMenu(experiment, hs.menu.traces.root);
+
+    
+    if(isfield(experiment, 'traces') && strcmp(hs.menu.traces.typeSmoothed.Checked, 'on'))
+      menuTracesType([], [], 'smoothed');
+      hs.menu.traces.typeSmoothed.Checked = 'on';
+    else
+      menuTracesType([], [], 'raw');
+      hs.menu.traces.typeRaw.Checked = 'on';
+    end
+    hs.menu.traces.selection = redoSelectionMenu(experiment, hs.menu.traces);
+    setappdata(hFigW, 'currentOrder', currentOrder);
+    % Try to avoid selecting group so we go to the same one
+    
+    selectGroup([], [], groupType, idx, [], hFigW);
+    %updateSortingMethod([], [], [], hFigW, experiment);
+    
+
+    consistencyChecks(experiment);
+    setappdata(hFigW, 'experiment', experiment);
+    % Try to recover previous page
+    pageChange(curPage);
+    blockImageUpdates = false;
+    updateImage();
+    % Now update the menus
+    menuList = findobj(gcf, '-regexp','Tag', 'experimentList');
+    for it = 1:length(menuList)
+      if(strcmp(menuList(it).Label, experiment.name))
+        menuList(it).Checked = 'on';
+      else
+        menuList(it).Checked = 'off';
+      end
+    end
+    
+  end
+    
 end

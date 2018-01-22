@@ -1,10 +1,10 @@
-classdef tracePatternDetectionOptions < baseOptions
-% TRACEPATTERNDETECTIONOPTIONS Options for pattern detection
+classdef traceUnsupervisedEventDetectionOptions < baseOptions
+% TRACEUNSUPERVISEDEVENTDETECTIONOPTIONS Options for unsupervised event detection
 %   Class containing the options for pattern detrection
 %
 %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-%   See also tracePatternDetection, baseOptions, optionsWindow
+%   See also traceUnsupervisedEventDetection, baseOptions, optionsWindow
 
   properties
     % Group to perform function on:
@@ -17,19 +17,17 @@ classdef tracePatternDetectionOptions < baseOptions
     % Type of traces to use
     tracesType = {'smoothed', 'raw', 'denoised'};
     
-    % What to do with overlapping events:
-    % - correlation: only the event with the highest correlation will be kept
-    % - length: only longest event will be kept
-    % - none: allows overlapping
-    overlappingDiscriminationMethod = {'correlation', 'length', 'none'};
+    % Minimum event length for detection (in seconds)
+    minimumEventLength = 1;
     
-    % What kind of discrimination to apply
-    % - independent: will try to resolve any kind of overlapping
-    % - groupBased: will only resolve overlapping between members of the same group
-    overlappingDiscriminationType = {'independent', 'groupBased'};
+    % Type of threshold to use for event detection
+    thresholdType = {'relative', 'absolute'};
     
-    % If true, will only try to detect events where a peak has been detected (see detectPeaks)
-    usePeakInformation = false;
+    % Thresholds to use for the event detection (using a Schmitt trigger). First number is the upper threshold, second the lower threshold
+    threshold = [1 0];
+    
+    % Number of groups to use for the unsupervised classification (through Kmeans). Always allow one group for noise
+    numberGroups = 3;
   end
   methods
     function obj = setExperimentDefaults(obj, experiment)

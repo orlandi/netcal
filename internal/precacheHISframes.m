@@ -35,6 +35,7 @@ params.mode = 'fast'; % 'fast' or 'normal'
 params = parse_pv_pairs(params, varargin);
 success = true;
 % Check if the handle exists. If not, update it
+%experiment.handle = strrep(experiment.handle, 'F:\', 'E:\');
 if(experiment.handle(1) == 0 || ~exist(experiment.handle, 'file'))
   if(experiment.handle(1) ~= 0)
     try %#ok<TRYNC>

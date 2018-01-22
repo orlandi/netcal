@@ -370,7 +370,7 @@ classdef ncbar < handle
         fraction = 1;
       end
       % If the fraction is either 0 and 1, force update
-      if(fraction == 0 || fraction == 1)
+      if(~isempty(fraction) && (fraction == 0 || fraction == 1))
         force = true;
       end
 

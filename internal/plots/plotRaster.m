@@ -56,7 +56,6 @@ if(params.saveFigure)
   if(~exist(figFolder, 'dir'))
     mkdir(figFolder);
   end
-  figFolder
 end
 baseFigName = experiment.name;
   
@@ -80,7 +79,38 @@ for it = 1:length(currentOrder)
 end
 experiment.spikes = cellfun(@(x)x(:)', experiment.spikes, 'UniformOutput', false);
 if(Nspikes > 0)
-    [~,~] = plotSpikeRaster(experiment.spikes(currentOrder), 'PlotType', 'vertLine', 'LineFormat', LineFormat);
+  if(params.plotAverageActivity)
+    if(isempty(params.averageActivityBinning))
+      params.averageActivityBinning = 1/experiment.fps;
+    end
+    subplot(2, 1, 1);
+    dt = params.averageActivityBinning;
+    binnedSpikes = [experiment.spikes{currentOrder}];
+    binnedSpikes = floor(binnedSpikes/dt);
+    [a,b] = hist(binnedSpikes, 0:max(experiment.t/dt));
+    switch params.averageActivityNormalization
+      case 'none'
+        bar(b*dt, a);
+        ylabel('Num spikes');
+      case 'ROI'
+        bar(b*dt, a/length(members));
+        ylabel('Num spikes per cell');
+      case 'bin'
+        bar(b*dt, a/params.averageActivityBinning);
+        ylabel('Total firing rate (Hz)');
+      case 'binAndROI'
+        bar(b*dt, a/length(members)/params.averageActivityBinning);
+        ylabel('Firing rate per cell (Hz)');
+    end
+    fprintf('%d\n', sum(a)/length(members))
+    xlim([min(experiment.t) max(experiment.t)]);
+    if(~isempty(params.averageActivityScale))
+      ylim(params.averageActivityScale);
+    end
+    %ylim([0 0.3]);
+    subplot(2, 1, 2);
+  end
+  [~,~] = plotSpikeRaster(experiment.spikes(currentOrder), 'PlotType', 'vertLine', 'LineFormat', LineFormat);
 end
 hFig.Visible = visible;
 

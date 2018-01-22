@@ -99,7 +99,7 @@ else
       logMsg('Something went wrong saving the project', 'e');
       return;
     end
-    save(projectFile, '-struct', 'newData');
+    save(projectFile, '-struct', 'newData', '-v7.3');
 end
 
 if(params.verbose)

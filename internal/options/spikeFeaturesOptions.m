@@ -71,6 +71,12 @@ classdef spikeFeaturesOptions < baseOptions
     % Feature: burst length from traces (time it takes the fluorescence signal to drop below the value it had at the beginning of the burst (9) (true/false)
     fBurstLengthFluorescence@logical = false;
 
+    % Feature: Number of spikes in bursts (absolute)
+    fNumSpikesInBursts@logical = true;
+    
+    % Feature: Number of spikes in bursts (ratio)
+    fNumSpikesInBurstsRatio@logical = true;
+    
     % Feature for Schmitt detection: maximum fluorescence amplitude inside the event
     fSchmittAmplitude@logical = false;
 

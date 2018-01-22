@@ -32,7 +32,7 @@ function experiment = fluorescenceAnalysisSimilarity(experiment, varargin)
 params.pbar = [];
 % Parse them
 params = parse_pv_pairs(params, var);
-params = barStartup(params, 'Performing similarity analysis');
+params = barStartup(params, 'Performing similarity analysis', true);
 %--------------------------------------------------------------------------
 
  

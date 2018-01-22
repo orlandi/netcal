@@ -52,7 +52,7 @@ end
 
 % Now the plots
 if(params.plotDistributions)
-  experiment = avalancheAnalysisPlotDistributions(experiment, varargin{1}, 'verbose', false, 'pbar', pbar);
+  experiment = avalancheAnalysisPlotDistributions(experiment, varargin{1}, 'verbose', false, 'pbar', params.pbar);
 end
 if(params.verbose && params.pbar > 0)
   ncbar.unsetAutomaticBar();

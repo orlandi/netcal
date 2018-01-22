@@ -1,10 +1,10 @@
-classdef oasisOptions < baseOptions
-% OASISOPTIONS Options for the Oasis algorithm
-%   Class containing the parameters to perform spike inference with the oasis algorithm
+classdef detectDyingCellsOptions < baseOptions
+% DETECTDYINGCELLSOPTIONS Options for detecting dying cells based on large and sudden fluroescence changes. The way this works is that it defines a running baseline looking only at X timesteps into the past. At the same time, it looks at future points, if all of them within a given interval are above a limit, an abrupt change has happened and the cell might have died
+%   Class containing the options for dying cells detection
 %
 %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-%   See also spikeInferenceFoopsi, baseOptions, optionsWindow
+%   See also detectDyingCells, baseOptions, optionsWindow
 
   properties
     % Group to perform function on:
@@ -14,31 +14,20 @@ classdef oasisOptions < baseOptions
     % - group member: will only use the members of this group
     group = {'none', ''};
     
-    % Type of traces to use
-    tracesType = {'smoothed', 'raw', 'denoised'};
     
-    % ROI index used to check peeling results with a single trace (only used in training mode)
-    trainingROI = 1;
+    % Time (in seconds) to look for changes ahead in the fluorescence baseline
+    peekLength = 10;
+  
+    % Time (in seconds) to keep looking back in time to define the baseline
+    pastLength = 10;
     
-    % True to also store the model trace
-    storeModelTrace = false;
+    % Threshold (times the standard deviation) to check for abrupt changes in the baseline
+    stdThreshold = 2;
     
-    % Penalty parameter
-    lambda = 50;
-    
-    % Infernece method
-    method = {'foopsi', 'constrained', 'thresholded', 'mcmc'},
-
-    % Infernece model
-    model = {'ar1', 'ar2', 'exp2', 'kernel'},
-    
-    % Minimum spike size constraint (leave 0 for automatic)
-    smin = 0;
-    
-    % Signal to noise parameter (leave at 0 for automatic estimation)
-    sn = 0;
+    % Only use one out of every X frames for detection
+    frameJump = 1;
   end
-  methods 
+  methods
     function obj = setExperimentDefaults(obj, experiment)
       if(~isempty(experiment) && isstruct(experiment))
         try

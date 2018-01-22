@@ -108,22 +108,19 @@ for it = 1:length(subset)
   if(params.smin > 0)
     varOpts{end+1} = 'smin';
     varOpts{end+1} = params.smin;
+  else
+    varOpts{end+1} = 'optimize_smin';
   end
   if(params.sn > 0)
     varOpts{end+1} = 'sn';
     varOpts{end+1} = params.sn;
   end
+  %varOpts
   [c_oasis, s_oasis, options] = deconvolveCa(currentTrace, params.model, ...
               params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', varOpts{:});
-    %[c_oasis, s_oasis, options] = deconvolveCa(currentTrace, params.model, ...
-    %          params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', 'sn', params.sn, 'snmultiplier', params.snmultiplier, 'smin', 1);
-  %else
-    %  [c_oasis, s_oasis, options] = deconvolveCa(currentTrace, params.model, ...
-    %    params.method, 'lambda', params.lambda, 'smin', 1);
-        %params.method, 'lambda', params.lambda, 'pars', 0.9675, 'smin', 10, 'b', 1.497, 'snmultiplier', 'maxIter', 100, params.snmultiplier);
-              %params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', 'snmultiplier', params.snmultiplier);
-  %end
-  %options
+  if(params.training)
+    options
+  end
   snList(it) = options.sn;
   nsList(it) = length(find(s_oasis));
   firings = find(s_oasis);

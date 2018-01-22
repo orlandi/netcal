@@ -24,7 +24,7 @@ function [experiment, trainingData] = spikeInferenceMLspike(experiment, varargin
 %
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-% See also foopsiOptions
+% See also MLspikeOptions
 
 % EXPERIMENT PIPELINE
 % name: MLspike inference
@@ -93,40 +93,159 @@ if(params.storeModelTrace)
 end
 subsetSpikes = cell(length(subset), 1);
 
+if(isempty(params.a)  || params.a == 0)
+  estimateA = true;
+else
+  estimateA = false;
+end
+if(isempty(params.tau)  || params.tau == 0)
+  estimateTau = true;
+else
+  estimateTau = false;
+end
+
 
 % Do the actual MLspike
 par = spk_est('par');
 par.dt = 1/experiment.fps;
+par.drift.parameter = 1;
 par.display = 'none';
+%par.algo.dogpu = true;
 par.dographsummary = params.showSummary;
-par.a = params.a;
-par.tau = params.tau;
+if(~isempty(params.a))
+  par.a = params.a;
+end
+if(~isempty(params.tau))
+  par.tau = params.tau;
+end
 
-for it = 1:length(subset)
-  selectedTrace = subset(it);
-  currentTrace = traces(:, selectedTrace)';
-  
-  [spk, fit, ~, ~] = spk_est(currentTrace, par);
+if(params.training && params.parallel)
+  params.parallel = false;
+  logMsg('Parallel mode cannot be used during training', 'w');
+end
+apar = [];
+apar.dt = 1/experiment.fps;
+MLspikeParams = cell(length(subset));
+switch params.automaticEstimationMode
+  case 'trainingROI'
+    if(estimateA || estimateTau)
+      params.pbarCreated = true;
+      params.pbar = 1;
+      ncbar.automatic('Autocalibrating parameters');
+      
+      if(isempty(params.trainingROI))
+        selectedROI = subset(randperm(length(subset), 1));
+      else
+        ROIid = getROIid(experiment.ROI);
+        selectedROI = find(ROIid == params.trainingROI);
+      end
+      logMsg(sprintf('Autocalibrating MLspike paramters with ROI: %d', experiment.ROI{selectedROI}.ID));
+      currentTrace = traces(:, selectedROI)';
+      [tau, amp, sigma, ~] = spk_autocalibration(currentTrace, apar);
+      logMsg(sprintf('MLspike autocalibration parameters: tau: %.3f ampa: %.3f sigma: %.3f', tau, amp, sigma));
+      if(estimateA)
+        par.a = amp;
+      end
+      if(estimateTau)
+        par.tau = tau;
+      end
+      for it = 1:length(subset)
+        MLspikeParams{it}.tau = tau;
+        MLspikeParams{it}.a = amp;
+        MLspikeParams{it}.sigma = sigma;
+      end
+      
+    end
+    case 'all'
+      apar.display = 'none';
+end
+if(params.training)
+  params.pbarCreated = true;
+  params.pbar = 1;
+  ncbar.automatic('Running MLspike');
+end
+
+if(~params.parallel)
+  Ntraces = length(subset);
+  for it = 1:length(subset)
+    selectedTrace = subset(it);
+    currentTrace = traces(:, selectedTrace)';
+    switch params.automaticEstimationMode
+      case 'all'
+        [tau, amp, sigma, ~] = spk_autocalibration(currentTrace, apar);
+        if(estimateA)
+          par.a = amp;
+        end
+        if(estimateTau)
+          par.tau = tau;
+        end
+        if(isempty(par.a) || isempty(par.tau))
+          logMsg(sprintf('Autocalibration failed on trace: %d. Using default values', experiment.ROI{selectedTrace}.ID), 'w');
+          par.a = 0.1;
+          par.tau = 1;
+        end
+          
+        MLspikeParams{it}.tau = tau;
+        MLspikeParams{it}.a = amp;
+        MLspikeParams{it}.sigma= sigma;
+    end
+    [spk, fit, ~, ~] = spk_est(currentTrace, par);
 
 
-  subsetSpikes{it} = spk;
-  
-  if(params.training)
-    trainingData.spikes = round(spk*experiment.fps);
+    subsetSpikes{it} = spk;
+
+     if(params.training)
+       trainingData.spikes = round(spk*experiment.fps);
+     end
+
+    % Now the generative model
+    if(params.storeModelTrace || params.training)
+      if(params.storeModelTrace)
+        modelTraces(:, it) = fit;
+      end
+       if(params.training)
+         trainingData.model = fit;
+       end
+    end
+     if(params.pbar > 0 && ~params.training)
+       ncbar.update(it/Ntraces);
+     end
   end
-  
-  % Now the generative model
-  if(params.storeModelTrace || params.training)
+else
+  switch params.automaticEstimationMode
+      case 'all'
+        logMsg('Automatic calibration in parallel mode not supported. (Me being lazy)', 'e');
+  end
+  if(params.pbar > 0)
+    ncbar.setBarName('Initializing cluster');
+    ncbar.setAutomaticBar();
+  end
+  cl = parcluster('local');
+  Ntraces = length(subset);
+  for it = 1:Ntraces
+    selectedTrace = subset(it);
+    currentTrace = traces(:, selectedTrace)';
+    futures(it) = parfeval(@spk_est, 4, currentTrace, par);
+  end
+
+  numCompleted = 0;
+  ncbar.unsetAutomaticBar();
+  while numCompleted < Ntraces
+    if(params.pbar > 0)
+      ncbar.setBarName(sprintf('Running parallel MLspike (%d/%d)', numCompleted, Ntraces));
+      ncbar.update(numCompleted/Ntraces);
+    end
+    [completedIdx, spk, fit, ~, ~] = fetchNext(futures);
+    subsetSpikes{completedIdx} = spk;
     if(params.storeModelTrace)
-      modelTraces(:, it) = fit;
+      modelTraces(:, completedIdx) = fit;
     end
-    if(params.training)
-      trainingData.model = fit;
+    numCompleted = numCompleted + 1;
+    if(params.pbar > 0)
+      ncbar.update(numCompleted/Ntraces);
     end
   end
-  if(params.pbar > 0 && ~params.training)
-    ncbar.update(it/length(subset));
-  end
+  cancel(futures);
 end
 
 if(params.training)
@@ -136,7 +255,20 @@ else
   trainingData = [];
 end
 
-
+experiment.MLspikeParams = MLspikeParams;
+%  if(~isfield(experiment, 'MLspikeParams'))
+%     experiment.MLspikeParams = MLspikeParams;
+%     %experiment.MLspikeParams(members) = MLspikeParams;
+%   else
+%     try
+%       experiment.MLspikeParams(members) = MLspikeParams;
+%     catch ME
+%       experiment.MLspikeParams = cell(size(traces, 2), 1);
+%       experiment.MLspikeParams(members) = MLspikeParams;
+%       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+%     end
+%  end
+  
 for it = 1:length(subset)
   experiment.spikes{subset(it)} = subsetSpikes{it};
 end

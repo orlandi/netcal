@@ -14,17 +14,25 @@ classdef MLspikeOptions < baseOptions
     % - group member: will only use the members of this group
     group = {'none', ''};
     
-    % Type of traces to use
-    tracesType = {'smoothed', 'raw', 'denoised'};
+    % Type of traces to use. Raw is usually better for MLspike
+    tracesType = {'raw', 'smoothed', 'denoised'};
     
     % ROI index used to check peeling results with a single trace (only used in training mode)
     trainingROI = 1;
     
-    % Decay time (in s)
+    % Decay time (in s) Leave empty for automatic estimation.
     tau = 1;
     
-    % Amplitude associated to one spike
+    % Amplitude associated to one spike. Leave empty for automatic estimation.
     a = 0.1;
+    
+    % When to estimate tau and a:
+    % - trainingROI: the training ROI trace will be used to estimate the parameters. If none is provided, one will be selected at random from the current group
+    % - all: parameters will be estimated for every trace. Please note that this might be extremely slow
+    automaticEstimationMode = {'trainingROI', 'all'};
+    
+    % Type of baseline estimation
+    baseLineMode = {'drifting', 'stable'};
     
     % baseLine fluorescence. Leave empty for automatic estimation
     F0 = [];
@@ -34,6 +42,9 @@ classdef MLspikeOptions < baseOptions
     
     % True to also store the model trace
     storeModelTrace = false;
+    
+    % If the function should be run in parallel
+    parallel = false;
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)

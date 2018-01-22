@@ -15,7 +15,10 @@ development/*
 *.asv
 *.pdf
 *.m~
+*.tif
 untitled*
+.ipynb*
+*.ipynb
 
 # Configuration files #
 #######################

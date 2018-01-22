@@ -25,7 +25,7 @@ function experiment = measureTracesQCEC(experiment, varargin)
 % parentGroups: fluorescence: basic, spikes
 % optionsClass: measureTracesQCECoptions
 % requiredFields: traces
-% producedFields: qEntropy, qComplexity, qList
+% producedFields: qEntropy, qComplexity, qList, qCEC
 
 % Pass class options
 %--------------------------------------------------------------------------

@@ -160,7 +160,7 @@ for t = 1:length(frameBlockList)-1
       if(strcmp(experiment.extension, '.his'))
         denoisedBlock.needsTranspose = true;
       else
-        denoisedBlock.needsTranspose = true;
+        denoisedBlock.needsTranspose = false;
       end
 
       denoisedData = [denoisedData, denoisedBlock];

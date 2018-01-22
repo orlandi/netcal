@@ -58,7 +58,7 @@ newmat = squareform(distmat);
 newmat = (2-newmat(perm,perm))/2;
 newmat(find(eye(size(newmat)))) = NaN;
 
-if(~params.showSimilarityMatrix && ~params.saveSimilarityMatrix && ~params.verbose);
+if(~params.showSimilarityMatrix && ~params.saveSimilarityMatrix && ~params.verbose)
   return;
 end
 
@@ -93,12 +93,16 @@ set(cb,'position',barPosition);
 
 % Export
 if(params.saveSimilarityMatrix)
-  fpa = [experiment.folder filesep 'figures'];
-  if(~exist(fpa, 'dir'))
-      mkdir(fpa);
+  try
+    fpa = [experiment.folder filesep 'figures'];
+    if(~exist(fpa, 'dir'))
+        mkdir(fpa);
+    end
+    outputfilename = [experiment.folder filesep 'figures' filesep experiment.name params.similarityMatrixTag '.png'];
+    export_fig(hfig, outputfilename, '-nocrop', '-r150');
+  catch
+    logMsg('Could not export figure', 'w');
   end
-  outputfilename = [experiment.folder filesep 'figures' filesep experiment.name params.similarityMatrixTag '.png'];
-  export_fig(hfig, outputfilename, '-nocrop', '-r150');
 end
 
 if(~params.showSimilarityMatrix)

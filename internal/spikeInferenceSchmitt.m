@@ -1,4 +1,4 @@
-function experiment = spikeInferenceSchmitt(experiment, varargin)
+function [experiment, td] = spikeInferenceSchmitt(experiment, varargin)
 % SPIKEINFERENCESCHMITT Does spike detection using a schmitt trigger
 %
 % USAGE:
@@ -21,37 +21,66 @@ function experiment = spikeInferenceSchmitt(experiment, varargin)
 % EXAMPLE:
 %   experiment = spikeInferenceSchmitt(experiment, schmittOptions)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 % See also schmittOptions
+
+% EXPERIMENT PIPELINE
+% name: schmitt inference
+% parentGroups: spikes: inference
+% optionsClass: schmittOptions
+% requiredFields: traces, rawTraces, t, fps
+% producedFields: spikes
 
 % Pass class options
 %--------------------------------------------------------------------------
 [params, var] = processFunctionStartup(schmittOptions, varargin{:});
 % Define additional optional argument pairs
 params.pbar = [];
-params.training = false;
 params.subset = [];
+params.training = false;
 % Parse them
 params = parse_pv_pairs(params, var);
-params = barStartup(params, 'Performing schmitt inference');
+if(params.training)
+  params.pbar = 0;
+end
+params = barStartup(params, 'Running schmitt');
 %--------------------------------------------------------------------------
+td = [];
+% Fix in case for some reason the group is a cell
+if(iscell(params.group))
+  mainGroup = params.group{1};
+else
+  mainGroup = params.group;
+end
 
-experiment = loadTraces(experiment, 'smoothed');
-traces = experiment.traces;
+members = getAllMembers(experiment, mainGroup);
+
+switch params.tracesType
+  case 'smoothed'
+    experiment = loadTraces(experiment, 'normal');
+    traces = experiment.traces;
+  case 'raw'
+    experiment = loadTraces(experiment, 'raw');
+    traces = experiment.rawTraces;
+  case 'denoised'
+    experiment = loadTraces(experiment, 'rawTracesDenoised');
+    traces = experiment.rawTracesDenoised;
+end
 
 if(isempty(params.subset))
-  subset = size(traces, 2);
+  subset = members;
 else
   subset = params.subset;
 end
-  
+
 if(~isfield(experiment, 'spikes') || length(experiment.spikes) ~= size(traces, 2) && ~params.training)
   experiment.spikes = cell(size(traces,2), 1);
   for it = 1:length(experiment.spikes)
     experiment.spikes{it} = nan(1, 1);
   end
-end    
+end  
+
 if(~isfield(experiment, 'schmittSpikesData') || length(experiment.schmittSpikesData) ~= size(experiment.rawTraces, 2) && ~params.training)
   experiment.schmittSpikesData = cell(size(traces,2), 1);
   for it = 1:length(experiment.schmittSpikesData)
@@ -100,8 +129,6 @@ barCleanup(params);
     split = SplitVec(y, 'equal', 'first');
     splitVals = SplitVec(y, 'equal');
     validSplit = find(y(split) == 1);
-
-    hold on;
 
     burstDuration = zeros(length(validSplit), 1);
     burstAmplitude = zeros(length(validSplit), 1);

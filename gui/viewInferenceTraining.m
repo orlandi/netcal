@@ -435,7 +435,7 @@ function updateImage(varargin)
                 if(experiment.inferenceTrainingOptionsCurrent.showModelTrace)
                   plot(t, inferenceTrainingData.model)
                 end
-                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)*1.001, experiment.inferenceTrainingOptionsCurrent.symbol);
+                plot(t(inferenceTrainingData.spikes), ones(size(inferenceTrainingData.spikes))*max(currentTrace)+(max(currentTrace)-min(currentTrace))*0.05, experiment.inferenceTrainingOptionsCurrent.symbol, 'MarkerSize', 8, 'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k');
             otherwise
                 currentTrace = experiment.traces(:, selectedROI);
                 plot(t, currentTrace);

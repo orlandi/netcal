@@ -85,8 +85,8 @@ classdef smoothTracesOptions < baseOptions
       elseif(~isempty(experiment) && exist(experiment, 'file'))
         exp = load(experiment, '-mat', 'totalTime');
         if(isfield(exp, 'totalTime'))
-          obj.splineDivisionLength = min([25 round(round(experiment.totalTime)/2)]);
-          obj.blockLength = round(experiment.totalTime);
+          obj.splineDivisionLength = min([25 round(round(exp.totalTime)/2)]);
+          obj.blockLength = round(exp.totalTime);
         end
       end
     end

@@ -17,6 +17,9 @@ classdef spikeDetectConflictsOptions < baseOptions
     % Groups of patterns that should not contain spikes
     conflictingGroups = {'none', ''};
     
+    % Number of seconds to expand events on the conflicting group (in both directions, e.g., 5 will remove any spikes within 5 seconds of events in the conflicting group
+    conflictingGroupExpansion = 0;
+    
     % Groups of patterns that should contain spikes (will remove any spikes from the conflicting groups that are also present in this group)
     exclusionGroups = {'none', ''};
     

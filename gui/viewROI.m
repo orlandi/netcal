@@ -138,6 +138,11 @@ end
 if(isfield(experiment, 'avgImgDenoised'))
   imageStr{end+1} = 'denoised average';
 end
+if(isfield(experiment, 'avgPSD'))
+  for it = 1:length(experiment.avgPSD)
+    imageStr{end+1} = sprintf('average PSD %d', it);
+  end
+end
 imageStr{end+1} = 'custom';
 
 uicontrol('Parent', b, 'Style', 'popup', 'Units', 'pixel', 'String', imageStr, 'Callback', @setCurrentImage, 'FontSize', textFontSize);
@@ -226,7 +231,7 @@ b = uix.VButtonBox( 'Parent', hs.mainWindowRightButtons);
 uicontrol('Parent', b, 'Style','text',...
           'String','Colormap:', 'FontSize', textFontSize, 'HorizontalAlignment', 'left');
 
-htmlStrings = getHtmlColormapNames({'gray','parula', 'morgenstemning', 'jet', 'isolum'}, 115, 12);
+htmlStrings = getHtmlColormapNames({'gray', 'parula', 'morgenstemning', 'jet', 'isolum'}, 115, 12);
 uicontrol('Parent', b, 'Style','popup', 'Units','pixel', 'String', htmlStrings, 'Callback', @setmap, 'FontSize', textFontSize);
 uicontrol('Parent', b, 'Units','pixel', 'String', 'Invert Colormap', 'Callback', @invertMap, 'FontSize', textFontSize);
 
@@ -377,19 +382,35 @@ function setCurrentImage(hObject, ~)
     case 'average'
       avgImg = experiment.avgImg;
       currFrame = avgImg;
+      bpp = experiment.bpp;
       autoLevels([], [], true);
     case 'percentile'
       avgImg = experiment.percentileImg;
       currFrame = avgImg;
+      bpp = experiment.bpp;
       autoLevels([], [], true);
     case 'denoised average'
       avgImg = experiment.avgImgDenoised;
       currFrame = avgImg;
+      bpp = experiment.bpp;
       autoLevels([], [], true);
     case 'custom'
       loadImageButton();
+      bpp = experiment.bpp;
       autoLevels([], [], true);
   end
+  k = strfind(currentSelection, 'average PSD');
+  if(~isempty(k))
+    k = k + length('average PSD ');
+    selImage = str2num(currentSelection(k:end));
+    avgImg = experiment.avgPSD{selImage};
+    % Normalize it and turn it to 16 bits
+    avgImg = uint16((avgImg'-min(avgImg(:)))/(max(avgImg(:))-min(avgImg(:)))*(2^16-1));
+    bpp = 16;
+    currFrame = avgImg;
+    autoLevels([], [], true);
+  end
+  
   updateImage();
   %displayROI();
 end

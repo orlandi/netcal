@@ -90,7 +90,7 @@ for git = 1:length(groupList)
     continue;
   end
   
-  conflictingSpikes(members) = detectConflicts(experiment.spikes(members), experiment.validPatterns(members), conflictingGroups, exclusionGroups, experiment.fps);
+  conflictingSpikes(members) = detectConflicts(experiment.spikes(members), experiment.validPatterns(members), conflictingGroups, params.conflictingGroupExpansion, exclusionGroups, experiment.fps);
   %[patterns, ~] = generatePatternList(experiment);
   
   %traces(:, members)
@@ -106,7 +106,8 @@ barCleanup(params);
 %--------------------------------------------------------------------------
 
   %------------------------------------------------------------------------
-  function conflicts = detectConflicts(spikes, validPatterns, conflictingGroups, exclusionGroups, fps)
+  function conflicts = detectConflicts(spikes, validPatterns, conflictingGroups, conflictingGroupsExpansion, exclusionGroups, fps)
+    expansionFrames = round(conflictingGroupsExpansion*fps);
     conflicts = cell(size(spikes));
     %conflictsFrames = cell(size(spikes));
     % Iterate from each cell
@@ -125,7 +126,12 @@ barCleanup(params);
           % And finally for each spikes
           for l = 1:length(curSpikes)
             curFrame = round(curSpikes(l)*fps);
-            if(any(curPatterns{k}.frames == curFrame))
+            if(expansionFrames == 0)
+              framesToCheck = curPatterns{k}.frames;
+            else
+              framesToCheck = (curPatterns{k}.frames(1)-expansionFrames):(curPatterns{k}.frames(end)+expansionFrames);
+            end
+            if(any(framesToCheck == curFrame))
               % There's a conflict - check with the other group
               realConflict = true;
               for m = 1:length(exclusionGroups)

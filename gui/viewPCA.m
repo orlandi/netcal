@@ -309,7 +309,7 @@ function plotFeatures(~, ~, varargin)
   hold on;
   axis tight;
   %scatter(features(:,selectionX), features(:,selectionY), 8, colorList, 'fill');
-  for itt = 1:length(uniqueColors);
+  for itt = 1:length(uniqueColors)
     valid = (colorList == uniqueColors(itt));
     scatter(features(valid,selectionX), features(valid,selectionY), 8, uniqueColorsCmap(colorList(valid), :), 'fill');
   end

@@ -134,7 +134,12 @@ switch params.automaticType
         % mask out everything else
         BW = xor(img,img);
         BW(cc) = 1;
-        BW = imfill(BW,4,'holes'); % Fill holes
+        %BW = imfill(BW,4,'holes'); % Fill holes
+        [vr, vc] = find(BW);
+        vr = unique(vr);
+        vc = unique(vc);
+        BW(vr,vc) = imfill(BW(vr,vc),4,'holes'); % Fill holes
+        
         img(~BW) = 0;
 
         % find the components for only this image
@@ -157,7 +162,11 @@ switch params.automaticType
 
             BW = zeros(size(frame));
             BW(cc) = 1;
-            BW = imfill(BW,4,'holes'); % Fill holes
+            %BW = imfill(BW,4,'holes'); % Fill holes
+            [vr, vc] = find(BW);
+            vr = unique(vr);
+            vc = unique(vc);
+            BW(vr,vc) = imfill(BW(vr,vc),4,'holes'); % Fill holes
 
             ROI{currROI}.pixels = find(BW);
             [y, x] = ind2sub(size(stillImage), ROI{currROI}.pixels);
@@ -178,7 +187,11 @@ switch params.automaticType
 
         BW = zeros(size(frame));
         BW(cc) = 1;
-        BW = imfill(BW,4,'holes'); % Fill holes
+        %BW = imfill(BW,4,'holes'); % Fill holes
+        [vr, vc] = find(BW);
+        vr = unique(vr);
+        vc = unique(vc);
+        BW(vr,vc) = imfill(BW(vr,vc),4,'holes'); % Fill holes
 
         ROI{currROI}.pixels = find(BW);
         [y, x] = ind2sub(size(stillImage), ROI{currROI}.pixels);
@@ -236,6 +249,7 @@ switch params.automaticType
           ncbar.update(i/CC.NumObjects);
       end
       cc = CC.PixelIdxList{i};
+      
       props = PROPS(i);
 
       single_cell = 1;
@@ -248,7 +262,11 @@ switch params.automaticType
         %BW = zeros(size(img), 'gpuArray');
         BW = zeros(size(img));
         BW(cc) = 1;
-        BWn = ~~imfill(BW,4,'holes'); % Fill holes
+        [vr, vc] = find(BW);
+        vr = unique(vr);
+        vc = unique(vc);
+        BWn = false(size(img));
+        BWn(vr,vc) = ~~imfill(BW(vr,vc),4,'holes'); % Fill holes
         img(~BWn) = 0;
 
         % find the components for only this image
@@ -274,8 +292,13 @@ switch params.automaticType
             BW = zeros(size(frame));
             BW(cc) = 1;
             %BWA = gpuArray(BW);
-            BWn = imfill(BW,4,'holes'); % Fill holes
-            %BW = imfill(BW,4,'holes'); % Fill holes
+            
+            %BWn = imfill(BW,4,'holes'); % Fill holes
+            [vr, vc] = find(BW);
+            vr = unique(vr);
+            vc = unique(vc);
+            BWn = false(size(frame));
+            BWn(vr,vc) = ~~imfill(BW(vr,vc),4,'holes'); % Fill holes
 
             ROI{currROI}.pixels = find(BWn);
             [y, x] = ind2sub(size(stillImage), ROI{currROI}.pixels);
@@ -297,7 +320,12 @@ switch params.automaticType
 
         BW = zeros(size(frame));
         BW(cc) = 1;
-        BW = imfill(BW,4,'holes'); % Fill holes
+        %BW = imfill(BW,4,'holes'); % Fill holes
+        [vr, vc] = find(BW);
+        vr = unique(vr);
+        vc = unique(vc);
+        BWn = false(size(frame));
+        BWn(vr,vc) = ~~imfill(BW(vr,vc),4,'holes'); % Fill holes
 
         ROI{currROI}.pixels = find(BW);
         [y, x] = ind2sub(size(stillImage), ROI{currROI}.pixels);

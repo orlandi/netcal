@@ -506,7 +506,15 @@ classdef plotStatistics < handle
             end
           end
           obj.fullGroupList = {obj.fullGroupList};
-          
+          for it = 1:size(subData, 2)
+            for itt = 1:size(subData, 2)
+              if(it > itt)
+                p = ranksum(subData(:, it), subData(:, itt));
+                [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                logMsg(sprintf('%s vs %s . P= %.3g KS P = %.3g', xList{it}, xList{itt}, p, p2));
+              end
+            end
+          end
           obj.plotHandles = boxPlot(xList, subData, ...
              'symbolColor','k',...
                             'medianColor','k',...
@@ -684,11 +692,13 @@ classdef plotStatistics < handle
         for cit = 1:size(bpData, 2)
           for git = 1:size(bpData, 3)
             if(it == 1)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.groupLabels{cit});
+              lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
             elseif(it == 2)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{git});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
+              data.(names{it})
+              %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
+              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
             end
           end
         end
@@ -706,27 +716,31 @@ classdef plotStatistics < handle
       end
       fID = fopen([pathName fileName], 'w');
       % +2 for the headers
-
       for it = 1:(size(bpData, 1)+2) 
-        lineStr = '';
         mainIdx = it-2;
+        lineStr = '';
         for cit = 1:size(bpData, 2)
           for git = 1:size(bpData, 3)
             if(it == 1)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.groupLabels{cit});
+              if(git == 1)
+                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+              else
+                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+              end
             elseif(it == 2)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{git});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
               lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, cit, git));
             end
           end
         end
+
         % Stop when everything is NaN
-        if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
-          break;
-        end
-        % 2:end to avoid the first comma
-        lineStr = sprintf('%s\n', lineStr(2:end));
+%         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
+%           break;
+%         end
+        % 2:end to avoid the first comma NOT ANYMORE
+        lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);
       end
       fclose(fID);

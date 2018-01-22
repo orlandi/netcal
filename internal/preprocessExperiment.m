@@ -52,15 +52,18 @@ end
 
 if(params.backgroundImageCorrection.active)
   try
+    experiment.backgroundImageCorrectionMode = params.backgroundImageCorrection.mode;
     experiment.backgroundImage = imread(params.backgroundImageCorrection.file);
     switch params.backgroundImageCorrection.mode
       case 'substract'
         experiment.backgroundImageMultiplier = -1;
       case 'add'
         experiment.backgroundImageMultiplier = 1;
+      case {'multiply', 'divide'}
+        experiment.backgroundImage = double(experiment.backgroundImage)/double(max(experiment.backgroundImage(:)));
     end
   catch ME 
-    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
+    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     logMsg('Could not load background image. Disabling the background correction', 'e');
     experiment.backgroundImageCorrection = false;
   end

@@ -768,12 +768,6 @@ function [exp, success] = consistencyChecks(exp)
     logMsg(sprintf( 'Number of smoothed traces and similarityOrder differ (%d vs %d). Perform a new similarity analysis', size(exp.traces, 2), length(exp.similarityOrder)), 'e');
   end 
 
-  if(isfield(exp, 'learningGroup') && (~isfield(exp, 'traces') || size(exp.learningGroup, 1) ~= size(exp.traces, 2)))
-    [exp, success] = resetAllTraining(exp, 'Number of traces and learning elements differ. Reset all training?');
-  end
-  if(isfield(exp, 'learningGroup') && ~ischar(exp.rawTraces) && size(exp.learningGroup, 1) ~= size(exp.rawTraces, 2))
-    [exp, success] = resetAllTraining(exp, 'Number of raw traces and learning elements differ. Reset all training?');
-  end
   if(isfield(exp, 'trainingGroupNames') && ~iscell(exp.trainingGroupNames))
     logMsg('There is a problem with the training group names. Please update them', 'e');
     if(isfield(exp, 'learningOptionsCurrent') && iscell(exp.learningOptionsCurrent.groupNames))

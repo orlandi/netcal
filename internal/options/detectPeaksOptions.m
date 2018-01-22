@@ -1,10 +1,10 @@
-classdef oasisOptions < baseOptions
-% OASISOPTIONS Options for the Oasis algorithm
-%   Class containing the parameters to perform spike inference with the oasis algorithm
+classdef detectPeaksOptions < baseOptions
+% DETECTPEAKSOPTIONS Options for peak detection
+%   Class containing the options for pattern detrection
 %
 %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-%   See also spikeInferenceFoopsi, baseOptions, optionsWindow
+%   See also detectPeaks, baseOptions, optionsWindow
 
   properties
     % Group to perform function on:
@@ -17,28 +17,13 @@ classdef oasisOptions < baseOptions
     % Type of traces to use
     tracesType = {'smoothed', 'raw', 'denoised'};
     
-    % ROI index used to check peeling results with a single trace (only used in training mode)
-    trainingROI = 1;
+    % Minimum peak height
+    minPeakHeight = 5;
     
-    % True to also store the model trace
-    storeModelTrace = false;
-    
-    % Penalty parameter
-    lambda = 50;
-    
-    % Infernece method
-    method = {'foopsi', 'constrained', 'thresholded', 'mcmc'},
-
-    % Infernece model
-    model = {'ar1', 'ar2', 'exp2', 'kernel'},
-    
-    % Minimum spike size constraint (leave 0 for automatic)
-    smin = 0;
-    
-    % Signal to noise parameter (leave at 0 for automatic estimation)
-    sn = 0;
+    % Minimum peak prominence
+    minPeakProminence = 5;
   end
-  methods 
+  methods
     function obj = setExperimentDefaults(obj, experiment)
       if(~isempty(experiment) && isstruct(experiment))
         try

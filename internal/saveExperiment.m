@@ -46,14 +46,14 @@ for i = 1:length(bigFields)
       if(params.pbar > 0)
         ncbar.setBarTitle(sprintf('Saving experiment %s', bigFields{i}));
       end
-      save(rawFile, '-struct', 'experiment', bigFields{i});
+      save(rawFile, '-struct', 'experiment', bigFields{i}, '-v7.3');
     end
     if(isfield(experiment, 'saveBigFields') && experiment.saveBigFields)
       savedBigFields = true;
       if(params.pbar > 0)
         ncbar.setBarTitle(sprintf('Saving experiment %s', bigFields{i}));
       end
-      save(rawFile, '-struct', 'experiment', bigFields{i});
+      save(rawFile, '-struct', 'experiment', bigFields{i}, '-v7.3');
     end
     if(exist(rawFile, 'file') && savedBigFields)
       experiment.(bigFields{i}) = [experiment.name '_' bigFields{i} '.dat'];
@@ -112,7 +112,7 @@ end
 if(params.pbar > 0)
   ncbar.setBarTitle('Saving experiment');
 end
-save(fullSaveFile, '-struct', 'experiment', '-mat');
+save(fullSaveFile, '-struct', 'experiment', '-mat', '-v7.3');
 
 %--------------------------------------------------------------------------
 barCleanup(params);

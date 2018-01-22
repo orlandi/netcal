@@ -13,6 +13,24 @@ classdef plotRasterOptions < plotBaseOptions & baseOptions
     % - group parent: will iterate through all the group submembers
     % - group member: will only use the members of this group
     group = {'none', ''};
+
+    % If true, also plot the average activity on top 
+    plotAverageActivity = true;
+    
+    % Bin size (in sec) for the average activity plot. If empty, will use
+    % the inverse of the frame rate
+    averageActivityBinning = 0.1;
+    
+    % Scale to use when plotting the average activity (leave empty for
+    % automatic, use an interval to define lower and upper limit, e.g., [0 1])
+    averageActivityScale = [];
+    
+    % How to normalize the average activity:
+    % - none: no normalization (spike count per bin)
+    % - ROI: normalize per cell within the target group
+    % - bin: normalize per bin size (total firing rate)
+    % - binAndROI: normalize per bin size and roi (firing rate pr cell)
+    averageActivityNormalization = {'none', 'ROI', 'bin', 'binAndROI'};
     
     % Line color
     lineColor = [0, 0, 0.5];

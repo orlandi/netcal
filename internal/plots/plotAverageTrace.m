@@ -34,7 +34,7 @@ if(length(varargin) >= 1 && isa(varargin{1}, class(optionsClass)))
   else
     varargin = [];
   end
-end
+end 
 % Define additional optional argument pairs
 params.pbar = [];
 params = parse_pv_pairs(params, varargin);
@@ -83,7 +83,7 @@ if(params.showFigure)
 else
   visible = 'off';
 end
-hFig = figure('Name', [type 'fluorescence trace'], 'NumberTitle', 'off', 'Visible', visible);
+hFig = figure('Name', [experiment.name type 'fluorescence trace'], 'NumberTitle', 'off', 'Visible', visible);
 plot(experiment.avgT, trace);
 xlabel('time (s)');
 ylabel('avg fluorescence (a.u.)');
@@ -92,7 +92,7 @@ y_range = max(trace)-min(trace);
 xlim([min(experiment.avgT)-x_range*0.01 max(experiment.avgT)+x_range*0.01]);
 ylim([min(trace)-y_range*0.01 max(trace)+y_range*0.01]);
 box on;
-title([type ' fluorescence trace']);
+title([experiment.name type ' fluorescence trace']);
 set(gcf,'Color','w');
 pos = get(hFig, 'Position');
 pos(4) = pos(3)/((1+sqrt(5))/2);

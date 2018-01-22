@@ -42,6 +42,10 @@ end
 experiment = loadTraces(experiment, 'validPatterns');
 
 [patterns, basePatternList] = generatePatternList(experiment);
+if(isempty(basePatternList) && isfield(experiment, 'traceUnsupervisedEventDetectionOptionsCurrent'))
+  basePatternList = strsplit(sprintf('Unsupervised: %d,', 1:experiment.traceUnsupervisedEventDetectionOptionsCurrent.numberGroups),',');
+  basePatternList = basePatternList(1:end-1);
+end
 
 countList = zeros(length(experiment.validPatterns), length(basePatternList));
 for it = 1:length(experiment.validPatterns)
@@ -114,8 +118,8 @@ for i = 1:trainingGroups
     if(~isempty(experiment.traceGroups.patternCountClassifier{i}))
       try
         experiment = loadTraces(experiment, 'smoothed');
-        size(experiment.traces)
-        experiment.traceGroups.patternCountClassifier{i}
+        %size(experiment.traces)
+        %experiment.traceGroups.patternCountClassifier{i}
         [~, order, ~] = identifySimilaritiesInTraces(...
           experiment, experiment.traces(:, experiment.traceGroups.patternCountClassifier{i}), ...
           'showSimilarityMatrix', false, ...

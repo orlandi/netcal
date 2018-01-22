@@ -84,12 +84,32 @@ switch lower(fpc)
     % update the experiment name in case it does not coincide with the .exp
     % file
     if(~strcmp(fpb, experiment.name))
-        logMsg(sprintf('Experiment name changed from %s to %s', experiment.name, fpb));
+      logMsg(sprintf('Experiment name changed from %s to %s', experiment.name, fpb));
     end
     experiment.name = fpb;
+    oldFolder = experiment.folder;
+%     params.project
+%     oldFolder
+    try
+      if(isfield(params, 'project') && isfield(params.project, 'folder'))
+        [status, msg, msgID] = copyfile(oldFolder, [params.project.folder experiment.name filesep], 'f');
+      
+      if(status == 0)
+        [tfpa tfpb tfpc] = fileparts(fileName);
+%         [tfpa filesep '..' filesep experiment.name]
+%         [params.project.folder experiment.name filesep]
+        [status, msg, msgID] = copyfile([tfpa filesep '..' filesep experiment.name], [params.project.folder experiment.name filesep], 'f');
+%         status
+%         msg
+%         msgID
+      end
+      end
+    catch ME
+      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+    end
     if(~isempty(params.project))
-        experiment.folder = [params.project.folder experiment.name filesep];
-        experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
+      experiment.folder = [params.project.folder experiment.name filesep];
+      experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
     end
      % Temporary hack to reduce memory usage, since the baseline is never used
     if(isfield(experiment, 'baseLine'))
@@ -143,9 +163,57 @@ switch lower(fpc)
       experiment.bpp = fileInfo.BitsPerSample;
       experiment.saveFile = [experiment.name '.exp'];
     else
-      logMsg('Invalid filename format. It should be: name_d.tif (where d is a number starting at 1)', 'e');
-      barCleanup(params);
-      return;
+      %logMsg('Invalid filename format. It should be: name_d.tif (where d is a number starting at 1)', 'e');
+      logMsg('Could not find any sequence. Assuming it''s a multitif file', 'w');
+      experiment.handle = fileName;
+      experiment.folder = [fpa filesep];
+      experiment.name = fpb;
+      finfo = imfinfo(fileName);
+      metadata_str = finfo(1).ImageDescription;
+      metadata_separated = strsplit(metadata_str,';');
+      metadata = [];
+      for i = 1:length(metadata_separated)
+          tmpStr = strsplit(metadata_separated{i},'=');
+          if(length(tmpStr) == 2)
+              if(isempty(strfind(tmpStr{1},'@')))
+                  metadata.(tmpStr{1}) = tmpStr{2};
+              end
+          end
+      end
+      experiment.metadata = metadata;
+      experiment.numFrames = length(finfo);
+      experiment.width = finfo(1).Width;
+      experiment.height = finfo(1).Height;
+      if(finfo(1).BitDepth == 88)
+        pixelType = '*uint8';
+        bitsPerPixel = 8;
+      elseif(finfo(1).BitDepth == 16)
+        pixelType = '*uint16';
+        bitsPerPixel = 16;
+      elseif(finfo(1).BitDepth == 32)
+        pixelType = '*uint32';
+        bitsPerPixel = 32;
+      end
+
+      experiment.pixelType = pixelType;
+      experiment.bpp = bitsPerPixel;
+      if(~isempty(metadata) && isfield(metadata, 'vExpTim1'))
+        experiment.fps = 1/str2double(metadata.vExpTim1);
+      else
+        answer = inputdlg('Enter the video framerate',...
+                      'Framerate', [1 60], {'20'});
+        if(isempty(answer))
+            logMsg('Invalid frame rate', 'e');
+            barCleanup(params);
+            return;
+        end
+        frameRate = str2double(strtrim(answer{1}));
+        experiment.fps = frameRate;
+      end
+
+      experiment.totalTime = experiment.numFrames/experiment.fps;
+      experiment.saveFile = [experiment.name '.exp'];
+
     end
     %regexp('D35 Control_0_32.tifa', '_\d*.tif(f?)$')
   case '.dcimg'
@@ -308,16 +376,32 @@ switch lower(fpc)
     experiment.width = finfo(1).Width;
     experiment.height = finfo(1).Height;
     if(finfo(1).BitDepth == 88)
-        pixelType = '*uint8';
-        bitsPerPixel = 8;
+      pixelType = '*uint8';
+      bitsPerPixel = 8;
     elseif(finfo(1).BitDepth == 16)
-        pixelType = '*uint16';
-        bitsPerPixel = 16;
+      pixelType = '*uint16';
+      bitsPerPixel = 16;
+    elseif(finfo(1).BitDepth == 32)
+      pixelType = '*uint32';
+      bitsPerPixel = 32;
     end
     
     experiment.pixelType = pixelType;
     experiment.bpp = bitsPerPixel;
-    experiment.fps = 1/str2double(metadata.vExpTim1);
+    if(~isempty(metadata) && isfield(metadata, 'vExpTim1'))
+      experiment.fps = 1/str2double(metadata.vExpTim1);
+    else
+      answer = inputdlg('Enter the video framerate',...
+                    'Framerate', [1 60], {'20'});
+      if(isempty(answer))
+          logMsg('Invalid frame rate', 'e');
+          barCleanup(params);
+          return;
+      end
+      frameRate = str2double(strtrim(answer{1}));
+      experiment.fps = frameRate;
+    end
+    
     experiment.totalTime = experiment.numFrames/experiment.fps;
     experiment.saveFile = [experiment.name '.exp'];
   case '.his'

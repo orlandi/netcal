@@ -48,7 +48,7 @@ classdef preprocessExperimentOptions < baseOptions
     % How to perform the correction
     % - substract: will substract the image to every frame
     % - add: will add the image to every frame
-    backgroundImageCorrection = struct('active', false, 'file', java.io.File([pwd 'background.tif']), 'mode', {{'substract', 'add'}});
+    backgroundImageCorrection = struct('active', false, 'file', java.io.File([pwd 'background.tif']), 'mode', {{'substract', 'add', 'multiply', 'divide'}});
     
     % Choose what movie to use in preprocessing
     % - standard: the original recording

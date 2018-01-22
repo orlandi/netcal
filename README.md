@@ -2,7 +2,7 @@
 
 # Installation instructions
 - You can find [here](http://www.itsnetcal.com/getting-started/) the latest installation instructions.
-- Install additional MATLAB toolboxes: Go to the installDependencies folder and execute the mltbx files (or drag and drop in MATLAB).
+- Install additional MATLAB toolboxes: Go to the installDependencies folder and execute the mltbx files (or drag and drop in MATLAB). NOTE: In MATLAB r2017a+ you might need to download the GUI Layout Toolbox from the Add On Explorer yourself.
 - Change default MAT-Files version: Go to MATLAB Preferences -> General -> MAT-Files to v7.3
 - To be able to export figures to pdf and eps you need ghostscript installed.
 - To be able to use any of the python modules you need python installed and available to MATLAB
@@ -22,6 +22,40 @@
 - Computer Vision System Toolbox (6.2) [vision]
 
 # Change Log
+
+## [7.1.1] - 2018-01-22
+
+### Added
+- viewROI now accepts power spectrum images
+- peak detector to detect peaks in traces (will be used to refine pattern-based classifiers)
+- module to detect dying cells (those with step-like changes in fluorescence levels)
+- view traces available in batch mode
+- Several new features on the KCl analyis module
+- Spike-based burst detection method
+- Power-spectrum based preprocessing (obtain different average images based on power-spectrum bands)
+- More spike features (spikes in bursts)
+- More options for MLspike inference
+- Cross-correlation measures
+- New raster plots with average activity on top
+- Options to multiply or divide all frames using an external file (to correct uneven light fields)
+
+### Modified
+- Updated CaImAn repository
+- Updated CellSort repository and fully integrated it within NETCAL (GUI pending)
+- Schmitt trigger now admits point to point thresholds
+- Substantial speed up on automatic ROI detection (quick_dev and split modules)
+
+### Fixed
+- Renamed brick montage to avoid conflicts
+- Some files where not being copied when importing/cloning exsting .EXP files
+- Some statistics were not being correctly exported
+
+### Removed
+- Several consistency checks on trace fixer
+
+### Known Bugs
+- There is an ongoing bug where several pipeline functions are not being correctly loaded from their json files
+
 ## [7.0.0] - 2017-11-12
 
 ### Added
@@ -1310,4 +1344,5 @@
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
-[6.0.0]: https://github.com/orlandi/netcal/tree/v6.0.0
+[7.1.1]: https://github.com/orlandi/netcal/tree/v7.1.1
+[7.0.0]: https://github.com/orlandi/netcal/tree/v7.0.0

@@ -11,6 +11,8 @@ function img = getFrame(experiment, frame, fid, varargin)
 %
 %    fid - ID of the stream (from openVideoStream)
 %
+% INPUT optional arguments:
+%    pixelList - 1d-vector with the list of pixels to use instead of the whole frame
 % OUTPUT arguments:
 %    img - frame data
 %
@@ -22,7 +24,7 @@ function img = getFrame(experiment, frame, fid, varargin)
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 % See also: loadExperiment
 
-if(~isempty(varargin))
+if(~isempty(varargin) && ~isempty(varargin{1}))
   pixelList = varargin{1};
   pixelLength = pixelList(end)-pixelList(1)+1;
   partial = true;
@@ -114,13 +116,24 @@ end
 
 % Now the background correction
 if(isfield(experiment, 'backgroundImageCorrection') && experiment.backgroundImageCorrection)
-  if(experiment.backgroundImageMultiplier == 1)
-    img = img + experiment.backgroundImage;
-  else
-    img = img - experiment.backgroundImage;
+%   if(experiment.backgroundImageMultiplier == 1)
+%     img = img + experiment.backgroundImage;
+%   else
+%     img = img - experiment.backgroundImage;
+%   end
+
+  switch experiment.backgroundImageCorrectionMode
+    case 'substract'
+      img = img - experiment.backgroundImage;
+    case 'add'
+      img = img + experiment.backgroundImage;
+    case 'multiply'
+      img = img.*experiment.backgroundImage;
+    case 'divide'
+      img = double(img)./double(experiment.backgroundImage);
+      img = uint16(img);
   end
 end
-
 if(nargin == 2)
   closeVideoStream(fid);
 end

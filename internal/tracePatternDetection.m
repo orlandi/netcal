@@ -98,13 +98,27 @@ for git = 1:length(groupList)
       traces = experiment.rawTraces;
   end
   [patterns, ~] = generatePatternList(experiment);
-  
-  validPatterns = detectPatterns(t, traces(:, members), patterns, params.overlappingDiscriminationMethod, params.overlappingDiscriminationType, params.parallelMode);
+  if(params.usePeakInformation)
+    if(isfield(experiment, 'peaks'))
+      peaks = experiment.peaks;
+    else
+      logMsg('No peak data found', 'w');
+    end
+  else
+    peaks = [];
+  end
+  if(~isempty(peaks))
+      subpeaks = peaks(members)
+  else
+      subpeaks = [];
+  end
+  validPatterns = detectPatterns(t, traces(:, members), patterns, params.overlappingDiscriminationMethod, params.overlappingDiscriminationType, params.parallelMode, params.usePeakInformation, subpeaks);
   if(~isfield(experiment, 'validPatterns'))
     experiment.validPatterns = cell(size(traces, 2), 1);
     experiment.validPatterns(members) = validPatterns;
   else
     try
+      experiment = loadTraces(experiment, 'validPatterns');
       experiment.validPatterns(members) = validPatterns;
     catch ME
       experiment.validPatterns = cell(size(traces, 2), 1);
@@ -135,7 +149,7 @@ barCleanup(params);
 %--------------------------------------------------------------------------
 
   %------------------------------------------------------------------------
-  function validPatterns = detectPatterns(t, traces, patterns, overlappingDiscriminationMethod, overlappingDiscriminationType, parallel)
+  function validPatterns = detectPatterns(t, traces, patterns, overlappingDiscriminationMethod, overlappingDiscriminationType, parallel, usePeakInformation, peaks)
     % Time to detect the patterns - for each neuron, a pattern list
     validPatterns = cell(size(traces, 2), 1);
 
@@ -156,7 +170,11 @@ barCleanup(params);
     numTraces = size(traces, 2);
     if(parallel)
       for it2 = 1:numTraces
-        futures(it2) = parfeval(@singleTracePatternDetection, 1, traces(:, it2), t, patterns, b, EY, EYY);
+        if(~usePeakInformation)
+          futures(it2) = parfeval(@singleTracePatternDetection, 1, traces(:, it2), t, patterns, b, EY, EYY);
+        else
+          futures(it2) = parfeval(@singleTracePatternDetectionPeaks, 1, traces(:, it2), t, patterns, b, EY, EYY, peaks{it2});
+        end
       end
       numCompleted = 0;
       ncbar.unsetAutomaticBar();
@@ -166,13 +184,17 @@ barCleanup(params);
         [completedIdx, validPattern] = fetchNext(futures);
         validPatterns{completedIdx} = validPattern;
         numCompleted = numCompleted + 1;
-        ncbar.update(numCompleted/length(checkedExperiments));
+        ncbar.update(numCompleted/numTraces);
       end
       cancel(futures);
-      ncbar.close();
     else
       for it2 = 1:numTraces
-        validPatterns{it2} = singleTracePatternDetection(traces(:, it2), t, patterns, b, EY, EYY);
+        if(~usePeakInformation)
+          validPatterns{it2} = singleTracePatternDetection(traces(:, it2), t, patterns, b, EY, EYY);
+        else
+          validPatterns{it2} = singleTracePatternDetectionPeaks(traces(:, it2), t, patterns, b, EY, EYY, peaks{it2});
+        end
+        
         if(params.pbar > 0)
           ncbar.update(it2/nTraces);
         end
@@ -275,7 +297,6 @@ barCleanup(params);
     end
   end
 
-
   function validPattern = singleTracePatternDetection(signal, t, patterns, b, EY, EYY)
 %    parfor(it1 = 1:size(traces, 2), parforArg)
  %     signal = traces(:, it1);
@@ -302,6 +323,53 @@ barCleanup(params);
           continue;
         end
         lastT = min(length(t), currT+length(pattern)-1);
+        validPattern{end+1} = struct;
+        validPattern{end}.frames = currT:lastT;
+        validPattern{end}.coeff = cc(currT);
+        validPattern{end}.pattern = it2;
+        validPattern{end}.basePattern = patterns{it2}.basePattern;
+        cc(1:lastT) = 0;
+      end
+    end
+  end
+ function validPattern = singleTracePatternDetectionPeaks(signal, t, patterns, b, EY, EYY, peaks)
+    validPattern = {};
+    
+    % First use find peaks to find possible peaks
+    if(isempty(peaks) || ~isfield(peaks, 'frame'))
+      return;
+    end
+
+    locs = arrayfun(@(x)x.frame, peaks);
+    
+    for it2 = 1:length(patterns)
+      threshold = patterns{it2}.threshold;
+      pattern = patterns{it2}.F(:)';
+      % Since patterns might have different lenght, this has to go here
+      % We are doing all
+      [cc, ~] = xcorr(signal, pattern);
+      EXY = cc(length(t):end)/length(pattern);
+      revY = signal(end:-1:1);
+      EX = filter(b{it2}, 1, revY);
+      EX = EX(end:-1:1);
+      EXX = filter(b{it2}, 1, revY.^2);
+      EXX = EXX(end:-1:1);
+      cc = (EXY-EX.*EY{it2})./(sqrt(EXX-EX.^2)*sqrt(EYY{it2}-EY{it2}.^2));
+      done = false;
+      while(~done)
+        currT = find(cc > threshold, 1, 'first');
+        if(isempty(currT))
+          done = true;
+          continue;
+        end
+        lastT = min(length(t), currT+length(pattern)-1);
+        frameList = currT:lastT;
+        % Only add if it overlaps a frame
+        
+        if(isempty(intersect(frameList, locs)))
+          cc(1:lastT) = 0;  
+          continue;
+        end
         validPattern{end+1} = struct;
         validPattern{end}.frames = currT:lastT;
         validPattern{end}.coeff = cc(currT);

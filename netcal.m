@@ -13,7 +13,7 @@ function netcal(varargin)
 % EXAMPLE:
 %    netcal
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi
+% Copyright (C) 2016-2018, Javier G. Orlandi
 
 %#ok<*AGROW>
 %#ok<*ASGLU>
@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.0.0';
+currVersion = '7.1.1';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -760,7 +760,7 @@ function menuExperimentAddBatch(~, ~, ~)
   for i = 1:length(filesToImport)
     experimentFile = names{filesToImport(i)};
     try
-      newExperiment = loadExperiment(experimentFile, 'verbose', false, 'filterIndex', filterIndex, 'pbar', 2);
+      newExperiment = loadExperiment(experimentFile, 'verbose', false, 'filterIndex', filterIndex, 'pbar', 2, 'project', project);
     catch ME 
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
       logMsg(sprintf('Something went wrong importing experiment %s', experimentFile), 'e');
@@ -1221,6 +1221,16 @@ function menuNewGuiWindow(~, ~, windowFunction)
 end
 
 %--------------------------------------------------------------------------
+function menuNewProjectGuiWindow(~, ~, windowFunction)
+  project = getappdata(netcalMainWindow, 'project');
+  
+  if(checkOpenFigures() > 0)
+    logMsg('Another figure that might modify the active experiment is already open. Be careful', 'w');
+  end
+  addFigure(windowFunction(project));
+end
+
+%--------------------------------------------------------------------------
 function experiment = menufluorescenceAnalysisCutTraces(experiment)
   experiment = loadTraces(experiment, 'all');
   minT = experiment.rawT(1);
@@ -1642,7 +1652,7 @@ function success = importExperiment(fileName, varargin)
         experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
         % Copy all project files
         try
-            copyfile(oldFolder, experiment.folder);
+            copyfile(oldFolder, experiment.folder, 'f');
         catch ME
             logMsg('Error copying the file...', 'w');
             logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
@@ -1677,11 +1687,19 @@ function success = menuExperimentAssignLabel(nodeList, type, label)
         newLabelList = label;
       case 'add'
         newLabelList = strtrim(strsplit(label, ','));
-        oldLabelList = strtrim(strsplit(project.labels{curExperimentIdx}, ','));
+        try
+          oldLabelList = strtrim(strsplit(project.labels{curExperimentIdx}, ','));
+        catch
+          oldLabelList = '';
+        end
         newLabelList = strjoin(unique([newLabelList oldLabelList]), ', ');
       case 'remove'
         newLabelList = strtrim(strsplit(label, ','));
-        oldLabelList = strtrim(strsplit(project.labels{curExperimentIdx}, ','));
+        try
+          oldLabelList = strtrim(strsplit(project.labels{curExperimentIdx}, ','));
+        catch
+          oldLabelList = '';
+        end
         newLabelList = strjoin(setdiff(oldLabelList, newLabelList), ', ');
         if(isempty(newLabelList))
           newLabelList = '';
@@ -2467,6 +2485,23 @@ function printSavedExperimentInfo(varargin)
       else
         msgList{end+1} = sprintf('<b>Info:</b> none');
       end
+    end
+    msgList{end+1} = '-------';
+    
+    msgList{end+1} = sprintf('<b>Additional background correction</b>');
+    if(isfield(experiment, 'backgroundImageCorrection') && isfield(experiment.backgroundImageCorrection, 'active') && experiment.backgroundImageCorrection.active)
+      switch params.backgroundImageCorrection.mode
+        case 'substract'
+          msgList{end+1} = sprintf('Background image substracted to original data');
+        case 'add'
+          msgList{end+1} = sprintf('Background image added to original data');
+        case 'multiply'
+          msgList{end+1} = sprintf('Background image multiplied to original data');
+          case 'divide'
+          msgList{end+1} = sprintf('Background image divided to original data');
+      end
+    else
+      msgList{end+1} = sprintf('None');
     end
     msgList{end+1} = '-------';
     baseMsg = 'ROI';
@@ -3372,6 +3407,7 @@ function resetProjectTree(~, ~)
   uimenu(projectTreeContextMenuRoot, 'Label', 'Sort by label (inverse)', 'Callback', {@sortMethod, projectTree, 'labelInverse'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Check all', 'Separator', 'on', 'Callback', {@selectMethod, projectTree, 'all'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Check none', 'Callback', {@selectMethod, projectTree, 'none'});
+  uimenu(projectTreeContextMenuRoot, 'Label', 'Check by label', 'Callback', {@selectMethod, projectTree, 'label'});
   
   %%% If there is no project or experiments we are done
   if(isempty(project) || ~isfield(project, 'experiments') || isempty(project.experiments))
@@ -3532,6 +3568,34 @@ function resetProjectTree(~, ~)
         hObject.Root.Checked = true;
         hObject.Root.Checked = false;
         project.checkedExperiments(:) = false;
+      case 'label'
+        answer = inputdlg('Select label to match', 'Check experiments by label', [1 60], {''});
+
+        if(isempty(answer))
+          return;
+        end
+        answer{1} = strtrim(answer{1});
+        targetLabelList = strtrim(strsplit(answer{1}, ','));
+        %project.checkedExperiments(:) = false;
+        for it = 1:length(hObject.Root.Children)
+          %hObject.Root.Children(it).UserData{3} = true;
+          curLabelList = strtrim(strsplit(hObject.Root.Children(it).UserData{2}, ','));
+          
+          if(isempty(setdiff(targetLabelList, curLabelList)))
+            hObject.Root.Children(it).UserData{3} = true;
+            hObject.Root.Children(it).Checked = true;
+            project.checkedExperiments(it) = 1;
+          else
+            hObject.Root.Children(it).UserData{3} = false;
+            project.checkedExperiments(it) = 0;
+            hObject.Root.Children(it).Checked = false;
+          end
+        end
+%         for it = 1:length(project.labels)
+%           if(strfind(project.labels{it}, answer{1}))
+%             project.checkedExperiments(it) = 1;
+%           end
+%         end
     end
     
     setappdata(netcalMainWindow, 'project', project);
@@ -4873,6 +4937,7 @@ function modules = loadModules()
         {'Standard', 'preprocessingStandard', 'preprocessing', {@menuExperimentGlobalAnalysis, @preprocessExperiment, preprocessExperimentOptions}, 'handle', 'avgImg'}, ...
         {'Percentile', 'preprocessingPercentile', 'preprocessing', {@menuExperimentGlobalAnalysis, @preprocessExperimentPercentile, preprocessExperimentPercentileOptions}, 'avgImg', 'percentileImg'}, ...
         {'Denoising', 'preprocessingDenoising', 'preprocessing', {@menuExperimentGlobalAnalysis, @denoiseRecording, denoiseRecordingOptions}, 'handle', 'denoisedData'}, ...
+        {'Power spectrum', 'preprocessingPSD', 'preprocessing', {@menuExperimentGlobalAnalysis, @computePSDavg, computePSDavgOptions}, 'handle', 'avgPSD'}, ...
       {'ROI detection', 'roiSelection', 'fluorescence', [], 'avgImg', []}, ...
         {'Supervised ROI detection', 'manualROIdetection', 'roiSelection', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI', false, 'single'}, ...
         {'Automatic ROI detection', 'automaticROIdetection', 'roiSelection', {@menuExperimentGlobalAnalysis, @automaticROIdetection, ROIautomaticOptions}, 'avgImg', 'ROI'}, ...
@@ -4937,6 +5002,9 @@ function modules = loadModules()
     {'Groups', 'viewGroups', 'view', {@menuNewGuiWindow, @viewGroups}, 'ROI', []}, ...
     {'Glia', 'viewGlia', 'view', {@menuNewGuiWindow, @viewGlia}, 'gliaAverageFrame', []}, ...
     {'Denoiser', 'viewDenoiser', 'view', {@menuNewGuiWindow, @viewDenoiser}, 'avgImg', 'denoisedData'}, ...
+  ...
+  {'View', 'viewMultiple', [], [], [], [], false, 'multiple'}, ...
+    {'Traces', 'viewMultipleTraces', 'viewMultiple', {@menuNewProjectGuiWindow, @viewTracesMultiExperiment}, 'rawTraces', []}, ...
   ...
   {'Statistics', 'statistics', [], [], [], [], false, 'multiple'}, ...
     {'Populations', 'populationStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotPopulationsStatistics, plotPopulationsStatisticsOptions}, 'ROI', []}, ...

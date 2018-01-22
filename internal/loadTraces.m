@@ -94,7 +94,11 @@ for i = 1:length(bigFields)
         end
       end
     end
-    experiment.(bigFields{i}) = eval(bigFields{i});
+    try
+      experiment.(bigFields{i}) = eval(bigFields{i});
+    catch
+      logMsg([bigFields{i} ' loaded but returned empty'],'e');
+    end
   elseif(isfield(experiment, bigFields{i}) && isnumeric(experiment.(bigFields{i})))
     success = true;
   end

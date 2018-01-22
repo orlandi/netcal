@@ -1,4 +1,4 @@
-function bursts = getExperimentGroupBursts(experiment, name)
+function bursts = getExperimentGroupBursts(experiment, name, varargin)
 % GETEXPERIMENTGROUPBURSTS Returns the bursts of a given group
 %
 % USAGE:
@@ -17,6 +17,11 @@ function bursts = getExperimentGroupBursts(experiment, name)
 %
 % Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
+if(nargin < 3)
+  type = 'fluorescence';
+else
+  type = varargin{1};
+end
 bursts = [];
 nameComponents = strsplit(name, ':');
 % Hack in case the user defined name has the delimiter
@@ -25,10 +30,22 @@ if(length(nameComponents) > 2)
 end
 if(isfield(experiment, 'traceGroups') && ~isempty(experiment.traceGroups) && isfield(experiment, 'traceGroupsNames'))
   if(length(nameComponents) == 1)
-    bursts = experiment.traceBursts.(nameComponents{1}){1};
+    switch type
+      case 'fluorescence'
+        bursts = experiment.traceBursts.(nameComponents{1}){1};
+      case 'spikes'
+        bursts = experiment.spikeBursts.(nameComponents{1}){1};
+    end
   else
-    groupNames = experiment.traceGroupsNames.(nameComponents{1});
-    validCategory = find(strcmpi(groupNames, strtrim(nameComponents{2})));
-    bursts = experiment.traceBursts.(nameComponents{1}){validCategory};
+    switch type
+      case 'fluorescence'
+        groupNames = experiment.traceGroupsNames.(nameComponents{1});
+        validCategory = find(strcmpi(groupNames, strtrim(nameComponents{2})));
+        bursts = experiment.traceBursts.(nameComponents{1}){validCategory};
+      case 'spikes'
+        groupNames = experiment.traceGroupsNames.(nameComponents{1});
+        validCategory = find(strcmpi(groupNames, strtrim(nameComponents{2})));
+        bursts = experiment.spikeBursts.(nameComponents{1}){validCategory};
+    end
   end
 end

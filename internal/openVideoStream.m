@@ -31,6 +31,8 @@ if(~isempty(experiment.handle) && strcmp(experiment.handle, 'dummy'))
 end
 
 % Check if the handle exists. If not, update it
+
+
 if(isempty(experiment.handle) || experiment.handle(1) == 0 || ~exist(experiment.handle, 'file'))
   if(~isempty(experiment.handle) && experiment.handle(1) ~= 0)
     [~, fpb, fpc] = fileparts(experiment.handle);

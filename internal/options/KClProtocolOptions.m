@@ -26,8 +26,25 @@ classdef KClProtocolOptions < baseOptions
     % Time (since the protocol began) to check for an effect after the protocol began (in seconds)
     windowOfInterest = inf;
     
+    % Method used to detect the onset time:
+    % - baseLine: estimate the baseline (using a percentile) before the estimulation and find
+    % abrupt changes afterwards (see baseLineDefinitionTime and
+    % baselineThreshold)
+    % - valleyDetection: use the findPeaks function to estimate the
+    % position of the onset time
+    onsetDetectionMethod = {'baseLine', 'valleyDetection', 'both'};
+    
     % Number of seconds to take before the protocol to define the baseline
     baseLineDefinitionTime = 5;
+    
+    % Percentile level to use to define the baseline (between 0 and 1)
+    baseLineThreshold = 0.1;
+    
+    % Drift multiplier added to the original line to maximize valley detection
+    valleyDetectionTilt = 10;
+    
+    % Prominence value to detect the peaks (see findPeaks function)
+    valleyProminence = 15;
     
     % protocolType: If you expect the protocol to increase (positive) or decrease (negative)  the signal
     protocolType = {'positive'; 'negative'}';
@@ -48,13 +65,9 @@ classdef KClProtocolOptions < baseOptions
     % - absolute: absolute increase of the fluorescence value
     maxResponseThreshold = 0.99;
     
-    % Type of threshold to use to detect when the signal starts to decay  (measured since the reaction time)
-    decayThresholdType = {'relative'; 'absolute'}';
-    
-    % Value of the threshold for the decay:
-    % - relative: times the global maximum
-    % - absolute: absolute increase of the fluorescence value
-    decayThreshold = 0.7;
+    % Window size (in sec) for the linear fits used to determine when the
+    % signal starts to decay
+    decayWindowSize = 10;
     
     % Type of threshold to use for the recovery time  (measured since the start time)
     recoveryTimeThresholdType = {'relative'; 'absolute'}';

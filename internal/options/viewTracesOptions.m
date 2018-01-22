@@ -19,8 +19,9 @@ classdef viewTracesOptions < baseOptions
     % - 'globalMax' - Normalize just by the maximum across all traces
     % - 'max' - Divide by the maximum across all displayed traces
     % - 'none' - Do not normalize
+    % - 'fixedValue' - The number in normalizationMultiplier will be the new normalization maximum, e.g., 10 for showing 10DF/F as max
     % - any number - This will be the new normalization maximum, e.g., 10 for showing 10DF/F as max
-    normalization = {'std', 'std2', 'mean', 'global', 'global2x', 'globalMax', 'max', 'none', ''};
+    normalization = {'std', 'std2', 'mean', 'global', 'global2x', 'globalMax', 'max', 'none', 'fixedValue', ''};
 
     % Value to multiply each trace fluorescence values after
     % normalization. Set it to 0 for the default values:

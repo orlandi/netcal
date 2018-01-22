@@ -91,11 +91,11 @@ parameters.fast_iter_max = 15; %15;
 parameters.fast_poiss = 0; %1=poisson/0=gaussian
 parameters.fast_thr = 0;
 parameters.plot = 0;
- parameters.est_a = 1;
- parameters.est_b = 1;
- parameters.est_gam = 1;
- parameters.est_lam = 1;
- parameters.est_sig = 1;
+parameters.est_a = 1;
+parameters.est_b = 1;
+parameters.est_gam = 1;
+parameters.est_lam = 1;
+parameters.est_sig = 1;
 parameters.probability = params.probabilityThreshold;
 % Some test
 %  parameters.est_a = 0;

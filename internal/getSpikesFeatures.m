@@ -62,6 +62,7 @@ Nfeatures = sum(params.fNumSpikes + params.fAverageISI + params.fStdISI + ...
                 params.fFanoFactorISI + params.fCoefficientVariationISI + ...
                 params.fBurstNumSpikes + params.fBurstLength + ...
                 params.fBurstLengthFluorescence + params.fSchmittAmplitude + ...
+                params.fNumSpikesInBursts + params.fNumSpikesInBurstsRatio + ...
                 params.fSchmittArea + params.fSchmittDuration + params.fFiringRate + params.fBurstingRate);
 
 % To not overwrite other groups
@@ -109,8 +110,8 @@ if(params.fMeanBurstISI)
     currFeature = currFeature + 1;
 end
 if(params.fMeanIBI)
-    featuresNames{currFeature} = 'Avg IBI (s)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg IBI (s)';
+  currFeature = currFeature + 1;
 end
 if(params.fEntropy)
   featuresNames{currFeature} = 'Shannon entropy (bits)';
@@ -133,30 +134,37 @@ if(params.fCoefficientVariationISI)
   currFeature = currFeature + 1;
 end
 if(params.fBurstNumSpikes)
-    featuresNames{currFeature} = 'Avg Num spikes per burst';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg Num spikes per burst';
+  currFeature = currFeature + 1;
 end
 if(params.fBurstLength)
-    featuresNames{currFeature} = 'Avg Burst length (s)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg Burst length (s)';
+  currFeature = currFeature + 1;
 end
 if(params.fBurstLengthFluorescence)
-    featuresNames{currFeature} = 'Avg Burst length (s) (fluorescence)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg Burst length (s) (fluorescence)';
+  currFeature = currFeature + 1;
+end
+if(params.fNumSpikesInBursts)
+  featuresNames{currFeature} = 'Num Spikes in bursts';
+  currFeature = currFeature + 1;
+end
+if(params.fNumSpikesInBurstsRatio)
+  featuresNames{currFeature} = 'Ratio num Spikes in bursts';
+  currFeature = currFeature + 1;
 end
 if(params.fSchmittAmplitude)
-    featuresNames{currFeature} = 'Avg event amplitude (schmitt)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg event amplitude (schmitt)';
+  currFeature = currFeature + 1;
 end
 if(params.fSchmittArea)
-    featuresNames{currFeature} = 'Avg event area (schmitt)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg event area (schmitt)';
+  currFeature = currFeature + 1;
 end
 if(params.fSchmittDuration)
-    featuresNames{currFeature} = 'Avg event duration (s) (schmitt)';
-    currFeature = currFeature + 1;
+  featuresNames{currFeature} = 'Avg event duration (s) (schmitt)';
+  currFeature = currFeature + 1;
 end
-
 
 
 if(isinf(diff(params.timeRange)))
@@ -343,9 +351,10 @@ for ii = 1:length(members)
 
   % Number of spikes per burst 7
   if(params.fBurstNumSpikes)
-      features(i, currFeature) = NspikesPerBurst;
-      currFeature = currFeature + 1;
+    features(i, currFeature) = NspikesPerBurst;
+    currFeature = currFeature + 1;
   end
+  
   
   % Burst length 8
   burstLengthS = [];
@@ -376,6 +385,15 @@ for ii = 1:length(members)
       end
     end
     features(i, currFeature) = nanmean(burstLength);
+    currFeature = currFeature + 1;
+  end
+  if(params.fNumSpikesInBursts)
+    features(i, currFeature) = NspikesPerBurst*Nbursts;
+    currFeature = currFeature + 1;
+  end
+  
+  if(params.fNumSpikesInBurstsRatio)
+    features(i, currFeature) = NspikesPerBurst*Nbursts/length(validSpikes);
     currFeature = currFeature + 1;
   end
   % Following features depend on the Schmitt trigger options, skip if not found

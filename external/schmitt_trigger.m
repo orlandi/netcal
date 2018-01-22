@@ -1,5 +1,7 @@
 %SCHMITT TRIGGER
 function y = schmitt_trigger(x,tL,tH)
+% Modified to allow an arbitrary number of thresholds
+% Javier Orlandi 2017
 
 %x=rand(1,100);
 %x=conv(x,ones(10,1)/10);
@@ -12,8 +14,12 @@ end
   
    y=[length(x)];
   
-
-   
+if(numel(tL) == 1)
+  tL = ones(size(x))*tL;
+end
+if(numel(tH) == 1)
+  tH = ones(size(x))*tH;
+end
    for i=1:N
        
        
@@ -28,11 +34,11 @@ end
       end
        
        
-      if (x(i)<=tL)
+      if (x(i)<=tL(i))
           limit=0; 
             y(i)=0;
           
-      elseif( x(i)>= tH)         
+      elseif( x(i)>= tH(i))         
           limit=1;  
           y(i)=1;
               
