@@ -467,7 +467,7 @@ function updateImage(varargin)
         plot(t, currentTrace);
         hold on;
         yl = ylim;
-        plot(t(1)+experiment.spikes{selectedTrace}, ones(size(experiment.spikes{selectedTrace}))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
+        plot(t(1)+experiment.inferenceTrainingData.spikes, ones(size(experiment.inferenceTrainingData.spikes))*yl(2)*1.1, experiment.inferenceTrainingOptionsCurrent.symbol);
         xl = xlim;
         switch experiment.schmittOptionsCurrent.thresholdType
           case 'relative'
@@ -477,7 +477,10 @@ function updateImage(varargin)
             plot(xl, [1,1]*experiment.schmittOptionsCurrent.lowerThreshold, '--');
             plot(xl, [1,1]*experiment.schmittOptionsCurrent.upperThreshold, '--');
         end
-        Nspikes = length(experiment.spikes{selectedTrace});
+        for it = 1:length(experiment.inferenceTrainingData.frames)
+          plot(t(experiment.inferenceTrainingData.frames{it}), currentTrace(experiment.inferenceTrainingData.frames{it}));
+        end
+        Nspikes = length(experiment.inferenceTrainingData.spikes);
         title(sprintf('ROI: %d - # spikes: %d', experiment.ROI{selectedROI}.ID, Nspikes));
 
         ylim([yl(1) yl(2)*1.2]);

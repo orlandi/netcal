@@ -1,4 +1,4 @@
-function [experiment, td] = spikeInferenceSchmitt(experiment, varargin)
+function [experiment, trainingData] = spikeInferenceSchmitt(experiment, varargin)
 % SPIKEINFERENCESCHMITT Does spike detection using a schmitt trigger
 %
 % USAGE:
@@ -11,17 +11,20 @@ function [experiment, td] = spikeInferenceSchmitt(experiment, varargin)
 %   options - object from class peelingOptions
 %
 % INPUT optional arguments ('key' followed by its value):
-%   gui - handle of the external GUI
 %
 %   subset - only get spikes for a particular subset of traces (idx list)
+%
+%   training - (true/false) if we are traning on a single trace
 %
 % OUTPUT arguments:
 %   experiment - structure containing an experiment
 %
+%   trainingData - structure containing the training data
+%
 % EXAMPLE:
 %   experiment = spikeInferenceSchmitt(experiment, schmittOptions)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 % See also schmittOptions
 
@@ -46,7 +49,7 @@ if(params.training)
 end
 params = barStartup(params, 'Running schmitt');
 %--------------------------------------------------------------------------
-td = [];
+
 % Fix in case for some reason the group is a cell
 if(iscell(params.group))
   mainGroup = params.group{1};
@@ -103,6 +106,10 @@ for it = 1:length(subset)
   end
 end
 
+if(params.training)
+  trainingData = schmittSpikesData{it};
+  trainingData.spikes = schmittSpikes{it};
+end
 
 for it = 1:length(subset)
   experiment.spikes{subset(it)} = schmittSpikes{it};

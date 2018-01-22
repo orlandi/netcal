@@ -127,7 +127,7 @@ internal/spikeInferenceFoopsi.m 8382
 internal/spikeInferenceMLspike.m 8111
 internal/spikeInferenceOasis.m 5064
 internal/spikeInferencePeeling.m 4172
-internal/spikeInferenceSchmitt.m 5439
+internal/spikeInferenceSchmitt.m 5644
 internal/spikeRemoveConflicts.m 2923
 internal/tracePatternDetection.m 13500
 internal/traceUnsupervisedEventDetection.m 9566
@@ -1618,7 +1618,7 @@ gui/traceFixer.m 28896
 gui/viewCompareExperiments.m 78901
 gui/viewDenoiser.m 30873
 gui/viewGroups.m 51374
-gui/viewInferenceTraining.m 22140
+gui/viewInferenceTraining.m 22363
 gui/viewPCA.m 42564
 gui/viewPatterns.m 40896
 gui/viewROI.m 54800
@@ -1635,5 +1635,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 38255
+README.md 38460
 netcal.m 207332

@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.3] - 2018-01-22
+
+### Fixed
+- Spike inference: Schmitt trigger should correctly display detected events and thresholds in the training window
+
 ## [7.1.2] - 2018-01-22
 
 ### Added
@@ -1353,6 +1358,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.3]: https://github.com/orlandi/netcal/tree/v7.1.3
 [7.1.2]: https://github.com/orlandi/netcal/tree/v7.1.2
 [7.1.1]: https://github.com/orlandi/netcal/tree/v7.1.1
 [7.0.0]: https://github.com/orlandi/netcal/tree/v7.0.0
