@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.4] - 2018-01-22
+
+### Modified
+- Moved Trace Fixer to the end of the View menu to avoid user missclicks
+
 ## [7.1.3] - 2018-01-22
 
 ### Fixed

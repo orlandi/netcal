@@ -440,8 +440,6 @@ external/CaImAn-MATLAB/endoscope/cnmfe_scripts/cnmfe_show_corr_pnr.m 557
 external/CaImAn-MATLAB/endoscope/cnmfe_scripts/cnmfe_update_BG.m 386
 external/CaImAn-MATLAB/endoscope/demos/data_endoscope.tif 32894078
 external/CaImAn-MATLAB/endoscope/demos/demo_endoscope.m 7775
-external/CaImAn-MATLAB/live scripts/demo_pipeline.mlx 2240365
-external/CaImAn-MATLAB/live scripts/demo_script.mlx 472540
 external/CaImAn-MATLAB/utilities/GetSn.m 879
 external/CaImAn-MATLAB/utilities/HALS.m 2236
 external/CaImAn-MATLAB/utilities/HALS_2d.m 1963
@@ -1635,5 +1633,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 38460
+README.md 38572
 netcal.m 207332
