@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.2] - 2018-01-22
+
+### Added
+- exportROIcenters: pipeline function to export ROI centers of a given group (groups: exports)
+
 ## [7.1.1] - 2018-01-22
 
 ### Added
@@ -1348,5 +1353,6 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.2]: https://github.com/orlandi/netcal/tree/v7.1.2
 [7.1.1]: https://github.com/orlandi/netcal/tree/v7.1.1
 [7.0.0]: https://github.com/orlandi/netcal/tree/v7.0.0

@@ -148,6 +148,7 @@ internal/exports/exportFluorescenceFeatures.m 5389
 internal/exports/exportKClAnalysis.m 4303
 internal/exports/exportLearningData.m 4053
 internal/exports/exportPopulationsStatistics.m 7026
+internal/exports/exportROIcenters.m 3553
 internal/exports/exportSpectrogram.m 4077
 internal/exports/exportSpikes.m 5725
 internal/images/loopFile.gif 351719
@@ -206,6 +207,7 @@ internal/options/exportBurstStatisticsOptions.m 2204
 internal/options/exportMovieOptions.m 1036
 internal/options/exportPopulationsOptions.m 924
 internal/options/exportPopulationsStatisticsOptions.m 2011
+internal/options/exportROIcentersOptions.m 1801
 internal/options/exportSpikesOptions.m 1666
 internal/options/exportTracesOptions.m 1895
 internal/options/extractTracesOptions.m 1140
@@ -1633,5 +1635,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 36952
+README.md 38255
 netcal.m 207332

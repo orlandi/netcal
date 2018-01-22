@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.1.1';
+currVersion = '7.1.2';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
