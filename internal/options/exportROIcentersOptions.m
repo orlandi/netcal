@@ -19,6 +19,11 @@ classdef exportROIcentersOptions < baseOptions
     % - txt: space separated ascii file (no header available)
     fileType = {'csv', 'txt'};
     
+    % Coordiante system to use:
+    % - cartesian: returns X,Y such that 1,1 corresponds to the lower-left of the image
+    % - image: returns I,J (rows,cols) such that 1,1 corresponds to the top-left of the image
+    coordinates = {'cartesian', 'image'};
+    
     % Numeric format to save the data (fprintf format)
     numericFormat = {'%.2f', ''};
     

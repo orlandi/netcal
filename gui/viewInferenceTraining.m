@@ -1,5 +1,5 @@
 function [hFigW, experiment] = viewInferenceTraining(experiment)
-% VIEWINFERENCETRAINING screen to check performance of spike inference algorithms on single traces (for now only peeling)
+% VIEWINFERENCETRAINING screen to check performance of spike inference algorithms on single traces
 %
 % USAGE:
 %    viewInferenceTraining(experiment)

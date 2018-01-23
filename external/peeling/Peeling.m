@@ -174,7 +174,8 @@ if rate > maxRate_peel
 end
 
 % optimization of reconstructed spike times to improve timing
-optMethod = 'pattern search';
+%optMethod = 'pattern search';
+optMethod = peel_p.optimizationMethod;
 optMaxIter = 100000;
 %lowerT = 1; % relative to x0
 %upperT = 1; % relative to x0
@@ -204,7 +205,7 @@ if peel_p.fitonset
     wleft = round(peel_p.fitwinleft*exp_p.acqrate);     % left window for onset fit
     wright = round(peel_p.fitwinright*exp_p.acqrate);    % right window for onset fit
     for i = 1:numel(data.spikes)
-        i
+        %i
         [~,idx] = min(abs(data.spikes(i)-data.tim));
         if (idx-wleft) < 1
             currentwin = data.dff(1:idx+wright);
@@ -271,6 +272,7 @@ if isfield(peel_p,'doPlot')
 else
     doPlot = 1;
 end
+
 if doPlot % plots at interpolation rate
     figure; plot(data.tim,data.peel); hold all
     plot(data.tim,data.dff); hold all

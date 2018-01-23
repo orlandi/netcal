@@ -27,6 +27,17 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.5] - 2018-01-22
+
+### Added
+- Peeling spike inference now has several new options to allow more customization (as in the original paper)
+- Cartesian coordiantes export of ROI centers
+- Export ROI coordinates button to the view ROI GUI
+
+### Modified
+- ROI centers export on the pipeline now has its own section (ROI)
+- Spike inference modes are now in the same order as in the training window
+
 ## [7.1.4] - 2018-01-22
 
 ### Modified
@@ -1363,8 +1374,9 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
-
+[7.1.5]: https://github.com/orlandi/netcal/tree/v7.1.5
 [7.1.4]: https://github.com/orlandi/netcal/tree/v7.1.4
+[7.1.3]: https://github.com/orlandi/netcal/tree/v7.1.3
 [7.1.2]: https://github.com/orlandi/netcal/tree/v7.1.2
 [7.1.1]: https://github.com/orlandi/netcal/tree/v7.1.1
 [7.0.0]: https://github.com/orlandi/netcal/tree/v7.0.0

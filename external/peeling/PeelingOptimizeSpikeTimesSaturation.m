@@ -58,6 +58,8 @@ switch lower(optimMethod)
         options = psoptimset;
     case 'genetic'
         options = gaoptimset;
+    case 'none'
+        options = psoptimset;
     otherwise
         error('Optimization method %s not supported.',optimMethod)
 end
@@ -97,11 +99,13 @@ switch lower(optimMethod)
         [x, fval , exitFlag, output] = ga(...
             @(x) objectiveFunc(x,opt_args),numel(x0),[],[],[],[],lbound,...
             ubound,[],options);
+    case 'none'
+        fval = inf;
 end
 
 if fval < resInit
     spkTout = x;
-else
+elseif(~strcmpi(optimMethod, 'none'))
     disp('Optimization did not improve residual. Keeping input spike times.')
 end
 

@@ -20,7 +20,7 @@ function experiment = exportROIcenters(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: export ROI centers
-% parentGroups: groups: exports
+% parentGroups: ROI: exports
 % optionsClass: exportROIcentersOptions
 % requiredFields: ROI, folder, name
 
@@ -81,17 +81,23 @@ for git = 1:length(groupList)
     continue;
   end
   
-  tag = strrep(groupList{git}, ':', '_');
+  tag = strrep(groupList{git}, ': ', '_');
   %ROIid = getROIid(experiment.ROI);
   %labels = {'ROI ID', 'X', 'Y'};
-  ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(2), experiment.ROI(members)), cellfun(@(x)x.center(1), experiment.ROI(members))];
-  
+  switch params.coordinates
+    case 'cartesian'
+      ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(1), experiment.ROI(members)), experiment.height-(cellfun(@(x)x.center(2), experiment.ROI(members))-1)];
+      fileHeader = 'ROI ID, X, Y\n';
+    case 'image'
+      ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(2), experiment.ROI(members)), cellfun(@(x)x.center(1), experiment.ROI(members))];
+      fileHeader = 'ROI ID, row, col\n';
+  end
   switch params.fileType
     case 'csv'
       outputFile = [dataFolder, experiment.name, '_ROI_centers_' tag '.csv'];
       fID = fopen(outputFile, 'W');
       % Create and write the header
-      fprintf(fID, 'ROI ID, X, Y\n');
+      fprintf(fID, fileHeader);
 
       % Create the format for the statistics
       fmt = ['%d, ' params.numericFormat, ', ' params.numericFormat, '\n'];

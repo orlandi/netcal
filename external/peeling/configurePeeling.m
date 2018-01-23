@@ -2,12 +2,10 @@ function [ca_p, peel_p, exp_p] = configurePeeling(experiment, traces, varargin)
 % CONFIGUREPEELING
 %
 % USAGE:
-%    ROI = refineROI(stillImage, ROI, varargin)
+%    ROI = configurePeeling(experiment, traces, varargin)
 %
 % INPUT arguments:
-%    stillImage - image to use in the ROI refinement
-%
-%    ROI - ROI list
+% TODO
 %
 % INPUT optional arguments ('key' followed by its value):
 %    'verbose' - true/false. If true, outputs verbose information. Default:
@@ -21,9 +19,13 @@ params.amp1 = [];
 params.amp2 = [];
 params.tau1 = [];
 params.tau2 = [];
-params.sdnoise = [];
-params.smtthigh = 2.4;
-params.smttlow = -1.2;
+params.standardNoise = [];
+params.schmittThresholds = [2.4, -1.2];
+params.optimizationMethod = 'none';
+params.calciumMode = 'linDFF';
+params.additionalPlots = false;
+params.gamma = 400;
+params.dffmax = 93;
 params.verbose = true;
 params = parse_pv_pairs(params, varargin);
 
@@ -47,15 +49,25 @@ end
 if(~isempty(params.tau2))
     ca_p.tau2 = params.tau2;
 end
-
-if(~isempty(params.sdnoise))
-    peel_p.sdnoise = params.sdnoise;
+if(~isempty(params.calciumMode))
+    ca_p.ca_genmode = params.calciumMode;
+    peel_p.spk_recmode = params.calciumMode;
+end
+if(~isempty(params.optimizationMethod))
+  peel_p.optimizationMethod = params.optimizationMethod;
+end
+if(~isempty(params.standardNoise))
+    peel_p.sdnoise = params.standardNoise;
 else
     peel_p.sdnoise = mean(std(traces))*0.75;
 end
 
-peel_p.smtthigh = params.smtthigh*peel_p.sdnoise;
-peel_p.smttlow = params.smttlow*peel_p.sdnoise;
+ca_p.ca_gamma = params.gamma;
+exp_p.dffmax = params.dffmax;
+
+peel_p.doPlot = params.additionalPlots;
+peel_p.smtthigh = params.schmittThresholds(1)*peel_p.sdnoise;
+peel_p.smttlow = params.schmittThresholds(2)*peel_p.sdnoise;
 
 exp_p.numpnts = size(traces,1);
 

@@ -59,6 +59,8 @@ switch lower(optimMethod)
         options = psoptimset;
     case 'genetic'
         options = gaoptimset;
+    case 'none'
+        options = psoptimset;
     otherwise
         error('Optimization method %s not supported.',optimMethod)
 end
@@ -85,25 +87,27 @@ options.Display = 'none';
 
 % options.PlotFcns = {@psplotbestf @psplotbestx};
 % options.OutputFcns = @psoutputfcn_peel;
-% HACK
-% switch lower(optimMethod)
-%     case 'simulated annealing'
-%         [x, fval , exitFlag, output] = simulannealbnd(...
-%             @(x) objectiveFunc(x,opt_args),x0,lbound,ubound,options);
-%     case 'pattern search'
-%         [x, fval , exitFlag, output] = patternsearch(...
-%             @(x) objectiveFunc(x,opt_args),x0,[],[],[],[],lbound,...
-%             ubound,[],options);
-%     case 'genetic'
-%         [x, fval , exitFlag, output] = ga(...
-%             @(x) objectiveFunc(x,opt_args),numel(x0),[],[],[],[],lbound,...
-%             ubound,[],options);
-% end
-fval = inf;
+
+switch lower(optimMethod)
+    case 'simulated annealing'
+        [x, fval , exitFlag, output] = simulannealbnd(...
+            @(x) objectiveFunc(x,opt_args),x0,lbound,ubound,options);
+    case 'pattern search'
+        [x, fval , exitFlag, output] = patternsearch(...
+            @(x) objectiveFunc(x,opt_args),x0,[],[],[],[],lbound,...
+            ubound,[],options);
+    case 'genetic'
+        [x, fval , exitFlag, output] = ga(...
+            @(x) objectiveFunc(x,opt_args),numel(x0),[],[],[],[],lbound,...
+            ubound,[],options);
+  case 'none'
+        fval = inf;
+end
+
 if fval < resInit
     spkTout = x;
-else
-    %disp('Optimization did not improve residual. Keeping input spike times.')
+elseif(~strcmpi(optimMethod, 'none'))
+    disp('Optimization did not improve residual. Keeping input spike times.')
 end
 
 if doPlot

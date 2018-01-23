@@ -32,8 +32,36 @@ classdef peelingOptions < baseOptions
     % Second tau (DO NOT CHANGE)
     secondTau = 1;
     
+    % noise level (DO NOT CHANGE). Default is: mean(std(traces))*0.75
+    standardNoise = []; 
+    
+    % How to estimate the noise level (if standardNoise is empty)
+    % - global: will use a single value for all traces
+    % - individual: will use a different value for each trace
+    noiseEstimationMethod = {'global', 'individual'};
+    
+    % schmitt thresholds (DO NOT CHANGE)
+    schmittThresholds = [2.4 -1.2];
+    
+    % Calcium mode:
+    % - linDFF: spikes cause linear summation on the fluorescence signal
+    % - satDFF: fluorescence signal can saturate
+    calciumMode = {'linDFF', 'satDFF'};
+    
+    % Ca transient extrusion rate (in Hz) - only used in saturation mode
+    gamma = 400;
+    
+    % Maximum DF/F value - only used in saturation mode
+    dffmax = 93;
+    
+    % Optimization method
+    optimizationMethod = {'none', 'simulated annealing', 'pattern search', 'genetic'};
+    
     % True to also store the model trace
     storeModelTrace = false;
+    
+    % Do some plots from the original peeling code
+    additionalPlots = false;
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)

@@ -123,6 +123,7 @@ uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Load ROI', 'FontSize', 
 uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Load ROI (legacy)', 'FontSize', textFontSize, 'callback', @loadROILegacyButton);
 uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Append ROI', 'FontSize', textFontSize, 'callback', {@loadROIButton, 'append'});
 uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Save ROI', 'FontSize', textFontSize, 'callback', @saveROIButton);
+uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Save ROI centers', 'FontSize', textFontSize, 'callback', @saveROIcentersButton);
 %uicontrol('Parent', hs.mainWindowLeftButtons, 'String', 'Load Image', 'FontSize', textFontSize, 'callback', @loadImageButton);
 
 b = uix.VButtonBox( 'Parent', hs.mainWindowLeftButtons);
@@ -156,7 +157,7 @@ hs.numROItext = uicontrol('Parent', hs.mainWindowLeftButtons, 'Style','text', 'S
 
 uix.Empty('Parent', hs.mainWindowLeftButtons);
 
-set(hs.mainWindowLeftButtons, 'Heights', [-1 25 25 25 25 100 25 25 25 -1], 'Padding', 5);
+set(hs.mainWindowLeftButtons, 'Heights', [-1 25 25 25 25 25 100 25 25 25 -1], 'Padding', 5);
 
 % Below left buttons
 uix.Empty('Parent', hs.mainWindowGrid);
@@ -1145,6 +1146,15 @@ end
 %--------------------------------------------------------------------------
 function saveROIButton(~, ~)
     saveROI(experiment, ROI);
+end
+
+%--------------------------------------------------------------------------
+function saveROIcentersButton(~, ~)
+  [success, exportROIcentersOptionsCurrent] = preloadOptions(experiment, exportROIcentersOptions, gui, true, false);
+  if(success)
+    experiment = exportROIcenters(experiment, exportROIcentersOptionsCurrent);
+    experiment.exportROIcentersOptionsCurrent = exportROIcentersOptionsCurrent;
+  end
 end
 
 %--------------------------------------------------------------------------

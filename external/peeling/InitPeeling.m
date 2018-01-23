@@ -54,7 +54,8 @@ elseif (strcmpi(ca_p.ca_genmode,'satDFF'))
 end
 
 % peel_p: parameters for peeling algorithm
-peel_p.spk_recmode = 'linDFF'; % flag,for spike reconstruction mode: 'linearDFF', or 'saturatDFF'  
+%peel_p.spk_recmode = 'linDFF'; % flag,for spike reconstruction mode: 'linearDFF', or 'saturatDFF'  
+peel_p.spk_recmode = ca_p.ca_genmode; % flag,for spike reconstruction mode: 'linearDFF', or 'saturatDFF'  
 peel_p.padding = 20;        % number of points for padding before and after
 peel_p.sdnoise = 1.4;       % expected SD baseline noise level
 peel_p.smtthigh = 2.4*peel_p.sdnoise;      % Schmitt trigger - high threshold (FIX), 
@@ -86,6 +87,7 @@ peel_p.negintacc=0.5;       % negative acceptance level (0.5 means 50%)
 peel_p.stepback=5.0;        % stepsize backwards for next iteration (s)
 peel_p.fitupdatetime=0.5;     % how often the linear fit is updated (s)
 peel_p.optimizeSpikeTimes = 1; % FIX
+peel_p.optimizationMethod = 'none';
 peel_p.doPlot = 0; %FIX
 % data: data struct 
 data.dff = dff;
