@@ -12,7 +12,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 - To be able to use any of the python modules you need python installed and available to MATLAB
 
 # Requeriments
-- Matlab 9.1+ (2015a or higher) - 2017a or higher recommended
+- Matlab 9.1+ (2015a or higher) - 2017a or higher recommended. Seriouslly, upgrade.
 
 ## MATLAB Tolboxes
 - Bioinformatics Toolbox (4.5.1) [bioinfo]
@@ -26,6 +26,14 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 - Computer Vision System Toolbox (6.2) [vision]
 
 # Change Log
+
+## [7.1.8] - 2018-01-24
+
+### Added
+- Pipeline function to create a new population based on firing neurons (those with a minimum number of spikes)
+
+### Fixed
+- Jitter option was always on on the ISI_N burst detector
 
 ## [7.1.7] - 2018-01-24
 
@@ -1391,6 +1399,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.8]: https://github.com/orlandi/netcal/tree/v7.1.8
 [7.1.7]: https://github.com/orlandi/netcal/tree/v7.1.7
 [7.1.6]: https://github.com/orlandi/netcal/tree/v7.1.6
 [7.1.5]: https://github.com/orlandi/netcal/tree/v7.1.5

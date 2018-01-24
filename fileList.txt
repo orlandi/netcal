@@ -12,8 +12,8 @@ internal/barCleanup.m 352
 internal/barStartup.m 581
 internal/blkPercentile.m 469
 internal/burstDetection.m 11770
-internal/burstDetectionISIN.m 7897
-internal/burstDetectionISINexplorer.m 3731
+internal/burstDetectionISIN.m 7898
+internal/burstDetectionISINexplorer.m 3765
 internal/burstDetectionSpikes.m 6445
 internal/checkExperimentName.m 1501
 internal/checkGroups.m 5318
@@ -70,6 +70,7 @@ internal/getPipelineParameters.m 3188
 internal/getROIid.m 264
 internal/getSigmoidConnection.m 203
 internal/getSpikesFeatures.m 14197
+internal/identifyFiringNeurons.m 2423
 internal/identifyHCG.m 7026
 internal/identifySimilaritiesInTraces.m 3244
 internal/importExperimentFromWorkspace.m 531
@@ -105,7 +106,7 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 30240
+internal/plotStatistics.m 30284
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12868
 internal/preprocessExperimentPercentile.m 7068
@@ -220,6 +221,7 @@ internal/options/foopsiOptions.m 2455
 internal/options/fuzzyOptions.m 833
 internal/options/generateAutomaticHelpFile.m 3718
 internal/options/groupsStatisticsOptions.m 1302
+internal/options/identifyFiringNeuronsOptions.m 1419
 internal/options/identifyHCGoptions.m 1822
 internal/options/importPatternsOptions.m 1439
 internal/options/inferenceTrainingOptions.m 650
@@ -1637,5 +1639,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 39801
+README.md 40094
 netcal.m 207709

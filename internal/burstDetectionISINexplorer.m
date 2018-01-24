@@ -87,7 +87,9 @@ for git = 1:length(groupList)
   mat = [SpikeTimes', SpikeIdx'];
   ar = sortrows(mat, 1);
   SpikeTimes = ar(:,1)';
-  SpikeTimes = SpikeTimes +(rand(size(SpikeTimes))-0.5)/experiment.fps;
+  if(params.jitterSpikes)
+    SpikeTimes = SpikeTimes +(rand(size(SpikeTimes))-0.5)/experiment.fps;
+  end
   SpikeIdx = ar(:,2)';
 
   N = eval(params.N);

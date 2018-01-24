@@ -511,7 +511,7 @@ classdef plotStatistics < handle
               if(it > itt)
                 p = ranksum(subData(:, it), subData(:, itt));
                 [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                logMsg(sprintf('%s vs %s . P= %.3g KS P = %.3g', xList{it}, xList{itt}, p, p2));
+                logMsg(sprintf('%s vs %s . Mann–Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
               end
             end
           end
