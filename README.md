@@ -27,7 +27,15 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
-## [7.1.5] - 2018-01-22
+## [7.1.6] - 2018-01-23
+
+### Added
+- Spike detector based on ISI_N distributions (see [https://doi.org/10.3389/fncom.2013.00193](https://doi.org/10.3389/fncom.2013.00193))
+
+### Modified
+- Previous spike burst detector is now called rate detector. Also added option to plot (or not) its results
+
+## [7.1.5] - 2018-01-23
 
 ### Added
 - Peeling spike inference now has several new options to allow more customization (as in the original paper)
@@ -1374,6 +1382,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.6]: https://github.com/orlandi/netcal/tree/v7.1.6
 [7.1.5]: https://github.com/orlandi/netcal/tree/v7.1.5
 [7.1.4]: https://github.com/orlandi/netcal/tree/v7.1.4
 [7.1.3]: https://github.com/orlandi/netcal/tree/v7.1.3

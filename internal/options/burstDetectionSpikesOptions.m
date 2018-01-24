@@ -26,6 +26,8 @@ classdef burstDetectionSpikesOptions < baseOptions
     % Schmitt thresholds (first the upper and then the lower). The way the schmitt trigger works is that the beginning of a burst is defined whenever the signal goes above the upper threshold, and it finishes whenever it goes below the second threshold). Set them equal for a normal threshold
     schmittThresholds = [1, 0.1];
     
+    % To show a plot after the detection
+    plotResults = true;
   end
   methods
     function obj = setExperimentDefaults(obj, experiment)

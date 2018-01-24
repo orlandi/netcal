@@ -12,7 +12,9 @@ internal/barCleanup.m 352
 internal/barStartup.m 581
 internal/blkPercentile.m 469
 internal/burstDetection.m 11770
-internal/burstDetectionSpikes.m 6353
+internal/burstDetectionISIN.m 7897
+internal/burstDetectionISINexplorer.m 3731
+internal/burstDetectionSpikes.m 6445
 internal/checkExperimentName.m 1501
 internal/checkGroups.m 5318
 internal/checkUserModifiedFile.m 1373
@@ -190,8 +192,10 @@ internal/options/aggregatedOptions.m 662
 internal/options/avalancheOptions.m 753
 internal/options/avalanchePlotsOptions.m 718
 internal/options/baseOptions.m 3642
+internal/options/burstDetectionISINexplorerOptions.m 1699
+internal/options/burstDetectionISINoptions.m 1746
 internal/options/burstDetectionOptions.m 2680
-internal/options/burstDetectionSpikesOptions.m 2127
+internal/options/burstDetectionSpikesOptions.m 2194
 internal/options/burstPatternOptions.m 777
 internal/options/ccRecordingOptions.m 3385
 internal/options/circularTransitionsOptions.m 2431
@@ -1633,5 +1637,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 39082
+README.md 39432
 netcal.m 207327

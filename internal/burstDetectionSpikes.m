@@ -1,5 +1,5 @@
 function experiment = burstDetectionSpikes(experiment, varargin)
-% BURSTDETECTIONSPIKES detects bursts using spike data for a given group
+% BURSTDETECTIONSPIKES detects bursts using spikes and a rate detector
 %
 % USAGE:
 %    experiment = burstDetectionSpikes(experiment, varargin)
@@ -19,8 +19,8 @@ function experiment = burstDetectionSpikes(experiment, varargin)
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
 % EXPERIMENT PIPELINE
-% name: burst detection
-% parentGroups: spikes
+% name: rate-based burst detection
+% parentGroups: spikes: bursts
 % optionsClass: burstDetectionSpikesOptions
 % requiredFields: spikes, ROI, folder, name
 
@@ -84,31 +84,32 @@ for git = 1:length(groupList)
   % The actual detection
   burstList = detectBurstsSchmitt(t, avgT, params.schmittThresholdType, params.schmittThresholds(1), params.schmittThresholds(2));
   
-  figure;
-  %h1 = bar(t, avgT/length(members));
-  h1 = bar(t, avgT);
-  hold on;
-  validFrames = [];
-  for it = 1:length(burstList.duration)
-    validFrames = [validFrames, floor(burstList.start(it)/dt):floor((burstList.start(it)+burstList.duration(it))/dt)];
-  end
-  
-  if(~isempty(validFrames))
-    validFrames = validFrames + 1; 
-    %h = bar(t(validFrames), avgT(validFrames)/length(members));
-    h = bar(t(validFrames), avgT(validFrames));
-    h.FaceColor = h1.FaceColor;
-    h.EdgeColor = 'r';
-  end
-  xlim([min(experiment.t) max(experiment.t)]);
-  xl = xlim;
-  %plot(xl, [1 1]*burstList.thresholds(3)/length(members));
-  %plot(xl, [1 1]*burstList.thresholds(4)/length(members));
-  plot(xl, [1 1]*burstList.thresholds(3));
-  plot(xl, [1 1]*burstList.thresholds(4));
-  ylabel('Num spikes per bin');
-  title(sprintf('%s - N: %d <IBI>: %.2g', experiment.name, length(burstList.start), mean(burstList.IBI)));
-  
+  if(params.plotResults)
+    figure;
+    %h1 = bar(t, avgT/length(members));
+    h1 = bar(t, avgT);
+    hold on;
+    validFrames = [];
+    for it = 1:length(burstList.duration)
+      validFrames = [validFrames, floor(burstList.start(it)/dt):floor((burstList.start(it)+burstList.duration(it))/dt)];
+    end
+
+    if(~isempty(validFrames))
+      validFrames = validFrames + 1; 
+      %h = bar(t(validFrames), avgT(validFrames)/length(members));
+      h = bar(t(validFrames), avgT(validFrames));
+      h.FaceColor = h1.FaceColor;
+      h.EdgeColor = 'r';
+    end
+    xlim([min(experiment.t) max(experiment.t)]);
+    xl = xlim;
+    %plot(xl, [1 1]*burstList.thresholds(3)/length(members));
+    %plot(xl, [1 1]*burstList.thresholds(4)/length(members));
+    plot(xl, [1 1]*burstList.thresholds(3));
+    plot(xl, [1 1]*burstList.thresholds(4));
+    ylabel('Num spikes per bin');
+    title(sprintf('%s - N: %d <IBI>: %.2g', experiment.name, length(burstList.start), mean(burstList.IBI)));
+  end  
   experiment.spikeBursts.(groupName){groupIdx} = burstList;
   %if(params.verbose)
     logMsg(sprintf('%d bursts detected on group %s', length(burstList.start), groupList{git}));
