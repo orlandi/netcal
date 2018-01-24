@@ -1,6 +1,6 @@
 function projexp = plotSpikesBurstStatistics(projexp, varargin)
-% plotSpikesBurstStatistics # Plot fluorescence burst statistics
-% Plots statistics associated to fluorescence (global) bursts: amplitude, duration, IBI
+% plotSpikesBurstStatistics # Plot spikes burst statistics
+% Plots statistics associated to spikes (global) bursts: amplitude, duration, IBI
 %
 % USAGE:
 %    projexp = plotSpikesBurstStatistics(projexp, varargin)
@@ -40,6 +40,11 @@ obj.cleanup();
       % Only a single burstRate
       if(strcmpi(stat, 'bursting rate'))
         data = length(bursts.amplitude)/experiment.totalTime;
+      elseif(strcmpi(stat, 'num spikes'))
+        data = bursts.amplitude;
+      elseif(strcmpi(stat, 'num spikes per group member'))
+        [members, ~, ~] = getExperimentGroupMembers(experiment, groupName);
+        data = bursts.amplitude/length(members);
       else
         data = bursts.(stat);
       end

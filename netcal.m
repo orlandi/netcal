@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.1.6';
+currVersion = '7.1.7';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -4856,8 +4856,6 @@ function loadPipeline(~, ~, pipelineFile)
       opt = eval(curEntry.optionsClass);
       opt = opt.set(curEntry.options);
       opt = fixNestedFields(opt);
-      %cell2mat(curEntry.options.treatmentLabels)
-      %end
     else
       opt = [];
     end
@@ -4914,10 +4912,25 @@ function curStruct = fixNestedFields(curStruct)
   fields = fieldnames(curStruct);
   for idx = 1:length(fields)
    curField = curStruct.(fields{idx});
+%    if(strcmp(fields{idx}, 'labelGroups'))
+%      curField
+%    end
    if isstruct(curField)
      curField = fixNestedFields(curField);
    elseif(iscell(curField) && size(curField, 2) ~= 1 && size(curField, 1) == 1)
+     if(~verLessThan('matlab', '9.2'))
        curField = curField';
+     else
+       if(iscell(curField{1}))
+         curField = [curField{:}]';
+       end
+     end
+   elseif(~verLessThan('matlab', '9.2') && isstring(curField)) % FIX string bugs
+     tmpField = cell(size(curField));
+     for itt = 1:length(tmpField)
+      tmpField{itt} = curField{itt};
+     end
+     curField = tmpField;
    end
    curStruct.(fields{idx}) = curField;
    if(strcmpi(class(curStruct.(fields{idx})), 'java.io.File'))

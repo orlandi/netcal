@@ -105,7 +105,7 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 30238
+internal/plotStatistics.m 30240
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12868
 internal/preprocessExperimentPercentile.m 7068
@@ -251,7 +251,7 @@ internal/options/plotRasterOptions.m 2284
 internal/options/plotSpikeStatisticsOptions.m 1218
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
-internal/options/plotStatisticsOptions.m 4530
+internal/options/plotStatisticsOptions.m 4613
 internal/options/plotStatisticsTreatmentOptions.m 5682
 internal/options/predefinedPatternsOptions.m 4142
 internal/options/preloadMultipleOptions.m 2442
@@ -289,8 +289,8 @@ internal/plots/plotSpectrogram.m 4026
 internal/plots/plotSpikeStatistics.m 1469
 internal/plots/plotSpikeStatisticsTreatment.m 1597
 internal/plots/plotSpikeTreatmentStatistics.m 13193
-internal/plots/plotSpikesBurstStatistics.m 1717
-internal/plots/plotSpikesBurstStatisticsOptions.m 815
+internal/plots/plotSpikesBurstStatistics.m 1969
+internal/plots/plotSpikesBurstStatisticsOptions.m 847
 internal/plots/plotStatisticsTreatment.m 36346
 external/GetFullPath.m 11855
 external/SplashScreen.m 19485
@@ -1637,5 +1637,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 39432
-netcal.m 207327
+README.md 39801
+netcal.m 207709

@@ -52,12 +52,12 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % factor:
     % How to define the samples:
     % - experiment: each experiment is a sample (averaged over each element)
-    % - ROI: each ROI from an experiment is a sample (means pooling all data from a set of experiments together)
+    % - event: each event (ROI in single cell statistics) or element (for global measures like bursts) from an experiment is a sample (means pooling all data from a set of experiments together)
     % factorAverageFunction:
     % How to perform the averages between samples (only if factor = experiment):
     % - mean: use the mean
     % - median: use the median
-    pipelineProject = struct('groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'ROI'}}, 'factorAverageFunction', {{'mean', 'median'}});
+    pipelineProject = struct('groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event'}}, 'factorAverageFunction', {{'mean', 'median'}});
     
     % If true will turn any zero values into NaNs (so they are not used for the statistics. Useful when working with rates and things like that
     zeroToNan = true;

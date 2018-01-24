@@ -242,7 +242,7 @@ classdef plotStatistics < handle
                   end
                 end
               end
-            case 'ROI'
+            case 'event'
               for it = 1:length(validCombinations)
                 plotDataAveraged{it} = cell(obj.maxGroups, 1);
                 valid = [experimentsPerCombinedLabel{validCombinations(it)}{:}];

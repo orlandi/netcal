@@ -27,6 +27,15 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.7] - 2018-01-24
+
+### Modified
+- Changed ROI factor name for event in statistics plots
+- Changed amplitude for number of spikes (and a normalized option) for spike-based burst statistics
+
+### Fixed
+- Bug when loading/saving pipelines was not working if they contained deep structures with table-like lists
+
 ## [7.1.6] - 2018-01-23
 
 ### Added
@@ -1382,6 +1391,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.7]: https://github.com/orlandi/netcal/tree/v7.1.7
 [7.1.6]: https://github.com/orlandi/netcal/tree/v7.1.6
 [7.1.5]: https://github.com/orlandi/netcal/tree/v7.1.5
 [7.1.4]: https://github.com/orlandi/netcal/tree/v7.1.4
