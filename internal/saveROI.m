@@ -53,8 +53,8 @@ end
 fID = fopen(outputfilename, 'w');
 for i = 1:length(ROI)
     pixelList = [ROI{i}.pixels(:); nan(biggestROI-length(ROI{i}.pixels),1)];
-    [x,y] = ind2sub([experiment.height, experiment.width], pixelList(:));
-    coords = [x;y];
+    [y,x] = ind2sub([experiment.height, experiment.width], pixelList(:));
+    coords = [y;x];
     fprintf(fID, '%d ', ROI{i}.ID, coords);
     fprintf(fID, '\n');
 end

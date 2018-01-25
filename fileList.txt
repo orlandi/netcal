@@ -82,7 +82,7 @@ internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
 internal/loadExperiment.m 22163
 internal/loadProject.m 4554
-internal/loadROI.m 4254
+internal/loadROI.m 4259
 internal/loadTraces.m 3422
 internal/logMessage.m 3319
 internal/logMsg.m 669
@@ -106,7 +106,7 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 30284
+internal/plotStatistics.m 32226
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12868
 internal/preprocessExperimentPercentile.m 7068
@@ -114,6 +114,7 @@ internal/preprocess_traces.m 242
 internal/processFunctionStartup.m 411
 internal/qlog.m 120
 internal/quiverFlow.m 1399
+internal/recalculateROIstats.m 1387
 internal/redoSelectionMenu.m 324
 internal/refineROI.m 4510
 internal/refineROIthreshold.m 2752
@@ -253,7 +254,7 @@ internal/options/plotRasterOptions.m 2284
 internal/options/plotSpikeStatisticsOptions.m 1218
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
-internal/options/plotStatisticsOptions.m 4613
+internal/options/plotStatisticsOptions.m 5104
 internal/options/plotStatisticsTreatmentOptions.m 5682
 internal/options/predefinedPatternsOptions.m 4142
 internal/options/preloadMultipleOptions.m 2442
@@ -1440,6 +1441,9 @@ external/peeling/modelCalciumTransient.m 253
 external/peeling/removeErrorBarEnds.m 1122
 external/peeling/spkTimes2Calcium.m 604
 external/peeling/spkTimes2FreeCalcium.m 1983
+external/sigstar/README.md 2450
+external/sigstar/demo_sigstar.m 1979
+external/sigstar/sigstar.m 8627
 external/toolbox_image/apply_colormap.m 322
 external/toolbox_image/barb.png 232752
 external/toolbox_image/callback_ti_wavelets.m 879
@@ -1639,5 +1643,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 40094
+README.md 40547
 netcal.m 207709

@@ -27,6 +27,14 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.1.9] - 2018-01-25
+
+### Added
+- Option to show signififcance level (stars) on statistics plots. Mann-Whitney and Kolmogorov-Smirnov for now.
+
+### Fixed
+- Bug when importing ROIs from an external file would result on their centers being transposed (has no effect on anything other than exporting ROI positions). Added pipeline function to recalculate centers based on the actual pixel values.
+
 ## [7.1.8] - 2018-01-24
 
 ### Added
@@ -1399,6 +1407,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.9]: https://github.com/orlandi/netcal/tree/v7.1.9
 [7.1.8]: https://github.com/orlandi/netcal/tree/v7.1.8
 [7.1.7]: https://github.com/orlandi/netcal/tree/v7.1.7
 [7.1.6]: https://github.com/orlandi/netcal/tree/v7.1.6

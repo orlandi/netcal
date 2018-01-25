@@ -506,14 +506,51 @@ classdef plotStatistics < handle
             end
           end
           obj.fullGroupList = {obj.fullGroupList};
-          for it = 1:size(subData, 2)
-            for itt = 1:size(subData, 2)
-              if(it > itt)
-                p = ranksum(subData(:, it), subData(:, itt));
-                [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                logMsg(sprintf('%s vs %s . Mann–Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+          grList = {};
+          pList = [];
+          switch obj.params.pipelineProject.showSignificance
+            case 'none'
+            case 'partial'
+              for it = 1:size(subData, 2)
+                for itt = 1:size(subData, 2)
+                  if(it > itt)
+                    p = ranksum(subData(:, it), subData(:, itt));
+                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                    switch obj.params.pipelineProject.significanceTest
+                      case 'Mann-Whitney'
+                        if(p <= 0.05)
+                          pList = [pList; p];
+                          grList{end+1} = [it itt];
+                        end
+                      case 'Kolmogorov-Smirnov'
+                        if(p <= 0.05)
+                          pList = [pList; p2];
+                          grList{end+1} = [it itt];
+                        end
+                    end
+                  end
+                end
               end
-            end
+            case 'all'
+              for it = 1:size(subData, 2)
+                for itt = 1:size(subData, 2)
+                  if(it > itt)
+                    p = ranksum(subData(:, it), subData(:, itt));
+                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                    switch obj.params.pipelineProject.significanceTest
+                      case 'Mann-Whitney'
+                        pList = [pList; p];
+                        grList{end+1} = [it itt];
+                      case 'Kolmogorov-Smirnov'
+                        pList = [pList; p2];
+                        grList{end+1} = [it itt];
+                    end
+                    grList{end+1} = [it itt];
+                  end
+                end
+              end
           end
           obj.plotHandles = boxPlot(xList, subData, ...
              'symbolColor','k',...
@@ -540,6 +577,17 @@ classdef plotStatistics < handle
           boxes(it).Vertices(end,2) = 0;
         end
       end
+      
+      hold on;
+      if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
+        switch obj.params.pipelineProject.significanceTest
+          case 'Mann-Whitney'
+            sigstar(grList, pList);
+          case 'Kolmogorov-Smirnov'
+            sigstar(grList, p2List);
+        end
+      end
+      
       obj.plotHandles.handles.box =  boxes;
       
       setappdata(obj.figureHandle, 'boxData', obj.plotHandles);

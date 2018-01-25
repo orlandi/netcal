@@ -24,7 +24,7 @@ function ROI = loadROI(experiment, filename, varargin)
 % EXAMPLE:
 %    ROI = loadROI(experiment, filename)
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2015-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 % See also autoDetectROI loadExperiment
 
@@ -98,12 +98,12 @@ elseif(strcmp(params.mode, 'raw'))
     ROI = cell(N, 1);
     for i = 1:N
         ID = ROIdata(i, 1);
-        x = ROIdata(i, 2:2:size(ROIdata,2));
-        y = ROIdata(i, 3:2:size(ROIdata,2));
-        x = x(~isnan(x));
-        y = y(~isnan(y));
+        y = ROIdata(i, 2:2:size(ROIdata,2));
+        x = ROIdata(i, 3:2:size(ROIdata,2));
+        y = y(~isnan(x));
+        x = x(~isnan(y));
         ROI{i}.ID = ID;
-        ROI{i}.pixels = sub2ind([height width], x, y);
+        ROI{i}.pixels = sub2ind([height width], y, x);
         ROI{i}.center = [mean(x), mean(y)];
         ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
     end
@@ -115,15 +115,15 @@ elseif(strcmp(params.mode, 'rawNew'))
         %x = ROIdata(i, 2:2:size(ROIdata,2));
         %y = ROIdata(i, 3:2:size(ROIdata,2));
         Npixels = (size(ROIdata,2)-1)/2;
-        x = ROIdata(i, 2:(1+Npixels));
-        y = ROIdata(i, (2+Npixels):end);
-        x = x(~isnan(x));
+        y = ROIdata(i, 2:(1+Npixels));
+        x = ROIdata(i, (2+Npixels):end);
         y = y(~isnan(y));
+        x = x(~isnan(x));
         %valid = find(~isnan(x) & ~isnan(y));
         %x = x(valid);
         %y = y(valid);
         ROI{i}.ID = ID;
-        ROI{i}.pixels = sub2ind([height width], x, y);
+        ROI{i}.pixels = sub2ind([height width], y, x);
         ROI{i}.center = [mean(x), mean(y)];
         ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
     end

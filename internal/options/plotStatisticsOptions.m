@@ -57,7 +57,16 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % How to perform the averages between samples (only if factor = experiment):
     % - mean: use the mean
     % - median: use the median
-    pipelineProject = struct('groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event'}}, 'factorAverageFunction', {{'mean', 'median'}});
+    % showSignificance:
+    % If any significance (***) should be ploted:
+    % - none: no significance is shown
+    % - partial: only those below 0.05 will be shown
+    % - all: all checks will be shown
+    % significanceTest:
+    % Kind of statistical test to use:
+    % - Mann-Whitney: uses two-tailed Mann-Whitney test
+    % - Kolmogorov-Smirnov: uses kolmogorov-smirnov test
+    pipelineProject = struct('groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event'}}, 'factorAverageFunction', {{'mean', 'median'}}, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov'}});
     
     % If true will turn any zero values into NaNs (so they are not used for the statistics. Useful when working with rates and things like that
     zeroToNan = true;
