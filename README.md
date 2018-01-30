@@ -27,6 +27,30 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.2.0] - 2018-01-30
+
+### Added
+- Bivariate gaussian kernel density estimation functions
+- nhist for prettier histograms
+- Option to plot multiple statistics simultaneously (spikes and KCl for now)
+- Option to tile (most) pipeline-generated figures
+
+### Modified
+- Completely redesigned several options on acute treatments analyses
+
+### Fixed
+- Export KCl features now works with the new data
+
+### Bugs
+- PCA analysis with KCl features is now broken
+
+## [7.1.10] - 2018-01-29
+
+### Added
+- spike bursts statistics plots now have the option to plot all statistics simultaneously
+### Modified
+- Forced option to copy files when renaming experiments
+
 ## [7.1.9] - 2018-01-25
 
 ### Added
@@ -1407,6 +1431,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.1.10]: https://github.com/orlandi/netcal/tree/v7.1.10
 [7.1.9]: https://github.com/orlandi/netcal/tree/v7.1.9
 [7.1.8]: https://github.com/orlandi/netcal/tree/v7.1.8
 [7.1.7]: https://github.com/orlandi/netcal/tree/v7.1.7

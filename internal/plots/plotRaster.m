@@ -64,7 +64,7 @@ if(params.showFigure)
 else
   visible = 'off';
 end
-hFig = figure('Name', 'raster plot', 'NumberTitle', 'off', 'Visible', visible);
+hFig = figure('Name', [experiment.name ' Raster plot'], 'NumberTitle', 'off', 'Visible', visible, 'Tag', 'netcalPlot');
 
 % Here the plot
 Nspikes = 0;
@@ -102,11 +102,12 @@ if(Nspikes > 0)
         bar(b*dt, a/length(members)/params.averageActivityBinning);
         ylabel('Firing rate per cell (Hz)');
     end
-    fprintf('%d\n', sum(a)/length(members))
+    %fprintf('%d\n', sum(a)/length(members))
     xlim([min(experiment.t) max(experiment.t)]);
     if(~isempty(params.averageActivityScale))
       ylim(params.averageActivityScale);
     end
+    title([experiment.name ' Firing rate']);
     %ylim([0 0.3]);
     subplot(2, 1, 2);
   end
@@ -118,10 +119,9 @@ xlabel('time (s)');
 ylabel('ordered ROI subset');
 ylim([0.5 length(currentOrder)+0.5]);
 xlim([min(experiment.t) max(experiment.t)]);
-title([experiment.name ' Raster plot']);
 box on;
 hold on;
-
+title([experiment.name ' Raster plot']);
 set(gcf,'Color','w');
 pos = get(hFig, 'Position');
 pos(4) = pos(3)/((1+sqrt(5))/2);
@@ -131,7 +131,7 @@ ui = uimenu(hFig, 'Label', 'Export');
      uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, [experiment.folder experiment.name '_raster']});
 
 if(params.saveFigure)
-  [figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
+  %[figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
   export_fig([figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType], ...
               sprintf('-r%d', params.saveFigureResolution), ...
               sprintf('-q%d', params.saveFigureQuality), hFig);

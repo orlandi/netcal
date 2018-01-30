@@ -20,7 +20,7 @@ function experiment = exportKClAnalysis(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: export KCl analysis results
-% parentGroups: protocols: intra-experiment: KCl analysis: exports
+% parentGroups: protocols: KCl analysis: exports
 % optionsClass: exportBaseGroupOptions
 % requiredFields: KClProtocolData, ROI, folder, name
 
@@ -40,8 +40,6 @@ else
   mainGroup = params.group;
 end
 
-
-checkedExperiments = 1;
 % Create the exports folder
 switch params.exportFolder
   case 'experiment'
@@ -72,25 +70,26 @@ if(isempty(groupList))
   return;
 end
 
-[members, ~, ~] = getExperimentGroupMembers(experiment, groupList{1});
 
-labels = {'baseLine', 'reactionTime', 'maxResponse', 'maxResponseTime', 'decay', 'decayTime', 'recoveryTime', 'endValue', 'lastResponseValue'};
-if(~isempty(experiment.KClProtocolData{members(1)}.fitRiseCoeffNames))
-  for it = 1:length(experiment.KClProtocolData{members(1)}.fitRiseCoeffNames)
-    labels{end+1} = sprintf('Rise coeff: %s', experiment.KClProtocolData{members(1)}.fitRiseCoeffNames{it});
-  end
-  labels{end+1} = sprintf('Rise rsquare');
+% Find maximum number of segments
+maxSegments = 0;
+for git = 1:length(groupList)
+  [~, groupName, groupIdx] = getExperimentGroupMembers(experiment, groupList{git});
+  maxSegments = max([maxSegments; experiment.KClProtocolData.(groupName){groupIdx}.responseFitSegments]);
 end
-if(~isempty(experiment.KClProtocolData{members(1)}.fitDecayCoeffNames))
-  for it = 1:length(experiment.KClProtocolData{members(1)}.fitDecayCoeffNames)
-    labels{end+1} = sprintf('Decay coeff: %s', experiment.KClProtocolData{members(1)}.fitDecayCoeffNames{it});
-  end
-  labels{end+1} = sprintf('Decay rsquare');
-end
-labels{end+1} = 'ROI';
 
-%labels = [labels, {'group', 'experiment', 'experiment index'}];
-labels = [labels, {'group', 'experiment'}];
+%labels = {'baseLine', 'reactionTime', 'maxResponse', 'maxResponseTime', 'decay', 'decayTime', 'recoveryTime', 'endValue', 'lastResponseValue'};
+
+originalLabels = {'baseLine', 'reactionTime', 'maxResponse', 'maxResponseTime', ...
+          'decay', 'decayTime', 'responseDuration', 'recoveryTime', 'recovered', ...
+          'protocolEndValue', 'lastResponseValue', ...
+          'responseFitSegments', 'responseFitSegmentsMaxFluorescenceIncrease', 'responseFitSegmentsMaxSlope'};
+labels = originalLabels;
+for it = 1:maxSegments
+  labels = [labels, {sprintf('seg: %d F inc', it), sprintf('seg: %d dur', it), sprintf('seg: %d slope', it)}];
+end
+
+labels = [labels, {'ROI', 'group', 'experiment'}];
 
 %%% Preparing the CSV export
 outputFile = [outputFileName '.csv'];
@@ -106,13 +105,30 @@ fmtEnd = '%s, %s\n';
 %fmtEnd = '%s, %s, %d\n';
   
 % Main loop for the export data
-
+ROIid = getROIid(experiment.ROI);
 % Time to iterate through all the groups
 for git = 1:length(groupList)
+  [members, groupName, groupIdx] = getExperimentGroupMembers(experiment, groupList{git});
   ncbar.setBarTitle(sprintf('Exporting KCl analysis results from group: %s', groupList{git}));
-
-  [exportData, ~] = getKClFeatures(experiment, groupList{git}, 'ROI ID');
+  exportData = nan(length(members), length(labels)-2);
+  % Copy info from original labels
+  for it = 1:length(originalLabels)
+    exportData(:, it) = experiment.KClProtocolData.(groupName){groupIdx}.(originalLabels{it});
+  end
+  exportData(:, end) = ROIid(members);
+  
+  %[exportData, ~] = getKClFeatures(experiment, groupList{git}, 'ROI ID');
   for j = 1:size(exportData, 1)
+    % Now let's add segment info
+    curPos = length(originalLabels);
+    for it = 1:experiment.KClProtocolData.(groupName){groupIdx}.responseFitSegments(j)
+      curPos = curPos+1;
+      exportData(j, curPos) = experiment.KClProtocolData.(groupName){groupIdx}.responseFitSegmentsFluorescenceIncrease{j}(it);
+      curPos = curPos+1;
+      exportData(j, curPos) = experiment.KClProtocolData.(groupName){groupIdx}.responseFitSegmentsDuration{j}(it);
+      curPos = curPos+1;
+      exportData(j, curPos) = experiment.KClProtocolData.(groupName){groupIdx}.responseFitSegmentsSlope{j}(it);
+    end
     fprintf(fID, fmt, exportData(j, :));
     fprintf(fID, fmtEnd, groupList{git}, experiment.name);
     %fprintf(fID, fmtEnd, groupList{git}, experiment.name, checkedExperiments(itt));

@@ -35,6 +35,7 @@ classdef plotStatistics < handle
       else
         obj.figName = obj.params.styleOptions.figureTitle;
       end
+      obj.figName = strrep(obj.figName, '_', '-');
       switch obj.mode
         case 'project'
           success = getDataProject(obj, funcHandle, projexp, varargin{:});
@@ -286,7 +287,8 @@ classdef plotStatistics < handle
         obj.figVisible = 'on';
       end
       obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible);
-      obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
+      %obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
+      obj.figureHandle.Position = setFigurePosition(gcf, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
       obj.axisHandle = axes;
       hold on;
       
@@ -420,7 +422,9 @@ classdef plotStatistics < handle
       else
         obj.figVisible = 'on';
       end
-      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible);
+      %prevFig = gcf;
+      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
+      %obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
       obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
       obj.axisHandle = axes;
       hold on;
@@ -514,20 +518,24 @@ classdef plotStatistics < handle
               for it = 1:size(subData, 2)
                 for itt = 1:size(subData, 2)
                   if(it > itt)
-                    p = ranksum(subData(:, it), subData(:, itt));
-                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
-                    switch obj.params.pipelineProject.significanceTest
-                      case 'Mann-Whitney'
-                        if(p <= 0.05)
-                          pList = [pList; p];
-                          grList{end+1} = [it itt];
-                        end
-                      case 'Kolmogorov-Smirnov'
-                        if(p <= 0.05)
-                          pList = [pList; p2];
-                          grList{end+1} = [it itt];
-                        end
+                    try
+                      p = ranksum(subData(:, it), subData(:, itt));
+                      [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                      logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                      switch obj.params.pipelineProject.significanceTest
+                        case 'Mann-Whitney'
+                          if(p <= 0.05)
+                            pList = [pList; p];
+                            grList{end+1} = [it itt];
+                          end
+                        case 'Kolmogorov-Smirnov'
+                          if(p <= 0.05)
+                            pList = [pList; p2];
+                            grList{end+1} = [it itt];
+                          end
+                      end
+                    catch ME
+                      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
                     end
                   end
                 end
@@ -552,6 +560,8 @@ classdef plotStatistics < handle
                 end
               end
           end
+          setappdata(gcf, 'subData', subData);
+          
           obj.plotHandles = boxPlot(xList, subData, ...
              'symbolColor','k',...
                             'medianColor','k',...

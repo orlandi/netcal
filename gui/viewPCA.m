@@ -237,9 +237,9 @@ function plotPCA(~, ~, ~)
 
   axis tight;
   hold on;
-  for itt = 1:size(uniqueColors, 1);
+  for itt = 1:size(uniqueColors, 1)
     valid = (colorList == uniqueColors(itt));
-    scatter(scoresPCA(valid,1), scoresPCA(valid,2), 8, uniqueColorsCmap(colorList(valid), :), 'fill');
+    scatter(scoresPCA(valid,1), scoresPCA(valid,2), 64, uniqueColorsCmap(colorList(valid), :), 'fill');
   end
 
   if(~isempty(lh))
@@ -274,7 +274,7 @@ function plotPCAfull(~, ~, varargin)
   hold on;
 %    scatter(scoresPCA(:,selectionX), scoresPCA(:,selectionY), 8, colorList, 'fill');
 
-  for itt = 1:length(uniqueColors);
+  for itt = 1:length(uniqueColors)
     valid = (colorList == uniqueColors(itt));
     scatter(scoresPCA(valid,selectionX), scoresPCA(valid,selectionY), 8, uniqueColorsCmap(colorList(valid), :), 'fill');
   end
@@ -1095,7 +1095,7 @@ function updateImage(~, ~, ~)
   axis tight;
   hold on;
 
-  for itt = 1:length(uniqueColors);
+  for itt = 1:length(uniqueColors)
     valid = (colorList == uniqueColors(itt));
     scatter(scoresPCA(valid,1), scoresPCA(valid,2), 8, uniqueColorsCmap(colorList(valid), :), 'fill');
   end

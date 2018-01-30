@@ -19,6 +19,7 @@ classdef plotSpikeStatisticsOptions < plotStatisticsOptions & baseOptions
         exp = load(experiment, '-mat', 'spikeFeaturesNames');
         if(isfield(exp, 'spikeFeaturesNames'))
           obj.statistic = exp.spikeFeaturesNames(:)';
+          obj.statistic{end+1} = 'ask';
           obj.statistic{end+1} = '';
         else
           obj.statistic = '';

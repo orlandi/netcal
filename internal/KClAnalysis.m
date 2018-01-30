@@ -22,7 +22,7 @@ function experiment = KClAnalysis(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: KCl Analysis
-% parentGroups: protocols: intra-experiment: KCl analysis
+% parentGroups: protocols: KCl analysis
 % optionsClass: KClProtocolOptions
 % requiredFields: rawTraces, t, fps
 % producedFields: KClProtocolData
@@ -57,12 +57,12 @@ if(isempty(groupList))
   return;
 end
 
-if(isfield(experiment, 'KClProtocolData') && length(experiment.KClProtocolData) ~= length(experiment.ROI))
-  logMsg('Inconsistent length of KClProtocolData. Resetting', 'w');
-  experiment.KClProtocolData = cell(length(experiment.ROI), 1);
-elseif(~isfield(experiment, 'KClProtocolData'))
-  experiment.KClProtocolData = cell(length(experiment.ROI), 1);
-end
+% if(isfield(experiment, 'KClProtocolData') && length(experiment.KClProtocolData) ~= length(experiment.ROI))
+%   logMsg('Inconsistent length of KClProtocolData. Resetting', 'w');
+%   experiment.KClProtocolData = cell(length(experiment.ROI), 1);
+% elseif(~isfield(experiment, 'KClProtocolData'))
+%   experiment.KClProtocolData = cell(length(experiment.ROI), 1);
+% end
 
 
 % Time to iterate through all the groups
@@ -103,8 +103,17 @@ for git = 1:length(groupList)
   protocolData = computeProtocolStatistics(traces(:, members), t, params);
   
   % Now outputs and assignations
-  experiment.KClProtocolData(members) = protocolData;
-  
+  if(~isfield(experiment, 'KClProtocolData'))
+    experiment.KClProtocolData = struct;
+  end
+  if(~isstruct(experiment.KClProtocolData))
+    experiment.KClProtocolData = struct;
+  end
+  if(~isfield(experiment.KClProtocolData, groupName))
+    experiment.KClProtocolData.(groupName) = {};
+  end
+  experiment.KClProtocolData.(groupName){groupIdx} = protocolData;
+  %members = experiment.traceGroups.(nameComponents{1}){validCategory};
 end
 
 %--------------------------------------------------------------------------
@@ -112,7 +121,17 @@ barCleanup(params);
 %--------------------------------------------------------------------------
 
 function protocolData = computeProtocolStatistics(currentTraces, t, params)
-  protocolData = cell(size(currentTraces, 2), 1);
+  protocolData = struct;
+  %cell(size(currentTraces, 2), 1);
+  arrayFields = {'baseLine',  'baseLineFrame',  'reactionTime',  'reactionTimeIdx',  'maxResponse',  'maxResponseTimeIdx',  'maxResponseTime',  'recoveryTimeIdx',  'recoveryTime',  'recovered',  'decayTimeIdx',  'decayTime',  'decay',  'responseDuration',  'protocolEndFrame',  'protocolEndValue',  'lastResponseFrame',  'lastResponseValue', 'responseFitSegments',  'responseFitSegmentsMaxFluorescenceIncrease',  'responseFitSegmentsMaxSlope'};
+  cellFields = {'responseFitFrames', 'responseFitModel', 'responseFitSegmentsDuration', 'responseFitSegmentsFluorescenceIncrease', 'responseFitSegmentsSlope'};
+  for it = 1:length(arrayFields)
+    protocolData.(arrayFields{it}) = nan(size(currentTraces, 2), 1);
+  end
+  for it = 1:length(cellFields)
+    protocolData.(cellFields{it}) = cell(size(currentTraces, 2), 1);
+  end
+  
   if(isempty(params.startTime))
     params.startTime = t(1);
   end
@@ -133,7 +152,7 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
       protocolSign = -1;
   end
   
-  for it = 1:length(protocolData)
+  for it = 1:size(currentTraces, 2)
       try
         currentTrace = currentTraces(:, it);
         %%% Start with the baseline
@@ -206,14 +225,29 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
           maxResponseTimeIdx = [];
           maxResponseTime = NaN;
         end
-
-        %%% Now the decay time and value
-    %     switch params.decayThresholdType
-    %       case 'relative'
-    %         decay = prctile(currentTrace(validResponseFrames), (protocolSign*params.decayThreshold+(protocolSign-1)/2)*100);
-    %       case 'absolute'
-    %         decay = params.decayThreshold;
-    %     end
+        % The primary response fit
+        ipt = [];
+        if(params.responseFit && ~isempty(maxResponseTimeIdx) && ~isempty(reactionTimeIdx))
+          valid = reactionTimeIdx:maxResponseTimeIdx;
+          %[ipt, res] = findchangepts(currentTrace(valid), 'maxNumChanges', maxC, 'Statistic' ,'linear', 'minDistance', round(params.responseFitMinimumTime*experiment.fps));
+          [ipt, res] = findchangepts(currentTrace(valid), 'minThreshold', params.responseFitResidual, 'Statistic' ,'linear', 'minDistance', round(params.responseFitMinimumTime*experiment.fps));
+          if(length(ipt) > params.responseFitMaximumSlopes)
+            [ipt, res] = findchangepts(currentTrace(valid), 'maxNumChanges', params.responseFitMaximumSlopes, 'Statistic' ,'linear', 'minDistance', round(params.responseFitMinimumTime*experiment.fps));
+          end
+%           done = false;
+%           maxC = 0;
+%           while(~done)
+%             maxC = maxC+1;
+%             [ipt, res] = findchangepts(currentTrace(valid), 'maxNumChanges', maxC, 'Statistic' ,'linear', 'minDistance', round(params.responseFitMinimumTime*experiment.fps));
+%             %if(res < minTp || it > 4)
+%             %if((length(resList) > 1 && resList(end)/resList(end-1) > maxRatio )|| maxC > 10)
+%             %if((length(resList) > 1 && resList(end)/resList(end-1) > maxRatio && abs(resList(end) - resList(end-1)) > 0.1 )|| maxC > 10)
+%             if(res < params.responseFitResidual || maxC >= params.responseFitMaximumSlopes)
+%               done = true;
+%             end
+%           end
+          ipt = valid(1)-1+[1; ipt; length(valid)];
+        end
         if(~isempty(maxResponseTimeIdx))
             windowSize = params.decayWindowSize;
             windowSizeFrames = round(experiment.fps*windowSize);
@@ -246,36 +280,27 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
                   done = true;
                 end
                   oldC = c;
-                  %plot(t(currFrames), fitDecay(t(currFrames)),'LineWidth',2);
             end
-            %if(endReached)
-              [~,bestSlope] = sort(cList);
+            [~,bestSlope] = sort(cList);
 
-              startFrame = maxResponseTimeIdx+windowSizeFrames*(bestSlope-1);
-              currFrames = startFrame:(startFrame+windowSizeFrames);
+            startFrame = maxResponseTimeIdx+windowSizeFrames*(bestSlope-1);
+            currFrames = startFrame:(startFrame+windowSizeFrames);
+            if(length(currFrames) > 2)
               f = fittype('poly1');
               [fitDecay, goefDecay] = fit(t(currFrames), currentTrace(currFrames), f);
-            %end
-            meanF = mean(currentTrace(maxResponseTimeIdx:min(currFrames)));
-            x = (meanF-fitDecay.p2)/fitDecay.p1;
-            %x = (fitDecay.p2-origFit.p2)/(origFit.p1-fitDecay.p1)
-            [~, validFrame] = min(abs(x-t));
-            decayTimeIdx = validFrame;
-            decayTime = t(decayTimeIdx)-t(reactionTimeIdx);
-            decay = currentTrace(decayTimeIdx);
-    %       if(protocolSign == 1)
-    %         decayTimeIdx = maxResponseTimeIdx - 1 + find(currentTrace(maxResponseTimeIdx:validResponseFrames(end)) <= decay, 1, 'first');
-    %       else
-    %         decayTimeIdx = maxResponseTimeIdx - 1 + find(currentTrace(maxResponseTimeIdx:validResponseFrames(end)) >= decay, 1, 'first');
-    %       end
-    %     else
-    %       decayTimeIdx  = [];
-    %     end
-    %     if(~isempty(decayTimeIdx) && ~isempty(reactionTimeIdx) && ~isempty(decayTimeIdx) && ~isempty(reactionTimeIdx))
-    %       decayTime = t(decayTimeIdx)-t(reactionTimeIdx);
-    %     else
-    %       decayTimeIdx = [];
-    %       decayTime = NaN;
+
+              meanF = mean(currentTrace(maxResponseTimeIdx:min(currFrames)));
+              x = (meanF-fitDecay.p2)/fitDecay.p1;
+              %x = (fitDecay.p2-origFit.p2)/(origFit.p1-fitDecay.p1)
+              [~, validFrame] = min(abs(x-t));
+              decayTimeIdx = validFrame;
+              decayTime = t(decayTimeIdx)-t(reactionTimeIdx);
+              decay = currentTrace(decayTimeIdx);
+            else
+              decayTimeIdx = NaN;
+              decayTime = NaN;
+              decay = NaN;
+            end
         end
 
         %%% Now the recovery time
@@ -308,129 +333,153 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
         end
 
         %%% Now the fits
-        switch params.riseFitType
-          case 'none'
-            NriseCoeffs = 0;
-          case 'linear'
-            f = fittype('poly1');
-            NriseCoeffs = 2;
-          case 'single exponential'
-            f = fittype('exp1');
-            NriseCoeffs = 2;
-          case 'double exponential'
-            f = fittype('exp2');
-            NriseCoeffs = 4;
-        end
-        if(~strcmp(params.riseFitType, 'none') && ~isempty(reactionTimeIdx) && ~isempty(reactionTimeIdx) && ~isempty(maxResponseTimeIdx) && ~isempty(maxResponseTimeIdx) && length(reactionTimeIdx:maxResponseTimeIdx) > 5)
-          [fitRise, goefRise] = fit(t(reactionTimeIdx:maxResponseTimeIdx), currentTrace(reactionTimeIdx:maxResponseTimeIdx), f);
-        else
-          fitRise = [];
-          goefRise = [];
-        end
+%         switch params.riseFitType
+%           case 'none'
+%             NriseCoeffs = 0;
+%           case 'linear'
+%             f = fittype('poly1');
+%             NriseCoeffs = 2;
+%           case 'single exponential'
+%             f = fittype('exp1');
+%             NriseCoeffs = 2;
+%           case 'double exponential'
+%             f = fittype('exp2');
+%             NriseCoeffs = 4;
+%         end
+%         if(~strcmp(params.riseFitType, 'none') && ~isempty(reactionTimeIdx) && ~isempty(reactionTimeIdx) && ~isempty(maxResponseTimeIdx) && ~isempty(maxResponseTimeIdx) && length(reactionTimeIdx:maxResponseTimeIdx) > 5)
+%           [fitRise, goefRise] = fit(t(reactionTimeIdx:maxResponseTimeIdx), currentTrace(reactionTimeIdx:maxResponseTimeIdx), f);
+%         else
+%           fitRise = [];
+%           goefRise = [];
+%         end
+% 
+%         switch params.decayFitType
+%           case 'none'
+%             NdecayCoeffs = 0;
+%           case 'linear'
+%             f = fittype('poly1');
+%             NdecayCoeffs = 2;
+%           case 'single exponential'
+%             f = fittype('exp1');
+%             NdecayCoeffs = 2;
+%           case 'double exponential'
+%             f = fittype('exp2');
+%             NdecayCoeffs = 4;
+%         end
+%         if(~strcmp(params.riseFitType, 'none') && ~isempty(recoveryTimeIdx) && ~isempty(recoveryTimeIdx) && ~isempty(decayTimeIdx) && ~isempty(decayTimeIdx) && length(decayTimeIdx:recoveryTimeIdx) > 5)
+%           [fitDecay, goefDecay] = fit(t(decayTimeIdx:recoveryTimeIdx), currentTrace(decayTimeIdx:recoveryTimeIdx), f);
+%         else
+%           fitDecay = [];
+%           goefDecay = [];
+%         end
 
-        switch params.decayFitType
-          case 'none'
-            NdecayCoeffs = 0;
-          case 'linear'
-            f = fittype('poly1');
-            NdecayCoeffs = 2;
-          case 'single exponential'
-            f = fittype('exp1');
-            NdecayCoeffs = 2;
-          case 'double exponential'
-            f = fittype('exp2');
-            NdecayCoeffs = 4;
-        end
-        if(~strcmp(params.riseFitType, 'none') && ~isempty(recoveryTimeIdx) && ~isempty(recoveryTimeIdx) && ~isempty(decayTimeIdx) && ~isempty(decayTimeIdx) && length(decayTimeIdx:recoveryTimeIdx) > 5)
-          [fitDecay, goefDecay] = fit(t(decayTimeIdx:recoveryTimeIdx), currentTrace(decayTimeIdx:recoveryTimeIdx), f);
+        protocolData.baseLine(it) = baseLine;
+        protocolData.baseLineFrame(it) = lastBaseLineFrame;
+        protocolData.reactionTime(it) = reactionTime;
+        if(~isempty(reactionTimeIdx))
+          protocolData.reactionTimeIdx(it) = reactionTimeIdx;
         else
-          fitDecay = [];
-          goefDecay = [];
+          protocolData.reactionTimeIdx(it) = NaN;
         end
-
-        protocolData{it}.baseLine = baseLine;
-        protocolData{it}.baseLineFrame = lastBaseLineFrame;
-        protocolData{it}.reactionTime = reactionTime;
-        protocolData{it}.reactionTimeIdx = reactionTimeIdx;
-        protocolData{it}.maxResponse = maxResponse;
-        protocolData{it}.maxResponseTimeIdx = maxResponseTimeIdx;
-        protocolData{it}.maxResponseTime = maxResponseTime;
-        protocolData{it}.recoveryTimeIdx = recoveryTimeIdx;
-        protocolData{it}.recoveryTime = recoveryTime;
-        protocolData{it}.recovered = ~isempty(recoveryTimeIdx);
-        protocolData{it}.decayTimeIdx = decayTimeIdx;
-        protocolData{it}.decayTime = decayTime;
-        protocolData{it}.decay = decay;
-        protocolData{it}.responseDuration = responseDuration;
-        protocolData{it}.protocolEndFrame = endFrame;
-        protocolData{it}.protocolEndValue = currentTrace(endFrame);
-        protocolData{it}.lastResponseFrame = validResponseFrames(end);
-        protocolData{it}.lastResponseValue = currentTrace(validResponseFrames(end));
-        if(~isempty(fitRise))
-          protocolData{it}.fitRiseCoeffs = coeffvalues(fitRise);
-          protocolData{it}.fitRiseCoeffNames = coeffnames(fitRise);
-          protocolData{it}.fitRiseRsquare = goefRise.rsquare;
-          protocolData{it}.fitRiseCurve = [t(reactionTimeIdx:maxResponseTimeIdx), fitRise(t(reactionTimeIdx:maxResponseTimeIdx))];
+        protocolData.maxResponse(it) = maxResponse;
+        if(~isempty(maxResponseTimeIdx))
+          protocolData.maxResponseTimeIdx(it) = maxResponseTimeIdx;
         else
-          protocolData{it}.fitRiseCoeffs = [];
-          protocolData{it}.fitRiseCoeffNames = [];
-          protocolData{it}.fitRiseRsquare = [];
-          protocolData{it}.fitRiseCurve = [];
-          if(NriseCoeffs > 0)
-            protocolData{it}.fitRiseCoeffs = zeros(NriseCoeffs, 1);
-            protocolData{it}.fitRiseCoeffNames = cell(NriseCoeffs, 1);
-            protocolData{it}.fitRiseRsquare = 0;
-          end
+          protocolData.maxResponseTimeIdx(it) = NaN;
         end
-        if(~isempty(fitDecay))
-          protocolData{it}.fitDecayCoeffs = coeffvalues(fitDecay);
-          protocolData{it}.fitDecayCoeffNames = coeffnames(fitDecay);
-          protocolData{it}.fitDecayRsquare = goefDecay.rsquare;
-          protocolData{it}.fitDecayCurve = [t(decayTimeIdx:recoveryTimeIdx), fitDecay(t(decayTimeIdx:recoveryTimeIdx))];
+        protocolData.maxResponseTime(it) = maxResponseTime;
+        if(~isempty(recoveryTimeIdx))
+          protocolData.recoveryTimeIdx(it) = recoveryTimeIdx;
         else
-          protocolData{it}.fitDecayCoeffs = [];
-          protocolData{it}.fitDecayCoeffNames = [];
-          protocolData{it}.fitDecayRsquare = [];
-          protocolData{it}.fitDecayCurve = [];
-          if(NdecayCoeffs > 0)
-            protocolData{it}.fitDecayCoeffs = zeros(NdecayCoeffs, 1);
-            protocolData{it}.fitDecayCoeffNames = cell(NdecayCoeffs, 1);
-            protocolData{it}.fitDecayRsquare = 0;
-          end
+          protocolData.recoveryTimeIdx(it) = NaN;
         end
-      catch
-        protocolData{it}.baseLine = NaN;
-        protocolData{it}.baseLineFrame = [];
-        protocolData{it}.reactionTime = NaN;
-        protocolData{it}.reactionTimeIdx = [];
-        protocolData{it}.maxResponse = NaN;
-        protocolData{it}.maxResponseTimeIdx = [];
-        protocolData{it}.maxResponseTime = NaN;
-        protocolData{it}.recoveryTimeIdx = [];
-        protocolData{it}.recoveryTime = NaN;
-        protocolData{it}.recovered = false;
-        protocolData{it}.decayTimeIdx = [];
-        protocolData{it}.decayTime = NaN;
-        protocolData{it}.decay = [];
-        protocolData{it}.responseDuration = [];
-        protocolData{it}.protocolEndFrame = [];
-        protocolData{it}.protocolEndValue = [];
-        protocolData{it}.lastResponseFrame = [];
-        protocolData{it}.lastResponseValue = [];
+        protocolData.recoveryTime(it) = recoveryTime;
+        protocolData.recovered(it) = ~isempty(recoveryTimeIdx);
+        if(~isempty(decayTimeIdx))
+          protocolData.decayTimeIdx(it) = decayTimeIdx;
+        else
+          protocolData.decayTimeIdx(it) = NaN;
+        end
+        protocolData.decayTime(it) = decayTime;
+        protocolData.decay(it) = decay;
+        protocolData.responseDuration(it) = responseDuration;
+        protocolData.protocolEndFrame(it) = endFrame;
+        protocolData.protocolEndValue(it) = currentTrace(endFrame);
+        protocolData.lastResponseFrame(it) = validResponseFrames(end);
+        protocolData.lastResponseValue(it) = currentTrace(validResponseFrames(end));
         
-      protocolData{it}.fitRiseCoeffs = [];
-      protocolData{it}.fitRiseCoeffNames = [];
-      protocolData{it}.fitRiseRsquare = [];
-      protocolData{it}.fitRiseCurve = [];
+        if(~isempty(ipt))
+          protocolData.responseFitFrames{it} = ipt;
+          protocolData.responseFitSegments(it) = length(ipt)-1;
+          protocolData.responseFitSegmentsDuration{it} = zeros(length(ipt)-1, 1);
+          protocolData.responseFitSegmentsFluorescenceIncrease{it} = zeros(length(ipt)-1, 1);
+          protocolData.responseFitSegmentsSlope{it} = zeros(length(ipt)-1, 1);
+          protocolData.responseFitModel{it} = cell(length(ipt)-1, 1);
+          f = fittype('poly1');
+          for itt = 2:length(ipt)
+            currFrames = ipt(itt-1):ipt(itt);
+            [fitCoefs, ~] = fit(t(currFrames), currentTrace(currFrames), f);
+            protocolData.responseFitSegmentsDuration{it}(itt-1) = length(currFrames)/experiment.fps;
+            protocolData.responseFitSegmentsFluorescenceIncrease{it}(itt-1) = protocolData.responseFitSegmentsDuration{it}(itt-1)*fitCoefs.p1;
+            protocolData.responseFitSegmentsSlope{it}(itt-1) = fitCoefs.p1;
+            protocolData.responseFitModel{it}{itt-1} = [fitCoefs.p1, fitCoefs.p2];
+          end
+          protocolData.responseFitSegmentsMaxFluorescenceIncrease(it) = max(protocolData.responseFitSegmentsFluorescenceIncrease{it});
+          protocolData.responseFitSegmentsMaxSlope(it) = max(protocolData.responseFitSegmentsSlope{it});
+        else
+          protocolData.responseFitFrames{it} = [];
+          protocolData.responseFitSegments(it) = 0;
+          protocolData.responseFitSegmentsDuration{it} = [];
+          protocolData.responseFitSegmentsFluorescenceIncrease{it} = [];
+          protocolData.responseFitSegmentsSlope{it} = [];
+          protocolData.responseFitSegmentsMaxFluorescenceIncrease(it) = NaN;
+          protocolData.responseFitSegmentsMaxSlope(it) = NaN;
+          protocolData.responseFitModel{it} = {};
+        end
 
-      protocolData{it}.fitDecayCoeffs = [];
-      protocolData{it}.fitDecayCoeffNames = [];
-      protocolData{it}.fitDecayRsquare = [];
-          protocolData{it}.fitDecayCurve = [];
+      catch ME
+        logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+        protocolData.baseLine(it) = NaN;
+        protocolData.baseLineFrame(it) = NaN;
+        protocolData.reactionTime(it) = NaN;
+        protocolData.reactionTimeIdx(it) = NaN;
+        protocolData.maxResponse(it) = NaN;
+        protocolData.maxResponseTimeIdx(it) = NaN;
+        protocolData.maxResponseTime(it) = NaN;
+        protocolData.recoveryTimeIdx(it) = NaN;
+        protocolData.recoveryTime(it) = NaN;
+        protocolData.recovered(it) = false;
+        protocolData.decayTimeIdx(it) = NaN;
+        protocolData.decayTime(it) = NaN;
+        protocolData.decay(it) = NaN;
+        protocolData.responseDuration(it) = NaN;
+        protocolData.protocolEndFrame(it) = NaN;
+        protocolData.protocolEndValue(it) = NaN;
+        protocolData.lastResponseFrame(it) = NaN;
+        protocolData.lastResponseValue(it) = NaN;
+        
+        protocolData.responseFitFrames{it} = [];
+        protocolData.responseFitSegments(it) = 0;
+        protocolData.responseFitSegmentsDuration{it} = [];
+        protocolData.responseFitSegmentsFluorescenceIncrease{it} = [];
+        protocolData.responseFitSegmentsSlope{it}= [];
+        protocolData.responseFitSegmentsMaxFluorescenceIncrease(it) = NaN;
+        protocolData.responseFitSegmentsMaxSlope(it) = NaN;
+        protocolData.responseFitModel{it} = [];
+        
+%         protocolData{it}.fitRiseCoeffs = [];
+%         protocolData{it}.fitRiseCoeffNames = [];
+%         protocolData{it}.fitRiseRsquare = [];
+%         protocolData{it}.fitRiseCurve = [];
+% 
+%         protocolData{it}.fitDecayCoeffs = [];
+%         protocolData{it}.fitDecayCoeffNames = [];
+%         protocolData{it}.fitDecayRsquare = [];
+%         protocolData{it}.fitDecayCurve = [];
           
         
       end
-    ncbar.update(it/length(protocolData));
+    ncbar.update(it/size(currentTraces, 2));
   end
 end
 

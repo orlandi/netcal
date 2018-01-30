@@ -64,6 +64,18 @@ classdef KClProtocolOptions < baseOptions
     % - relative: times the global maximum
     % - absolute: absolute increase of the fluorescence value
     maxResponseThreshold = 0.99;
+ 
+    % If true, will try to fit the response (from the reaction time to the maximum response) by partioning the signal into various linear fits
+    responseFit = true;
+    
+    % Minimum separation (in time) to detect slope changes
+    responseFitMinimumTime = 0.5;
+    
+    % Penalty parameter to define when the fitting should stop (the higher the number the faster it will stop (less partitions))
+    responseFitResidual = 800;
+    
+    % Maximum number of slopes to try to fit
+    responseFitMaximumSlopes = 5;
     
     % Window size (in sec) for the linear fits used to determine when the
     % signal starts to decay
@@ -76,23 +88,6 @@ classdef KClProtocolOptions < baseOptions
     % - relative: mean +- effectThreshold times standard deviation
     % - absolute: absolute increase of the fluorescence value
     recoveryTimeThreshold = 5;
-    
-    % Type of fit to perform to compute the rise time:
-    % - none: don't fit
-    % - linear: p1*x+p2
-    % - single exponential: a*exp(b*x)
-    % - double exponential: a*exp(b*x) + c*exp(d*x)
-    riseFitType = {'none', 'linear', 'single exponential', 'double exponential'};
-    
-    % Type of fit to perform to compute the decay time:
-    % - none: don't fit
-    % - linear: p1*x+p2
-    % - single exponential: a*exp(b*x)
-    % - double exponential: a*exp(b*x) + c*exp(d*x)
-    decayFitType = {'none', 'linear', 'single exponential', 'double exponential'};
-    
-    % True to show the protocol effect on the viewTraces menu
-    showProtocol = true;
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)

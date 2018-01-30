@@ -26,12 +26,45 @@ function projexp = plotSpikeStatistics(projexp, varargin)
 % optionsClass: plotSpikeStatisticsOptions
 % requiredFields: spikes
 
-obj = plotStatistics;
-obj.init(projexp, plotSpikeStatisticsOptions, 'Plotting spike statistics', varargin{:}, 'gui', gcbf);
-if(obj.getData(@getData, projexp, obj.params.statistic))
-  obj.createFigure();
+tmpStat = varargin{1}.statistic;
+defClass = plotSpikeStatisticsOptions;
+defTitle = 'Plotting spikes statistics';
+
+% This block should be the same for any statistics plot
+if(strcmpi(tmpStat, 'ask'))
+  if(isfield(projexp, 'checkedExperiments'))
+    exp = [projexp.folderFiles projexp.experiments{find(projexp.checkedExperiments, 1, 'first')} '.exp'];
+    tmpClass = defClass.setExperimentDefaults(exp);
+  else
+    tmpClass = defClass.setExperimentDefaults(projexp);
+  end
+  %tmpClass = defClass.setExperimentDefaults([]);
+  statList = tmpClass.statistic(1:end-2); % Removing last one since it's going to be empty and 'all'
+  [selection, ok] = listdlg('PromptString', 'Select statistics to plot', 'ListString', statList, 'SelectionMode', 'multiple');
+  if(~ok)
+    return;
+  end
+  for it = 1:length(selection)
+    logMsg(sprintf('%s for: %s', defTitle, statList{selection(it)}));
+    varargin{1}.statistic = statList{selection(it)};
+    obj = plotStatistics;
+    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+    if(obj.getData(@getData, projexp, obj.params.statistic))
+      obj.createFigure();
+    end
+    obj.cleanup();
+    autoArrangeFigures();
+  end
+  
+else
+  obj = plotStatistics;
+  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+  if(obj.getData(@getData, projexp, obj.params.statistic))
+    obj.createFigure();
+  end
+  obj.cleanup();
 end
-obj.cleanup();
+
 
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)

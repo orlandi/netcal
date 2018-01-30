@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.1.9';
+currVersion = '7.2.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -1358,7 +1358,7 @@ function success = menuExperimentRename(experiment)
     experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
     % Move all project files
     try
-      movefile(oldFolder, experiment.folder);
+      movefile(oldFolder, experiment.folder, 'f');
     catch ME
       logMsg('Copying failed', 'e');
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
@@ -1376,8 +1376,8 @@ function success = menuExperimentRename(experiment)
         if(~strcmp(fpb, nfpb))
           fileList(it).name
           newName = [fpa filesep nfpb fpc];
-          newName
-          movefile(fileList(it).name, newName);
+          %newName
+          movefile(fileList(it).name, newName, 'f');
         end
       end
     end
@@ -4478,6 +4478,25 @@ function pipelineRun(~, ~, parallelMode)
             logMsg(sprintf('Something went wrong while processing %s on the project', analysisFunction), 'e');
             logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
           end
+          % Check for figure tiling
+          if(~isempty(optionsList{f}))
+            if(isa(optionsClassCurrent, 'plotBaseOptions'))
+              try
+                if(optionsClassCurrent.tileFigures)
+                  autoArrangeFigures();
+                end
+              catch
+              end
+            elseif(isa(optionsClassCurrent, 'plotFigureOptions'))
+              try
+                optionsClassCurrent.styleOptions
+                if(optionsClassCurrent.styleOptions.tileFigures)
+                  autoArrangeFigures();
+                end
+             catch
+             end
+            end
+          end
         case {'experiment', 'experimentDebug'}
           for it = 1:length(checkedExperiments)
             experimentIndex = checkedExperiments(it);
@@ -4510,8 +4529,46 @@ function pipelineRun(~, ~, parallelMode)
             %executeExperimentFunctions(project, experimentIndex, functionHandleList, optionsList, 'pbar', p, 'verbose', false);
             ncbar.setCurrentBar(2);
             ncbar.update((it)/length(checkedExperiments), 'force'); 
+            % Check for figure tiling
+            if(~isempty(optionsList{f}))
+              if(isa(optionsClassCurrent, 'plotBaseOptions'))
+                try
+                  if(optionsClassCurrent.tileFigures)
+                    autoArrangeFigures();
+                  end
+                catch
+                end
+              elseif(isa(optionsClassCurrent, 'plotFigureOptions'))
+                try
+                  optionsClassCurrent.styleOptions
+                  if(optionsClassCurrent.styleOptions.tileFigures)
+                    autoArrangeFigures();
+                  end
+               catch
+               end
+              end
+            end
           end
       end
+%       % Check for figure tiling
+%       if(~isempty(optionsList{f}))
+%         if(isa(optionsClassCurrent, 'plotBaseOptions'))
+%           try
+%             if(optionsClassCurrent.tileFigures)
+%               autoArrangeFigures();
+%             end
+%           catch
+%           end
+%         elseif(isa(optionsClassCurrent, 'plotFigureOptions'))
+%           try
+%             optionsClassCurrent.styleOptions
+%             if(optionsClassCurrent.styleOptions.tileFigures)
+%               autoArrangeFigures();
+%             end
+%          catch
+%          end
+%         end
+%       end
       % Now the function is over. Next
       nodeList{f}.Name = sprintf('<html><font color="%s">%s</font></html>', colList{f}, regexprep(nodeList{f}.Name, '<[^>]*>', ''));
     end

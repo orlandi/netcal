@@ -49,5 +49,8 @@ classdef plotBaseOptions < baseOptions
     
     % Show figure (if false, it will automatically close after plotting, only useful if saveFigure is set to true)
     showFigure = true;
+    
+    % If true will try and tile any open figures after each iteration
+    tileFigures = false;
   end
 end

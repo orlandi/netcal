@@ -26,13 +26,30 @@ function projexp = plotSpikesBurstStatistics(projexp, varargin)
 % optionsClass: plotSpikesBurstStatisticsOptions
 % requiredFields: traceBursts
 
-obj = plotStatistics;
-obj.init(projexp, plotSpikesBurstStatisticsOptions, 'Plotting burst statistics', varargin{:}, 'gui', gcbf);
-if(obj.getData(@getData, projexp, obj.params.statistic))
-  obj.createFigure();
+tmpStat = varargin{1}.statistic;
+defClass = plotSpikesBurstStatisticsOptions;
+defTitle = 'Plotting burst statistics';
+if(strcmpi(tmpStat, 'all'))
+  statList = defClass.setExperimentDefaults([]).statistic;
+  statList = statList(1:end-1);
+  for it = 1:length(statList)
+    logMsg(sprintf('Plotting burst statistics for: %s', statList{it}));
+    varargin{1}.statistic = statList{it};
+    obj = plotStatistics;
+    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+    if(obj.getData(@getData, projexp, obj.params.statistic))
+      obj.createFigure();
+    end
+    obj.cleanup();
+  end
+else
+  obj = plotStatistics;
+  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+  if(obj.getData(@getData, projexp, obj.params.statistic))
+    obj.createFigure();
+  end
+  obj.cleanup();
 end
-obj.cleanup();
-
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)
     bursts = getExperimentGroupBursts(experiment, groupName, 'spikes');

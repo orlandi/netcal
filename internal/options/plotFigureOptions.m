@@ -27,7 +27,9 @@ classdef plotFigureOptions < baseOptions
     % If true, will invert the colormap scale
     % notch:
     % If true, will show the notches: The notch is centred on the median and extends to +-1.58*IQR/sqrt(N), where N is the sample size (number of non-NaN). Generally if the notches of two boxes do not overlap, this is evidence of a statistically significant difference between the medians.
-    styleOptions = struct('figureSize', '[500 500]', 'figureTitle', [], 'xLabel', [], 'yLabel', [], 'XTickLabelRotation', 0, 'YTickLabelRotation', 0, 'colormap', 'lines', 'invertColormap', false, 'notch', false);
+    % tileFigures:
+    % If true, will try to tile all opened figures at the end
+    styleOptions = struct('figureSize', '[500 500]', 'figureTitle', [], 'xLabel', [], 'yLabel', [], 'XTickLabelRotation', 0, 'YTickLabelRotation', 0, 'colormap', 'lines', 'invertColormap', false, 'notch', false, 'tileFigures', false);
     
     % Save options
     % saveFigure:

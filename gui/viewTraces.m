@@ -73,6 +73,7 @@ showPatterns = false;
 showPeaks = false;
 showDyingCells = false;
 showBaseLine = false;
+showKCl = false;
 additionalExperiments = false;
 additionalExperimentsList = {};
 additionalExperimentsPanelList = [];
@@ -229,6 +230,7 @@ hs.menuPreferencesShowPatterns = uimenu(hs.menuView, 'Label', 'Show patterns', '
 hs.menuPreferencesShowPeaks = uimenu(hs.menuView, 'Label', 'Show peaks', 'Callback', @menuPreferencesShowPeaks, 'Enable', 'off');
 hs.menuPreferencesShowDyingCells = uimenu(hs.menuView, 'Label', 'Show dying cells', 'Callback', @menuPreferencesShowDyingCells, 'Enable', 'off');
 hs.menuPreferencesShowBaseLine = uimenu(hs.menuView, 'Label', 'Show baseline', 'Callback', @menuPreferencesShowBaseLine, 'Enable', 'off');
+hs.menuPreferencesShowKCl = uimenu(hs.menuView, 'Label', 'Show KCl analysis', 'Callback', @menuPreferencesShowKCl, 'Enable', 'off');
 
 if(isfield(experiment, 'spikes'))
   hs.menuPreferencesShowSpikes.Enable = 'on';
@@ -244,6 +246,9 @@ if(isfield(experiment, 'dyingCells'))
 end
 if(isfield(experiment, 'baseLine'))
   hs.menuPreferencesShowBaseLine.Enable = 'on';
+end
+if(isfield(experiment, 'KClProtocolData'))
+  hs.menuPreferencesShowKCl.Enable = 'on';
 end
 
 hs.menuClassification = uimenu(hs.mainWindow, 'Label', 'Classification');
@@ -568,7 +573,9 @@ function changeDisplay(~, ~)
     cmap = parula(numberTraces+1);
     totalPages = ceil(length(currentOrder)/numberTraces);
     experiment.viewTracesOptionsCurrent = viewTracesOptionsCurrent;
-    setappdata(gui, 'viewTracesOptionsCurrent', viewTracesOptionsCurrent);
+    if(~isempty(gui))
+      setappdata(gui, 'viewTracesOptionsCurrent', viewTracesOptionsCurrent);
+    end
     updateImage(false);
   end
 end
@@ -588,6 +595,21 @@ function menuPreferencesShowSpikes(~, ~, ~)
     hs.menuPreferencesShowSpikes.Checked = 'on';
     if(isfield(experiment,'spikes') && ~isempty(experiment.spikes))
       showSpikes = true;
+    end
+    updateImage(true);
+  end
+end
+
+%--------------------------------------------------------------------------
+function menuPreferencesShowKCl(~, ~, ~)
+  if(strcmp(hs.menuPreferencesShowKCl.Checked,'on'))
+    hs.menuPreferencesShowKCl.Checked = 'off';
+    showKCl = false;
+    updateImage(true);
+  else
+    hs.menuPreferencesShowKCl.Checked = 'on';
+    if(isfield(experiment,'KClProtocolData'))
+      showKCl = true;
     end
     updateImage(true);
   end
@@ -682,6 +704,7 @@ function menuPreferencesShowBaseLine(~, ~)
     updateImage(true);
   end
 end
+
 
 %--------------------------------------------------------------------------
 function menuViewRaster(~, ~, ~)
@@ -797,6 +820,11 @@ function KClAnalysisMenu(~, ~)
   end
   % Do something (in case you need to)
   experiment = KClAnalysis(experiment, experiment.KClProtocolOptionsCurrent);
+  if(isfield(experiment, 'KClProtocolData'))
+    hs.menuPreferencesShowKCl.Enable = 'on';
+    hs.menuPreferencesShowKCl.Checked = 'on';
+    showKCl = true;
+  end
   updateImage(true);
 end
 
@@ -3486,7 +3514,7 @@ end
   end
   
   % Now the protocols part
-  if(isfield(experiment, 'KClProtocolOptionsCurrent') && experiment.KClProtocolOptionsCurrent.showProtocol)
+  if(isfield(experiment, 'KClProtocolOptionsCurrent') && showKCl)
     % Do the plots
     %xl = xlim;
     yl = ylim;
@@ -3500,42 +3528,73 @@ end
       p = [p; plot([1, 1]*(experiment.KClProtocolOptionsCurrent.startTime+experiment.KClProtocolOptionsCurrent.windowOfInterest), yl, '--', 'Color', [0.9 0.4 1], 'LineWidth', 2)];
       legendText{end+1} = 'window of interest end';
     end
-   
-    %% Now for each trace
-    
+    %%% Now for each trace
     for it = 1:size(traces, 2)
-      curNeuron = currentOrder(firstTrace+it-1);
-      if(isempty(experiment.KClProtocolData{curNeuron}))
+      %curNeuron = currentOrder(firstTrace+it-1);
+      %curData = experiment.KClProtocolData{curNeuron};
+      try
+        [groupType, groupIdx] = getCurrentGroup();
+        curData = experiment.KClProtocolData.(groupType){groupIdx};
+%        currentOder
+        %curNeuron = (firstTrace+it-1);
+        curNeuron = find(experiment.traceGroups.(groupType){groupIdx} == currentOrder(firstTrace+it-1));
+        %curNeuron
+      catch
         continue;
       end
-      curData = experiment.KClProtocolData{curNeuron};
-      % From protocol start to reaction time
-      plot(t(curData.baseLineFrame:curData.reactionTimeIdx), traces(curData.baseLineFrame:curData.reactionTimeIdx, it), 'k');
-      % From reaction time to maximum
-      plot(t(curData.reactionTimeIdx:curData.maxResponseTimeIdx), traces(curData.reactionTimeIdx:curData.maxResponseTimeIdx, it), 'b');
-      % From maximum to decay
-      plot(t(curData.maxResponseTimeIdx:curData.decayTimeIdx), traces(curData.maxResponseTimeIdx:curData.decayTimeIdx, it), 'g');
-      % From decay time to recovery
-      plot(t(curData.decayTimeIdx:curData.recoveryTimeIdx), traces(curData.decayTimeIdx:curData.recoveryTimeIdx, it), 'r');
-      
-      plot(t(curData.reactionTimeIdx), traces(curData.reactionTimeIdx, it), 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
-      plot(t(curData.maxResponseTimeIdx), traces(curData.maxResponseTimeIdx, it), 'bo', 'MarkerSize', 8, 'MarkerFaceColor', 'b');
-      plot(t(curData.decayTimeIdx), traces(curData.decayTimeIdx, it), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g');
-      plot(t(curData.recoveryTimeIdx), traces(curData.recoveryTimeIdx, it), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
-      plot(t(curData.lastResponseFrame), traces(curData.lastResponseFrame, it), 'mo', 'MarkerSize', 8, 'MarkerFaceColor', 'm');
-      plot(t(curData.protocolEndFrame), traces(curData.protocolEndFrame, it), 'co', 'MarkerSize', 8, 'MarkerFaceColor', 'c');
-      
-      
-      %% Now the fits
-      if(~isempty(curData.fitRiseCurve))
-        x = curData.fitRiseCurve(:, 1);
-        y = curData.fitRiseCurve(:, 2);
-        plot(x, (y-valSubs(it))*valMult(it)+valAdd(it), 'b');
+      %curName = getExperimentGroupsNames(experiment, groupType, groupIdx);
+      %oldGroup = experiment.identifyHCGoptionsCurrent.group;
+      %experiment.identifyHCGoptionsCurrent.group = {curName{:}, ''};
+      if(isempty(curData))
+        continue;
       end
-      if(~isempty(curData.fitDecayCurve))
-        x = curData.fitDecayCurve(:, 1);
-        y = curData.fitDecayCurve(:, 2);
-        plot(x, (y-valSubs(it))*valMult(it)+valAdd(it), 'r');
+      
+      % From protocol start to reaction time
+      try
+        plot(t(curData.baseLineFrame(curNeuron):curData.reactionTimeIdx(curNeuron)), traces(curData.baseLineFrame(curNeuron):curData.reactionTimeIdx(curNeuron), it), 'k');
+      end
+      % From reaction time to maximum
+      try
+        plot(t(curData.reactionTimeIdx(curNeuron):curData.maxResponseTimeIdx(curNeuron)), traces(curData.reactionTimeIdx(curNeuron):curData.maxResponseTimeIdx(curNeuron), it), 'b');
+      end
+      % From maximum to decay
+      try
+        plot(t(curData.maxResponseTimeIdx(curNeuron):curData.decayTimeIdx(curNeuron)), traces(curData.maxResponseTimeIdx(curNeuron):curData.decayTimeIdx(curNeuron), it), 'g');
+      end
+      % From decay time to recovery
+      try
+        plot(t(curData.decayTimeIdx(curNeuron):curData.recoveryTimeIdx(curNeuron)), traces(curData.decayTimeIdx(curNeuron):curData.recoveryTimeIdx(curNeuron), it), 'r');
+      end
+      try
+        plot(t(curData.reactionTimeIdx(curNeuron)), traces(curData.reactionTimeIdx(curNeuron), it), 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');e
+      end
+      try
+        plot(t(curData.maxResponseTimeIdx(curNeuron)), traces(curData.maxResponseTimeIdx(curNeuron), it), 'bo', 'MarkerSize', 8, 'MarkerFaceColor', 'b');
+      end
+      try
+        plot(t(curData.decayTimeIdx(curNeuron)), traces(curData.decayTimeIdx(curNeuron), it), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g');
+      end
+      try
+        plot(t(curData.recoveryTimeIdx(curNeuron)), traces(curData.recoveryTimeIdx(curNeuron), it), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+      end
+      try
+        plot(t(curData.lastResponseFrame(curNeuron)), traces(curData.lastResponseFrame(curNeuron), it), 'mo', 'MarkerSize', 8, 'MarkerFaceColor', 'm');
+      end
+      try
+        plot(t(curData.protocolEndFrame(curNeuron)), traces(curData.protocolEndFrame(curNeuron), it), 'co', 'MarkerSize', 8, 'MarkerFaceColor', 'c');
+      end
+      %curData.responseFitFrames
+      % Now the response fit
+      curmap = lines(curData.responseFitSegments(curNeuron));
+      for it2 = 1:curData.responseFitSegments(curNeuron)
+        curFrames = curData.responseFitFrames{curNeuron}(it2:(it2+1));
+        x = t(curFrames);
+        %y = curData.responseFitModel{curNeuron}{it2}(t(curFrames));
+        y = curData.responseFitModel{curNeuron}{it2}(1)*(t(curFrames))+curData.responseFitModel{curNeuron}{it2}(2);
+        plot(x, (y-valSubs(it))*valMult(it)+valAdd(it), 'Color', curmap(it2, :));
+        if(it2 < curData.responseFitSegments(curNeuron))
+          plot([1,1]*x(end), [traces(curData.reactionTimeIdx(curNeuron), it) traces(curData.maxResponseTimeIdx(curNeuron), it)], 'k--');
+        end
       end
     end
     %legend(p, legendText);
