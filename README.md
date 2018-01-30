@@ -1431,6 +1431,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.2.0]: https://github.com/orlandi/netcal/tree/v7.2.0
 [7.1.10]: https://github.com/orlandi/netcal/tree/v7.1.10
 [7.1.9]: https://github.com/orlandi/netcal/tree/v7.1.9
 [7.1.8]: https://github.com/orlandi/netcal/tree/v7.1.8
