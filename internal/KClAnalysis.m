@@ -310,13 +310,13 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
           case 'absolute'
             recoveryTimeThreshold = params.recoveryTimeThreshold;
         end
-        if(~isempty(decayTimeIdx) && ~isempty(decayTimeIdx))
+        if(~isempty(decayTimeIdx) && ~isnan(decayTimeIdx))
           if(protocolSign == 1)
             recoveryTimeIdx = decayTimeIdx - 1 + find(currentTrace(decayTimeIdx:validResponseFrames(end)) <= recoveryTimeThreshold, 1, 'first');
           else
             recoveryTimeIdx = decayTimeIdx - 1 + find(currentTrace(decayTimeIdx:validResponseFrames(end)) >= recoveryTimeThreshold, 1, 'first');
           end
-          if(~isempty(recoveryTimeIdx))
+          if(~isempty(recoveryTimeIdx) && ~isnan(recoveryTimeIdx))
             recoveryTime = t(recoveryTimeIdx)-params.startTime;
           else
             recoveryTimeIdx = [];
@@ -326,7 +326,7 @@ function protocolData = computeProtocolStatistics(currentTraces, t, params)
           recoveryTimeIdx = [];
           recoveryTime = NaN;
         end
-        if(~isempty(decayTimeIdx) && ~isempty(maxResponseTimeIdx) && ~isempty(decayTimeIdx) && ~isempty(maxResponseTimeIdx))
+        if(~isempty(decayTimeIdx) && ~isempty(maxResponseTimeIdx) && ~isnan(decayTimeIdx) && ~isnan(maxResponseTimeIdx))
           responseDuration = t(decayTimeIdx)-t(maxResponseTimeIdx);
         else
           responseDuration = NaN;

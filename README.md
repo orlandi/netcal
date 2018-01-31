@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.2.1] - 2018-01-30
+
+### Added
+- Option to store traces with single precision (EXPERIMENTAL)
+
 ## [7.2.0] - 2018-01-30
 
 ### Added

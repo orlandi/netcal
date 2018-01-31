@@ -190,7 +190,8 @@ for git = 1:length(groupList)
         OrderedChannels(c-min(Spike.C)+1) = find( ID==c-min(Spike.C)+1 );
       end
       % Raster plot
-      plot(Spike.T, OrderedChannels(1+Spike.C), 'k.');
+      %plot(Spike.T, OrderedChannels(1+Spike.C), 'k.');
+      plot(Spike.T, OrderedChannels(Spike.C), 'k.');
       maxC = max(OrderedChannels)+1;
     else
       % Raster plot
@@ -214,12 +215,12 @@ for git = 1:length(groupList)
         plot(Spike.T(valid), 1+Spike.C(valid), 'b.');
       end
     end
-    plot(Detected, maxC*ones(size(Detected)), 'r', 'linewidth', 14 )
+    plot(Detected, maxC*ones(size(Detected)), 'r', 'linewidth', 6 )
 
     xlabel 'Time [sec]'
     ylabel 'Channel'
     box on;
-    title(sprintf('ISI_N burst detection exploration for: %s - %s', groupName, experiment.name));
+    title(sprintf('ISI_N burst detection exploration for: %s - %s - N: %d', groupName, experiment.name, length(burstList.amplitude)));
   end
   
   experiment.spikeBursts.(groupName){groupIdx} = burstList;

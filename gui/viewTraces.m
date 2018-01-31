@@ -2514,13 +2514,7 @@ function viewPositionsOnScreen(~, ~, ~)
       caxis(h, [minIntensity, maxIntensity]*(1*(opacityLevel+0.5))^3);
       % Touch min at fixed max
     end
-    
-    %[max(minIntensity,min(maxIntensity,minIntensity+(1-opacityLevel)*(maxIntensity-minIntensity))), maxIntensity]
-    %caxis(h, [max(minIntensity,min(maxIntensity,minIntensity+(1-opacityLevel)*(maxIntensity-minIntensity))), maxIntensity]);
-        %caxis(h, [minIntensity, maxIntensity]*(1-opacityLevel));
   end
-  
-  
 end
 
 %--------------------------------------------------------------------------

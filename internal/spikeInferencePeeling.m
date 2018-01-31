@@ -118,7 +118,7 @@ for it = 1:length(subset)
   peelingSpikeTrains(:, it) = peelingData.spiketrain';
   peelingModelTraces(:, it) = peelingData.model';
   peelingSpikes{it} = experiment.t(1)+peelingData.spikes-peelingData.tim(1);
-  peelingSpikes{it}
+  %peelingSpikes{it}
   if(~isempty(params.pbar) && params.verbose && ~params.training)
     ncbar.update(it/length(subset));
   end

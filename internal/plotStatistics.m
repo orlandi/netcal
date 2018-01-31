@@ -594,7 +594,7 @@ classdef plotStatistics < handle
           case 'Mann-Whitney'
             sigstar(grList, pList);
           case 'Kolmogorov-Smirnov'
-            sigstar(grList, p2List);
+            sigstar(grList, pList);
         end
       end
       

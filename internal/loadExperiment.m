@@ -91,7 +91,7 @@ switch lower(fpc)
 %     params.project
 %     oldFolder
     try
-      if(isfield(params, 'project') && isfield(params.project, 'folder'))
+      if(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]))
         [status, msg, msgID] = copyfile(oldFolder, [params.project.folder experiment.name filesep], 'f');
       
       if(status == 0)
