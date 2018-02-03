@@ -27,6 +27,20 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.2.3] - 2018-02-02
+
+### Added
+- Semi-automatic burst detector based on ISI_N
+
+## [7.2.2] - 2018-02-01
+
+### Modified
+- ISI_N burst detection: now each burst is plotted in a different color
+- ISI_N burst detection explorer: now shows the estimated positon of maximums and minimums of the distribution
+
+### Fixed
+- New options were not being stored within the experiments after a succesful parallel pipeline run
+
 ## [7.2.2] - 2018-01-31
 
 ### Fixed
@@ -1441,6 +1455,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.2.3]: https://github.com/orlandi/netcal/tree/v7.2.3
 [7.2.2]: https://github.com/orlandi/netcal/tree/v7.2.2
 [7.2.0]: https://github.com/orlandi/netcal/tree/v7.2.0
 [7.1.10]: https://github.com/orlandi/netcal/tree/v7.1.10

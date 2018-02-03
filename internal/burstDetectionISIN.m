@@ -79,8 +79,10 @@ for git = 1:length(groupList)
   SpikeTimes = [];
   SpikeIdx = [];
   for it = 1:length(ar)
-    SpikeTimes = [SpikeTimes, ar{it}];
-    SpikeIdx = [SpikeIdx, ones(size(ar{it}))*it];
+    if(~isnan(ar{it}))
+      SpikeTimes = [SpikeTimes, ar{it}];
+      SpikeIdx = [SpikeIdx, ones(size(ar{it}))*it];
+    end
   end
   mat = [SpikeTimes', SpikeIdx'];
   ar = sortrows(mat, 1);
@@ -210,9 +212,9 @@ for git = 1:length(groupList)
       Detected = [ Detected Burst.T_start(i) Burst.T_end(i) NaN ];
       valid = find(Spike.T >= Burst.T_start(i) & Spike.T <= Burst.T_end(i));
       if(params.reorderChannels)
-        plot(Spike.T(valid), OrderedChannels(1+Spike.C(valid)), 'b.');
+        plot(Spike.T(valid), OrderedChannels(1+Spike.C(valid)), '.');
       else
-        plot(Spike.T(valid), 1+Spike.C(valid), 'b.');
+        plot(Spike.T(valid), 1+Spike.C(valid), '.');
       end
     end
     plot(Detected, maxC*ones(size(Detected)), 'r', 'linewidth', 6 )

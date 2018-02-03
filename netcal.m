@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.2.2';
+currVersion = '7.2.3';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -4603,7 +4603,7 @@ function pipelineRun(~, ~, parallelMode)
           switch curMode
             case {'project', 'projectDebug'}
               modeList{f} = 'project';
-            case {'experiment', 'experimentDebug'};
+            case {'experiment', 'experimentDebug'}
               modeList{f} = 'experiment';
             otherwise
               logMsg(sprintf('Function pipelineMode undefined. Assuming experiment'), 'w');
@@ -4667,6 +4667,10 @@ function pipelineRun(~, ~, parallelMode)
           while numCompleted < length(checkedExperiments)
             ncbar.setBarName(sprintf('Processing experiments (%d/%d)', numCompleted, length(checkedExperiments)));
             [completedIdx, experiment] = fetchNext(futures);
+            if(~isempty(optionsList{f}))
+              experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+              project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+            end
             saveExperiment(experiment, 'verbose', false, 'pbar', 0);
             
             numCompleted = numCompleted + 1;

@@ -1,7 +1,7 @@
 internal/.importExperimentFromWorkspace.m.swp 12287
 internal/CheckboxTreeExperiment.m 1240
 internal/CheckboxTreePipeline.m 1247
-internal/KClAnalysis.m 21524
+internal/KClAnalysis.m 21545
 internal/TreeFunctionList.m 1078
 internal/applyCorrection.m 8745
 internal/applySmoothing.m 1172
@@ -12,8 +12,8 @@ internal/barCleanup.m 352
 internal/barStartup.m 581
 internal/blkPercentile.m 469
 internal/burstDetection.m 11770
-internal/burstDetectionISIN.m 7898
-internal/burstDetectionISINexplorer.m 3765
+internal/burstDetectionISIN.m 8021
+internal/burstDetectionISINexplorer.m 5212
 internal/burstDetectionSpikes.m 6445
 internal/checkExperimentName.m 1501
 internal/checkGroups.m 5318
@@ -24,6 +24,7 @@ internal/closeVideoStream.m 576
 internal/computeFCA.m 6107
 internal/computePSDavg.m 4640
 internal/connectivityMatrixToGexf.m 5364
+internal/convertTracesToSinglePrecision.m 1763
 internal/createTiffStack.m 2732
 internal/customTreeDnD.m 15995
 internal/decodeFloat.m 229
@@ -80,7 +81,7 @@ internal/integerLogBinning2.m 2681
 internal/isSubField.m 478
 internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
-internal/loadExperiment.m 22163
+internal/loadExperiment.m 22235
 internal/loadProject.m 4554
 internal/loadROI.m 4259
 internal/loadTraces.m 3422
@@ -106,7 +107,7 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 32890
+internal/plotStatistics.m 32889
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12868
 internal/preprocessExperimentPercentile.m 7068
@@ -130,7 +131,7 @@ internal/spikeDetectConflicts.m 5458
 internal/spikeInferenceFoopsi.m 8382
 internal/spikeInferenceMLspike.m 8111
 internal/spikeInferenceOasis.m 5064
-internal/spikeInferencePeeling.m 4937
+internal/spikeInferencePeeling.m 4938
 internal/spikeInferenceSchmitt.m 5644
 internal/spikeRemoveConflicts.m 2923
 internal/tracePatternDetection.m 13500
@@ -1652,7 +1653,7 @@ gui/viewPatterns.m 40896
 gui/viewROI.m 55354
 gui/viewRecording.m 64920
 gui/viewSpikes.m 24558
-gui/viewTraces.m 159960
+gui/viewTraces.m 159642
 gui/viewTracesMultiExperiment.m 147175
 gui/images/funding_logos.jpg 68202
 gui/images/logo_netcal.png 146184
@@ -1663,5 +1664,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 41254
-netcal.m 209658
+README.md 41888
+netcal.m 209893

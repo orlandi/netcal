@@ -97,7 +97,7 @@ for git = 1:length(groupList)
   hold on;
   cmap = parula(length(N));
   cnt = 0;
-  
+  hList = [];
   for FRnum = N
     cnt = cnt + 1;
     ISI_N = SpikeTimes( FRnum:end ) - SpikeTimes( 1:end-(FRnum-1) );
@@ -107,10 +107,42 @@ for git = 1:length(groupList)
     newSteps = Steps(valid);
     n = n(valid);
     %plot( newSteps, n/sum(n), '-', 'color', map(cnt,:) )
-    plot(newSteps, smooth(n)/sum(n), '-', 'color', cmap(cnt,:), 'DisplayName', sprintf('N=%d', FRnum));
+    nPlot = smooth(n)/sum(n);
+    hList = [hList; plot(newSteps, nPlot, '-', 'color', cmap(cnt,:), 'DisplayName', sprintf('N=%d', FRnum))];
     %r = 1-n/sum(n);
     %r(n == 0) = nan;
     %plot( Steps, r, '-o', 'color', map(cnt,:) )
+    
+    % Peak detection
+     [~, locs, ~, p] = findpeaks(log(nPlot));
+    if(length(locs) < 2)
+      continue;
+    end
+    [~, pidx] = sort(p, 'descend');
+    pksIdx = locs(pidx(1:2));
+    plot(newSteps(pksIdx), nPlot(pksIdx)*1.1, 'v','MarkerSize', 8, 'MarkerFaceColor', cmap(cnt, :), 'MarkerEdgeColor', cmap(cnt, :));
+    optISINupper = max(newSteps(pksIdx));
+    optISINlower = min(newSteps(pksIdx));
+    %[optISINupper optISINlower]
+    [~, locs, ~, p] = findpeaks(-log(nPlot));
+    valid = find(newSteps(locs) > optISINlower & newSteps(locs) < optISINupper);
+    locs = locs(valid);
+    p = p(valid);
+    [~, pidx] = sort(p,'descend');
+    pksIdx = locs(pidx(1));
+    plot(newSteps(pksIdx), nPlot(pksIdx)*1.1, 'o', 'MarkerSize', 8, 'MarkerFaceColor', cmap(cnt, :), 'MarkerEdgeColor', cmap(cnt, :));
+    optISINmiddle = newSteps(pksIdx);
+    if(length(pidx) > 1)
+      optISINmiddle2 = newSteps(locs(pidx(2)));
+      plot(newSteps(locs(pidx(2))), nPlot(locs(pidx(2)))*1.1, 'o', 'MarkerSize', 8, 'MarkerFaceColor', cmap(cnt, :), 'MarkerEdgeColor', cmap(cnt, :));
+    else
+      optISINmiddle2 = optISINmiddle;
+    end
+    %optISINupper = mean([optISINupper newSteps(pksIdx)]);
+    % Move it a little bit
+    logMsg(sprintf('N: %d - maxs: %.2f %.2f - mins: %.2f %.2f', FRnum, optISINupper, optISINlower, optISINmiddle, optISINmiddle2));
+    %optISINmiddle[optISINupper optISINlower]);
+    
   end
   xlabel 'ISI, T_i - T_{i-(N-1) _{ }} [s]'
   ylabel 'Probability [%]'
@@ -118,7 +150,7 @@ for git = 1:length(groupList)
   set(gca,'yscale','log') 
   title(sprintf('ISI_N burst detection exploration for: %s - %s', groupName, experiment.name));
   box on;
-  legend;
+  legend(hList);
 end
 
 %--------------------------------------------------------------------------
