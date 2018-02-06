@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.2.3';
+currVersion = '7.2.4';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -4489,7 +4489,7 @@ function pipelineRun(~, ~, parallelMode)
               end
             elseif(isa(optionsClassCurrent, 'plotFigureOptions'))
               try
-                optionsClassCurrent.styleOptions
+                %optionsClassCurrent.styleOptions
                 if(optionsClassCurrent.styleOptions.tileFigures)
                   autoArrangeFigures();
                 end
@@ -4545,7 +4545,14 @@ function pipelineRun(~, ~, parallelMode)
                     autoArrangeFigures();
                   end
                catch
-               end
+                end
+              elseif(isprop(optionsClassCurrent, 'tileFigures'))
+                try
+                  if(optionsClassCurrent.tileFigures)
+                    autoArrangeFigures();
+                  end
+                catch
+                end
               end
             end
           end

@@ -13,6 +13,7 @@ internal/barStartup.m 581
 internal/blkPercentile.m 469
 internal/burstDetection.m 11770
 internal/burstDetectionISIN.m 8021
+internal/burstDetectionISINautomatic.m 20027
 internal/burstDetectionISINexplorer.m 5212
 internal/burstDetectionSpikes.m 6445
 internal/checkExperimentName.m 1501
@@ -195,6 +196,7 @@ internal/options/aggregatedOptions.m 662
 internal/options/avalancheOptions.m 753
 internal/options/avalanchePlotsOptions.m 718
 internal/options/baseOptions.m 3642
+internal/options/burstDetectionISINautomaticOptions.m 2744
 internal/options/burstDetectionISINexplorerOptions.m 1699
 internal/options/burstDetectionISINoptions.m 1746
 internal/options/burstDetectionOptions.m 2680
@@ -306,6 +308,7 @@ external/autoArrangeFigures.m 2788
 external/calcCircle.m 2740
 external/ciplot.m 1050
 external/findjobj.m 169591
+external/findpeaks2.m 38133
 external/mtit.m 3955
 external/parse_pv_pairs.m 2820
 external/pick.m 3919
@@ -1664,5 +1667,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 41888
+README.md 42026
 netcal.m 209893

@@ -51,7 +51,7 @@ minBurstSeparation = params.minBurstSeparation;
 lowMultiplier = params.lowMultiplier;
 highMultiplier = params.highMultiplier;
 Steps = 10.^[-3:.05:3];
-pkList = linspace(0, 10, 100);
+pkList = linspace(0, 5, 100);
 burstThreshold = params.burstThreshold;
 minParticipators = params.minParticipators;
 
@@ -100,14 +100,18 @@ for git = 1:length(groupList)
   SpikeTimes = ar(:,1)';
   SpikeTimes = SpikeTimes +(rand(size(SpikeTimes))-0.5)/experiment.fps;
   
-  SpikeIdx = ar(:,2)';
+  SpikeIdx = members(ar(:,2))';
   firings.T = SpikeTimes;
   firings.N = SpikeIdx;
   sortedSpikeTimes = sort(SpikeTimes);
   [a, b] = hist(firings.N, 1:max(firings.N));
   [~, sortedChannels] = sort(a, 'ascend');
   sortedChannels = arrayfun(@(x)find(x==sortedChannels), 1:max(firings.N));
-  minC = min(sortedChannels(firings.N));
+  if(params.reorderChannels)
+    minC = min(sortedChannels(firings.N));
+  else
+    minC = 0;
+  end
   
   FRnum = Ne;
   
@@ -134,12 +138,12 @@ for git = 1:length(groupList)
       burstStructure.duration = [];
       burstStructure.amplitude = [];
       burstStructure.start = [];
-      %burstStructure.IBI = IBI;
+      burstStructure.IBI = [];
       burstStructure.frames = {};
       burstStructure.participators = {};
       burstStructure.thresholds = NaN;
       burstStructure.N = 0;
-      detectedFull = [];
+      detectedFullSchmitt = [];
       optISINmaxShort = NaN;
       optISINmaxLong = NaN;
       optISINthLow = NaN;
@@ -167,10 +171,14 @@ for git = 1:length(groupList)
 
       optISINminLong = max([optISINmiddle optISINmiddle2]);
       optISINminShort = min([optISINmiddle optISINmiddle2]);
+      %optISINminShort = mean([optISINmiddle optISINmiddle2]);
+      if(isempty(optISINminShort))
+        optISINminShort = min([optISINmiddle optISINmiddle2]);
+      end
 
       optISINthLow = optISINminShort*lowMultiplier;
       optISINthHigh = optISINminShort*highMultiplier;
-
+      [optISINthLow optISINthHigh]
       % Now the schmitt part
       % Negate everything because we want to be below the thresholds!
       %y = schmitt_trigger(-ISI_N, -optISINlower, -optISINupper);
@@ -208,7 +216,7 @@ for git = 1:length(groupList)
       burstStructure.N = FRnum;
 
       if(length(burstStructure.start) > 1)
-        burstStructure.IBI = burstStructure.start(2:end)- (burstStructure.start(1:end-1) + burstStructure.duration(1:end-1));
+        burstStructure.IBI = burstStructure.start(2:end) - (burstStructure.start(1:end-1) + burstStructure.duration(1:end-1));
       else
         burstStructure.IBI = [];
       end
@@ -229,6 +237,7 @@ for git = 1:length(groupList)
             burstStructure.duration(it) = burstStructure.start(it+1)+burstStructure.duration(it+1)-burstStructure.start(it);
             burstStructure.amplitude(it) = burstStructure.amplitude(it) + burstStructure.amplitude(it+1);
             burstStructure.frames{it} = burstStructure.frames{it}(1):burstStructure.frames{it+1}(end);
+            burstStructure.participators{it} = unique([burstStructure.participators{it}, burstStructure.participators{it+1}]);
             % Now remove the next one
             burstStructure.duration(it+1) = [];
             burstStructure.amplitude(it+1) = [];
@@ -275,9 +284,14 @@ for git = 1:length(groupList)
     end
 
     nPeaks = mode(pkListRes(pkListRes>0));
+    
     valid = find(pkListRes == nPeaks, 1, 'first');
-    minProminence = pkList(valid);
+    minProminence = pkList(valid)*params.peakMultiplier;
+    minProminence
     [pks, locs, w, p] = findpeaks2(newY, newX, 'MinPeakProminence', minProminence, 'MinPeakDistance', minBurstSeparation, 'Annotate', 'extents');
+    % Incrase the duration
+    w(:, 1) = w(:, 1) - diff(w, 1, 2)/4;
+    w(:, 2) = w(:, 2) + diff(w, 1, 2)/4;
 
     burstDuration = zeros(length(pks), 1);
     burstAmplitude = zeros(length(pks), 1);
@@ -286,6 +300,11 @@ for git = 1:length(groupList)
     burstChannels = cell(length(pks), 1);
     for i = 1:length(pks)
       burstFrames{i} = round(w(i, 1)*experiment.fps):round(w(i, 2)*experiment.fps);
+      if(isempty(burstFrames{i}))
+        continue;
+      end
+      burstFrames{i}(burstFrames{i} > length(newX)) = [];
+      burstFrames{i}(burstFrames{i} < 1) = [];
       burstT = newX(burstFrames{i});
       %burstF = avgTraceAbove(burstFrames{i});
       burstDuration(i) = max(burstT)-min(burstT);
@@ -297,7 +316,11 @@ for git = 1:length(groupList)
       burstFrames{i} = round(min(SpikeTimes(validSpikes))*experiment.fps):round(max(SpikeTimes(validSpikes))*experiment.fps);
       burstT = newX(burstFrames{i});
       %burstF = avgTraceAbove(burstFrames{i});
-      burstDuration(i) = max(burstT)-min(burstT);
+      if(~isempty(burstT))
+        burstDuration(i) = max(burstT)-min(burstT);
+      else
+        burstDuration(i) = 0;
+      end
       burstStart(i) = min(burstT);
       burstAmplitude(i) = length(validSpikes);
       %plot(burstT, burstF, 'LineWidth', 2);
@@ -306,7 +329,7 @@ for git = 1:length(groupList)
     burstStructurePeaks.duration = burstDuration;
     burstStructurePeaks.amplitude = burstAmplitude;
     burstStructurePeaks.start = burstStart;
-    %burstStructure.IBI = IBI;
+    burstStructurePeaks.IBI = [];
     burstStructurePeaks.frames = burstFrames;
     burstStructurePeaks.participators = burstChannels;
     burstStructurePeaks.thresholds = [NaN, NaN];
@@ -335,6 +358,7 @@ for git = 1:length(groupList)
           burstStructurePeaks.duration(it) = burstStructurePeaks.start(it+1)+burstStructurePeaks.duration(it+1)-burstStructurePeaks.start(it);
           burstStructurePeaks.amplitude(it) = burstStructurePeaks.amplitude(it) + burstStructurePeaks.amplitude(it+1);
           burstStructurePeaks.frames{it} = burstStructurePeaks.frames{it}(1):burstStructurePeaks.frames{it+1}(end);
+          burstStructurePeaks.participators{it} = unique([burstStructurePeaks.participators{it}, burstStructurePeaks.participators{it+1}]);
           % Now remove the next one
           burstStructurePeaks.duration(it+1) = [];
           burstStructurePeaks.amplitude(it+1) = [];
@@ -372,7 +396,7 @@ for git = 1:length(groupList)
       sortedChannels = 1:max(firings.N);
     end
     if(strcmpi(params.method, 'schmitt') || strcmpi(params.method, 'explore'))
-      hFig = figure;
+      hFig = figure('Tag', 'netcalPlot');
       
       a1 = subplot(3, 1, 2);
       hold on;
@@ -401,6 +425,8 @@ for git = 1:length(groupList)
       try
         experiment = loadTraces(experiment, 'smoothed');
         plot(experiment.t, mean(experiment.traces(:, members), 2),'Color',[1 1 1]*0.75);
+        ax = gca;
+        ax.ColorOrderIndex = 1;
         for i=1:length(burstStructure.start)
           valid = find(experiment.t >= burstStructure.start(i) & experiment.t <= (burstStructure.start(i)+burstStructure.duration(i)));
           plot(experiment.t(valid), mean(experiment.traces(valid, members), 2));
@@ -430,7 +456,7 @@ for git = 1:length(groupList)
     end
     
     if(strcmpi(params.method, 'peaks') || strcmpi(params.method, 'explore'))
-      hFig = figure;
+      hFig = figure('Tag', 'netcalPlot');
       a1 = subplot(3, 1, 1);
       hold on;
       box on;

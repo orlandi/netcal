@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.2.4] - 2018-02-05
+
+### Added
+- Suprise-based burst detection
+
 ## [7.2.3] - 2018-02-02
 
 ### Added
@@ -1455,8 +1460,8 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.2.4]: https://github.com/orlandi/netcal/tree/v7.2.4
 [7.2.3]: https://github.com/orlandi/netcal/tree/v7.2.3
-[7.2.2]: https://github.com/orlandi/netcal/tree/v7.2.2
 [7.2.0]: https://github.com/orlandi/netcal/tree/v7.2.0
 [7.1.10]: https://github.com/orlandi/netcal/tree/v7.1.10
 [7.1.9]: https://github.com/orlandi/netcal/tree/v7.1.9
