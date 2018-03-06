@@ -29,7 +29,7 @@ params.filterIndex = [];
 params.defaultFolder = [];
 experiment = [];
 
-formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN, *.BTF)';...
+formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF;*.MJ2', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN, *.BTF, *.MJ2)';...
                '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
                '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
                '*.AVI', 'AVI files (*.AVI)';...
@@ -39,7 +39,8 @@ formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF', 'All Movie files (*.HIS, *.DCI
                '*.BIN', 'NETCAL binary experiment (*.BIN)'; ...
                '*.MAT', 'quick_dev (*.MAT)'; ...
                '*.MAT', 'CRCNS datasets (*.MAT)'; ...
-               '*.MAT', 'RIKEN (*.MAT)'};
+               '*.MAT', 'RIKEN (*.MAT)'; ...
+               '*.MJ2', 'Motion JPEG 2000'};
 filterIndex = [];
 if(~isempty(params.filterIndex))
   filterIndex = params.filterIndex;
@@ -319,7 +320,7 @@ switch lower(fpc)
     experiment.folder = [fpa filesep];
     experiment.name = fpb;
     obj = VideoReader(fileName);
-    obj.BitsPerPixel
+    %obj.BitsPerPixel
     experiment.bpp = obj.BitsPerPixel;
     if(obj.BitsPerPixel == 16)
         pixelType = '*uint16';
@@ -333,6 +334,30 @@ switch lower(fpc)
     end
 
     experiment.metadata = 'no metadata for .avi';
+    experiment.numFrames = round(obj.Duration*obj.FrameRate);
+    experiment.fps = obj.FrameRate;
+    experiment.totalTime = obj.Duration;
+    experiment.width = obj.Width;
+    experiment.height = obj.Height;
+    experiment.pixelType = pixelType;
+    experiment.saveFile = [experiment.name '.exp'];
+  case '.mj2'
+    experiment.handle = fileName;
+    experiment.folder = [fpa filesep];
+    experiment.name = fpb;
+    obj = VideoReader(fileName);
+    experiment.bpp = obj.BitsPerPixel;
+    if(obj.BitsPerPixel == 16)
+        pixelType = '*uint16';
+    elseif(obj.BitsPerPixel == 8)
+        pixelType = '*uint8';
+    elseif(obj.BitsPerPixel == 32)
+        pixelType = '*uint32';
+    elseif(obj.BitsPerPixel == 24)
+        pixelType = '*uint8';
+        experiment.bpp = 8;
+    end
+    experiment.metadata = 'no metadata for .mj2';
     experiment.numFrames = round(obj.Duration*obj.FrameRate);
     experiment.fps = obj.FrameRate;
     experiment.totalTime = obj.Duration;
@@ -375,7 +400,7 @@ switch lower(fpc)
     experiment.numFrames = length(finfo);
     experiment.width = finfo(1).Width;
     experiment.height = finfo(1).Height;
-    if(finfo(1).BitDepth == 88)
+    if(finfo(1).BitDepth == 8)
       pixelType = '*uint8';
       bitsPerPixel = 8;
     elseif(finfo(1).BitDepth == 16)

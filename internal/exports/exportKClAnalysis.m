@@ -70,7 +70,6 @@ if(isempty(groupList))
   return;
 end
 
-
 % Find maximum number of segments
 maxSegments = 0;
 for git = 1:length(groupList)

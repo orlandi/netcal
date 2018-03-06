@@ -617,7 +617,57 @@ classdef plotStatisticsTreatment < handle
         obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
         obj.axisHandle = axes;
         hold on;
-        
+        grList = {};
+        pList = [];
+        switch obj.params.pipelineProject.showSignificance
+          case 'none'
+          case 'partial'
+            for it = 1:size(subData, 2)
+              for itt = 1:size(subData, 2)
+                if(it > itt)
+                  try
+                    p = ranksum(subData(:, it), subData(:, itt));
+                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                    switch obj.params.pipelineProject.significanceTest
+                      case 'Mann-Whitney'
+                        if(p <= 0.05)
+                          pList = [pList; p];
+                          grList{end+1} = [it itt];
+                        end
+                      case 'Kolmogorov-Smirnov'
+                        if(p <= 0.05)
+                          pList = [pList; p2];
+                          grList{end+1} = [it itt];
+                        end
+                    end
+                  catch ME
+                    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+                  end
+                end
+              end
+            end
+          case 'all'
+            for it = 1:size(subData, 2)
+              for itt = 1:size(subData, 2)
+                if(it > itt)
+                  p = ranksum(subData(:, it), subData(:, itt));
+                  [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                  logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                  switch obj.params.pipelineProject.significanceTest
+                    case 'Mann-Whitney'
+                      pList = [pList; p];
+                      grList{end+1} = [it itt];
+                    case 'Kolmogorov-Smirnov'
+                      pList = [pList; p2];
+                      grList{end+1} = [it itt];
+                  end
+                  grList{end+1} = [it itt];
+                end
+              end
+            end
+        end
+        setappdata(gcf, 'subData', subData);
         obj.plotHandles = boxPlot(xList, subData, ...
                           'symbolColor','k',...
                           'medianColor','k',...
@@ -642,6 +692,17 @@ classdef plotStatisticsTreatment < handle
             boxes(it).Vertices(end,2) = 0;
           end
         end
+        
+        hold on;
+        if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
+          switch obj.params.pipelineProject.significanceTest
+            case 'Mann-Whitney'
+              sigstar(grList, pList);
+            case 'Kolmogorov-Smirnov'
+              sigstar(grList, pList);
+          end
+        end
+        
         obj.plotHandles.handles.box =  boxes;
 
         title(obj.axisHandle, sprintf('%s - %s', obj.figName, obj.treatmentNames{fIdx}));
@@ -765,7 +826,7 @@ classdef plotStatisticsTreatment < handle
     
     %--------------------------------------------------------------------
     function exportDataAggregates(obj, bpData, baseFolder)
-      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_aggregates.csv']);
+      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_aggregatesTreatment.csv']);
       if(fileName == 0)
         return;
       end
@@ -778,11 +839,13 @@ classdef plotStatisticsTreatment < handle
         for cit = 1:size(bpData, 2)
           for git = 1:size(bpData, 3)
             if(it == 1)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.groupLabels{cit});
+              lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
             elseif(it == 2)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{git});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
+              data.(names{it})
+              %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
+              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
             end
           end
         end
@@ -794,33 +857,37 @@ classdef plotStatisticsTreatment < handle
 
     %--------------------------------------------------------------------
     function exportDataFull(obj, bpData, baseFolder)
-      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_full.csv']);
+      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_fullTreatment.csv']);
       if(fileName == 0)
         return;
       end
       fID = fopen([pathName fileName], 'w');
       % +2 for the headers
-
       for it = 1:(size(bpData, 1)+2) 
-        lineStr = '';
         mainIdx = it-2;
+        lineStr = '';
         for cit = 1:size(bpData, 2)
           for git = 1:size(bpData, 3)
             if(it == 1)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.groupLabels{cit});
+              if(git == 1)
+                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+              else
+                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+              end
             elseif(it == 2)
-              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{git});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
               lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, cit, git));
             end
           end
         end
+
         % Stop when everything is NaN
-        if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
-          break;
-        end
-        % 2:end to avoid the first comma
-        lineStr = sprintf('%s\n', lineStr(2:end));
+%         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
+%           break;
+%         end
+        % 2:end to avoid the first comma NOT ANYMORE
+        lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);
       end
       fclose(fID);

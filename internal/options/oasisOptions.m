@@ -37,6 +37,18 @@ classdef oasisOptions < baseOptions
     
     % Signal to noise parameter (leave at 0 for automatic estimation)
     sn = 0;
+    
+    % pars. Leave empty if you don't know what this is
+    pars = [];
+    
+    % Window (in frames) for kernel/exp2 generation
+    window = 200;
+    
+    % Shift (slide in frames)
+    shift = 100;
+    
+    % If the function should be run in parallel (1 trace per job)
+    parallel = false;
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)

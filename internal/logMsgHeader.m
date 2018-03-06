@@ -25,8 +25,8 @@ switch condition
   case {'start', 'header'}
     logMsg('', gui);
     logMsg('----------------------------------', gui);
-    logMsg([datestr(now, 'HH:MM:SS'), ' ', msg], gui, 'w');
+    logMsg([datestr(now, 'HH:MM:SS'), ' ', msg], gui, 't');
   case {'finish', 'footer'}
-    logMsg([datestr(now, 'HH:MM:SS'), ' ', msg], gui, 'w');
+    logMsg([datestr(now, 'HH:MM:SS'), ' ', msg], gui, 't');
     logMsg('----------------------------------', gui);
 end

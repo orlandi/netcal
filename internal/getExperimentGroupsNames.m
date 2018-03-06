@@ -28,7 +28,7 @@ if(isfield(experiment, 'traceGroups') && ~isempty(experiment.traceGroups) && isf
   end
   for i = 1:length(categories)
     if(~isfield(experiment.traceGroupsNames, categories{i}))
-      % Check if it's a composite nane (to check on itself)
+      % Check if it's a composite name (to check on itself)
       nameComponents = strsplit(categories{i}, ':');
       % Hack in case the user defined name has the delimiter
       if(length(nameComponents) > 2)

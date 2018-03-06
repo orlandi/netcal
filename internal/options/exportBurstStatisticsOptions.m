@@ -27,7 +27,7 @@ classdef exportBurstStatisticsOptions < baseOptions
     % Numeric format to save the data (fprintf format)
     numericFormat = {'%.5f', ''};
     
-    % Mian folder to export to (only for experiment pipeline)
+    % Main folder to export to (only for experiment pipeline)
     % - experiment: inside the exports folder of the experiment
     % - project: inside the exports folder of the project
     exportFolder = {'experiment', 'project'};

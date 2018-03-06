@@ -27,6 +27,30 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.3.0] - 2018-03-05
+
+### Added
+- Support for mj2 files
+- Options to detect spike conflicts based on rate
+
+### Modified
+- Major rework on statistics plots. New significance options and distributions features
+- Overhaul of export movie features
+- Color of log headers
+
+### Fixed
+- Many small bug fixes
+
+## [7.2.6] - 2018-02-16
+
+### Modified
+- Added options for spike train exports
+
+## [7.2.5] - 2018-02-06
+
+### Added
+- X-based burst detection
+
 ## [7.2.4] - 2018-02-05
 
 ### Added
@@ -1460,6 +1484,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.3.0]: https://github.com/orlandi/netcal/tree/v7.3.0
 [7.2.4]: https://github.com/orlandi/netcal/tree/v7.2.4
 [7.2.3]: https://github.com/orlandi/netcal/tree/v7.2.3
 [7.2.0]: https://github.com/orlandi/netcal/tree/v7.2.0

@@ -78,6 +78,11 @@ hs.menu.sort.ROI = uimenu(hs.menu.sort.root, 'Label', 'ROI',  'Checked', 'on');
 if(isfield(experiment, 'similarityOrder'))
   hs.menu.sort.similarity = uimenu(hs.menu.sort.root, 'Label', 'similarity');
 end
+if(isfield(experiment, 'qCEC'))
+  hs.menu.sort.entropy = uimenu(hs.menu.sort.root, 'Label', 'entropy');
+  hs.menu.sort.complexity = uimenu(hs.menu.sort.root, 'Label', 'complexity');
+  hs.menu.sort.qCEC = uimenu(hs.menu.sort.root, 'Label', 'qCEC');
+end
 if(isfield(experiment, 'FCA'))
   hs.menu.sort.FCA = uimenu(hs.menu.sort.root, 'Label', 'FCA');
 end
@@ -92,6 +97,11 @@ end
 if(isfield(experiment, 'FCA'))
   hs.menu.sort.FCA.Callback = {@updateSortingMethod, 'FCA', hFigW};
 end
+if(isfield(experiment.traceGroupsOrder, 'ks'))
+  hs.menu.sort.ks = uimenu(hs.menu.sort.root, 'Label', 'KS');
+  hs.menu.sort.ks.Callback = {@updateSortingMethod, 'ks', hFigW};
+end
+
 
 %hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences', 'Callback', @menuPreferences);
 hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences');
@@ -100,7 +110,8 @@ hs.menuPreferencesLineStyle = uimenu(hs.menuPreferences, 'Label', 'Line style', 
 
 hs.menu.analysis.root = uimenu(hs.mainWindow, 'Label', 'Analysis');
 hs.menu.analysis.features = uimenu(hs.menu.analysis.root, 'Label', 'Features', 'Callback', @menuAnalysisFeatures);
-hs.menu.analysis.detectConflicts = uimenu(hs.menu.analysis.root, 'Label', 'Detect conflicting spikes', 'Callback', @menuAnalysisDetectConflicts);
+hs.menu.analysis.detectConflicts = uimenu(hs.menu.analysis.root, 'Label', 'Detect conflicting spikes (pattern-based)', 'Callback', @menuAnalysisDetectConflicts);
+hs.menu.analysis.detectConflicts = uimenu(hs.menu.analysis.root, 'Label', 'Detect conflicting spikes (rate-based)', 'Callback', @menuAnalysisDetectConflictsRate);
 hs.menu.analysis.solveConflicts = uimenu(hs.menu.analysis.root, 'Label', 'Remove conflicting spikes', 'Callback', @menuAnalysisRemoveConflicts);
 
 hs.menuView = uimenu(hs.mainWindow, 'Label', 'View');
@@ -164,7 +175,9 @@ cleanMenu();
 updateButtons();
 
 selectGroup([], [], 'everything', 1);
-if(isfield(experiment, 'similarityOrder') && ~isempty(experiment.similarityOrder))
+if(isfield(experiment.traceGroups, 'ksdist') && ~isempty(experiment.traceGroups.ksdist))
+  updateSortingMethod([], [], 'ks', hFigW, experiment);
+elseif(isfield(experiment, 'similarityOrder') && ~isempty(experiment.similarityOrder))
   updateSortingMethod([], [], 'similarity', hFigW, experiment);
 else
   updateSortingMethod([], [], 'ROI', hFigW, experiment);
@@ -257,6 +270,16 @@ function menuAnalysisDetectConflicts(~, ~)
   [success, ~, experiment] = preloadOptions(experiment, spikeDetectConflictsOptions, gui, true, false);
   if(success)
     experiment = spikeDetectConflicts(experiment, experiment.spikeDetectConflictsOptionsCurrent);
+    updateMenu();
+    updateImage();
+  end
+end
+
+%--------------------------------------------------------------------------
+function menuAnalysisDetectConflictsRate(~, ~)
+  [success, ~, experiment] = preloadOptions(experiment, spikeDetectConflictsRateOptions, gui, true, false);
+  if(success)
+    experiment = spikeDetectConflictsRate(experiment, experiment.spikeDetectConflictsRateOptionsCurrent);
     updateMenu();
     updateImage();
   end

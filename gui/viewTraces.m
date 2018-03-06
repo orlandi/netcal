@@ -174,6 +174,10 @@ if(isfield(experiment, 'qCEC'))
   hs.menu.sort.complexity = uimenu(hs.menu.sort.root, 'Label', 'complexity');
   hs.menu.sort.qCEC = uimenu(hs.menu.sort.root, 'Label', 'qCEC');
 end
+if(isfield(experiment.traceGroupsOrder, 'ks'))
+  hs.menu.sort.ks = uimenu(hs.menu.sort.root, 'Label', 'KS');
+  hs.menu.sort.ks.Callback = {@updateSortingMethod, 'ks', hFigW};
+end
 
 % Finish the selection menus
 hs.menu.traces.selection = generateSelectionMenu(experiment, hs.menu.traces.root);

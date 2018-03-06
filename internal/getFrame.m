@@ -95,7 +95,7 @@ switch experiment.extension
     if(partial)
       img = img(pixelList);
     end
-  case '.avi'
+  case {'.avi', '.mj2'}
     img = read(fid, frame);
     if(size(img, 3) == 3)
       img = rgb2gray(img);

@@ -4,7 +4,7 @@ classdef burstDetectionSurpriseOptions < plotFigureOptions & baseOptions
 %
 %   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-%   See also burstDetectionISINautomatic, baseOptions, optionsWindow
+%   See also burstDetectionSurprise, baseOptions, optionsWindow
 
   properties
     % Group to perform burst detection on:
@@ -14,13 +14,18 @@ classdef burstDetectionSurpriseOptions < plotFigureOptions & baseOptions
     % - group member: will only return the traces from this group member
     group = {'none', ''};
     
+    % How to compute the surpsie:
+    % - single: individually for each group member
+    % - global: on the compound of all spike trains (binarized)
+    surpriseMode = {'single', 'global'};
+      
     % Minimum surprise to consider individual bursts. Actual number will be minus the logarithm of the input value.
     surpriseThreshold = 1;
     
     % Maximum ISI (in sec) to check for bursts
     maximumISI = 1;
     
-    % Thresholds to use to detect global bursts (number of simultaneous suprise bursts). Two numbers as in Schmitt triggers (High and low)
+    % Thresholds to use to detect global bursts (number of simultaneous suprise bursts). Two numbers as in Schmitt triggers (High and low). Only if surpriseMode = single
     globalSurpriseThresholds = [0.1 0.01];
     
     % How to compute the global suprirse threshold:

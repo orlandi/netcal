@@ -75,14 +75,15 @@ if(~success)
   return;
 end
 
-exportMovieOptionsCurrent = exportMovieOptions;
-
 if(~isequaln(newExperiment, experiment))
   experimentChanged = true;
 else
   experimentChanged = false;
 end
 experiment = newExperiment;
+[success, curOptions] = preloadOptions(experiment, exportMovieOptions, gui, false, false);
+experiment.exportMovieOptionsCurrent = curOptions;
+
 clear newExperiment;
 
 if(isfield(experiment, 'ROI'))
@@ -315,7 +316,7 @@ frameRateText = uicontrol('Parent', b, 'Style','edit',...
           'String', num2str(round(experiment.fps)), 'FontSize', textFontSize, 'HorizontalAlignment', 'left');
 uicontrol('Parent', b, 'Style', 'text', 'String', 'Frame rate (fps)', 'FontSize', textFontSize, 'HorizontalAlignment', 'left');
 moviePlayButton = uicontrol('Parent', b, 'String', 'Play', 'FontSize', textFontSize, 'Callback', @moviePlay);
-set(b, 'Widths', [30 100 80], 'Spacing', 5, 'Padding', 0);
+set(b, 'Widths', [30 120 80], 'Spacing', 5, 'Padding', 0);
 
 set(hs.mainWindowBottomButtons, 'Heights', [20 20], 'Padding', 5, 'Spacing', 10);
 
@@ -1355,58 +1356,105 @@ end
 
 %--------------------------------------------------------------------------
 function exportCurrentMovie(~, ~)
-    % Export movie options
-    
-    exportMovieOptionsCurrent.frameRate = str2double(frameRateText.String);
-    exportMovieOptionsCurrent.frameRange = [hs.mainWindowFramesSlider.Value hs.mainWindowFramesSlider.Max];
-    
-    [success, exportMovieOptionsCurrent] = optionsWindow(exportMovieOptionsCurrent);
-    if(~success)
+  % Export movie options
+  exportMovieOptionsCurrent = experiment.exportMovieOptionsCurrent;
+  exportMovieOptionsCurrent.frameRate = str2double(frameRateText.String);
+  frameRange = [hs.mainWindowFramesSlider.Value hs.mainWindowFramesSlider.Max];
+
+  [success, exportMovieOptionsCurrent] = optionsWindow(exportMovieOptionsCurrent);
+  if(~success)
+    return;
+  end
+
+  [fileName, pathName] = uiputfile({'*'}, 'Save current movie', experiment.folder);
+  if(fileName == 0)
+    return;
+  end
+  switch exportMovieOptionsCurrent.rangeSelection
+    case 'frames'
+      frameRange = exportMovieOptionsCurrent.range;
+    case 'time'
+      frameRange = round(exportMovieOptionsCurrent.range*experiment.fps);
+  end
+  % Little bit of consistency checks
+    if(frameRange(1) < 1)
+      frameRange(1) = 1;
+    end
+    if(frameRange(2) > hs.mainWindowFramesSlider.Max)
+      frameRange(2) = hs.mainWindowFramesSlider.Max;
+    end
+  if(isempty(exportMovieOptionsCurrent.frameSkip) || exportMovieOptionsCurrent.frameSkip == 0)
+    exportMovieOptionsCurrent.frameSkip = 1;
+  end
+  % Create the movie
+  %if(exportMovieOptionsCurrent.compressMovie)
+  %  newMovie = VideoWriter([pathName fileName], 'Motion JPEG AVI');
+  %else
+    newMovie = VideoWriter([pathName fileName], exportMovieOptionsCurrent.profile);
+  %end
+  % The iterator loop
+  switch exportMovieOptionsCurrent.resamplingMethod
+    case 'none'
+      frameList = frameRange(1):exportMovieOptionsCurrent.frameSkip:frameRange(2);
+    otherwise
+      if(exportMovieOptionsCurrent.frameRate > experiment.fps)
+        logMsg('New framerate cannot be higher with the selected resampling method. Use none instead', 'e');
         return;
-    end
-    
-    [fileName, pathName] = uiputfile({'*.avi'}, 'Save current movie', experiment.folder); 
-    if(fileName == 0)
-        return;
-    end
-    % Little bit of consistency checks
-    if(exportMovieOptionsCurrent.frameRange(1) < 1)
-        exportMovieOptionsCurrent.frameRange(1) = 1;
-    end
-    if(exportMovieOptionsCurrent.frameRange(2) > hs.mainWindowFramesSlider.Max)
-        exportMovieOptionsCurrent.frameRange(2) = hs.mainWindowFramesSlider.Max;
-    end
-    if(exportMovieOptionsCurrent.jump == 0)
-        exportMovieOptionsCurrent.jump = 1;
-    end
-    % Create the movie
-    if(exportMovieOptionsCurrent.compressMovie)
-      newMovie = VideoWriter([pathName fileName], 'Motion JPEG AVI');
-    else
-      newMovie = VideoWriter([pathName fileName], 'Uncompressed AVI');
-    end
-    newMovie.FrameRate = exportMovieOptionsCurrent.frameRate;
-    open(newMovie);
-    ncbar('Saving current movie');
-    % The iterator loop
-    frameList = exportMovieOptionsCurrent.frameRange(1):exportMovieOptionsCurrent.jump:exportMovieOptionsCurrent.frameRange(2);
-    numFrames = length(frameList);
-    prevUnits = hs.mainWindowFramesAxes.Units;
-    hs.mainWindowFramesAxes.Units = 'pixels';
-    for it = 1:numFrames
+      end
+      if(mod(experiment.fps, exportMovieOptionsCurrent.frameRate) ~=0)
+        closestFrameRate = 1/round(experiment.fps/exportMovieOptionsCurrent.frameRate)*experiment.fps;
+        logMsg(sprintf('For the current resampling method the new frame rate has to be a divisor of the original one. Using %.3f instead', closestFrameRate), 'w');
+        exportMovieOptionsCurrent.frameRate = closestFrameRate;
+        frameWindow = round(experiment.fps/exportMovieOptionsCurrent.frameRate);
+      end
+      % New consistency check
+      if(frameRange(2)+frameWindow-1 > hs.mainWindowFramesSlider.Max)
+        frameRange(2) = hs.mainWindowFramesSlider.Max-frameWindow+1;
+      end
+      frameList = frameRange(1):frameWindow:frameRange(2);
+  end
+  newMovie.FrameRate = exportMovieOptionsCurrent.frameRate;
+  open(newMovie);
+  ncbar('Saving current movie');
+  numFrames = length(frameList);
+  prevUnits = hs.mainWindowFramesAxes.Units;
+  hs.mainWindowFramesAxes.Units = 'pixels';
+  frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position);
+  for it = 1:numFrames
+    %frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position-[0 0 1 1]);
+    switch exportMovieOptionsCurrent.resamplingMethod
+      case 'none'
         hs.mainWindowFramesSlider.Value = frameList(it);
         currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
         frameChange();
         updateImage();
-        %frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position-[0 0 1 1]);
         frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position);
-        %frame = getframe(hs.mainWindowFramesAxes);
         writeVideo(newMovie, frame.cdata(:, :, :));
-        ncbar.update(it/numFrames);
+      otherwise
+        frameData = zeros(size(frame.cdata));
+        for it2 = 1:frameWindow
+          hs.mainWindowFramesSlider.Value = frameList(it)+it2-1;
+          currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
+          frameChange();
+          frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position);
+          frameData = frameData + double(frame.cdata(:, :, :));
+        end
+        if(strcmpi(exportMovieOptionsCurrent.resamplingMethod, 'mean'))
+          frameData = frameData/frameWindow;
+        end
+        %whos frameData
+        %size(frameData)
+        writeVideo(newMovie, uint8(frameData));
+        updateImage();
     end
-    hs.mainWindowFramesAxes.Units = prevUnits;
-    ncbar.close();
-    close(newMovie);
+    %frame = getframe(hs.mainWindowFramesAxes);
+    
+    ncbar.update(it/numFrames);
+  end
+  hs.mainWindowFramesAxes.Units = prevUnits;
+  ncbar.close();
+  close(newMovie);
+  experiment.exportMovieOptionsCurrent = exportMovieOptionsCurrent;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

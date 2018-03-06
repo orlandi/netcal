@@ -53,7 +53,7 @@ if(isempty(experiment.handle) || experiment.handle(1) == 0 || ~exist(experiment.
 end
 
 [~, ~, fpc] = fileparts(experiment.handle);
-if(strcmpi(fpc, '.avi'))
+if(strcmpi(fpc, '.avi') ||strcmpi(fpc, '.mj2'))
   stream = VideoReader(experiment.handle);
 elseif(strcmpi(fpc, '.his'))
   [experiment, success] = precacheHISframes(experiment);

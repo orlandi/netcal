@@ -48,14 +48,38 @@ else
   project = projexp;
 end
 
-colNames = {'neuron index', 'time (s)'};
+colNames = {'neuron index'};
+if(params.includeSimplifiedROIorder)
+  colNames{end+1} = 'neuron index simplified';
+end
+
+switch params.timeUnits
+  case 'seconds'
+    colNames{end+1} = 'time (s)';
+    exportFormat = '%d, %.5f';
+  case 'milliseconds'
+    colNames{end+1} = 'time (ms)';
+    exportFormat = '%d, %.5f';
+  case 'frames'
+    colNames{end+1} = 'frame';
+    exportFormat = '%d, %d';
+end
+if(params.includeSimplifiedROIorder)
+  exportFormat = ['%d, ' exportFormat];
+end
 
 switch mode
   case 'experiment'
-    if(~exist(experiment.folder, 'dir'))
-      mkdir(experiment.folder);
+    switch params.exportFolder
+      case 'experiment'
+        mainFolder = experiment.folder;
+      case 'project'
+        mainFolder = [experiment.folder '..' filesep];
     end
-    dataFolder = [experiment.folder 'data' filesep];
+    if(~exist(mainFolder, 'dir'))
+      mkdir(mainFolder);
+    end
+    dataFolder = [mainFolder 'exports' filesep];
     if(~exist(dataFolder, 'dir'))
       mkdir(dataFolder);
     end
@@ -67,8 +91,8 @@ switch mode
       fmt = [fmt(1:end-2) '\n'];
       fprintf(fID, fmt, colNames{:});
       
-      fmt = repmat('%.5f, ',1, size(exportData,2));
-      fmt = [fmt(1:end-2) '\n'];
+      fmt = exportFormat;
+      fmt = [fmt '\n'];
       for i = 1:size(exportData,1)
         fprintf(fID, fmt,exportData(i,:));
       end
@@ -90,10 +114,12 @@ switch mode
       return;
     end
     
-    if(~exist(project.folder, 'dir'))
-      mkdir(project.folder);
+    % Create the exports folder
+    mainFolder = project.folder;
+    if(~exist(mainFolder, 'dir'))
+      mkdir(mainFolder);
     end
-    dataFolder = [project.folder 'data' filesep];
+    dataFolder = [mainFolder 'exports' filesep];
     if(~exist(dataFolder, 'dir'))
       mkdir(dataFolder);
     end
@@ -116,7 +142,7 @@ switch mode
           fmt = [fmt(1:end-2) '\n'];
           fprintf(fID, fmt, fullNames{:});
         end
-        fmt=[repmat('%.5f, ',1,size(exportData,2)) '%s' '\n'];
+        fmt=[exportFormat ', %s' '\n'];
         for j = 1:size(exportData,1)
           fprintf(fID, fmt,exportData(j,:), experiment.name);
         end
@@ -154,24 +180,49 @@ function exportData = getExportData(experiment)
     end
     members = getExperimentGroupMembers(experiment, subpop);
     ROIid = getROIid(experiment.ROI);
+
     N = [];
     T = [];
-
+    if(params.includeSimplifiedROIorder)
+      No = [];
+    end
     for it = 1:length(members)
       if(~all(isnan(experiment.spikes{members(it)}')))
         T = [T; experiment.spikes{members(it)}(:)];
         N = [N; ones(size(experiment.spikes{members(it)}(:)))*ROIid(members(it))];
+        if(params.includeSimplifiedROIorder)
+          No = [No; ones(size(experiment.spikes{members(it)}(:)))*it];
+        end
       end
     end
-    mat = double([N, T]);
-    
+    switch params.timeUnits
+      case 'seconds'
+      case 'milliseconds'
+        T = T*1000;
+      case 'frames'
+        T = round(T*experiment.fps);
+    end
+    if(params.includeSimplifiedROIorder)
+      mat = double([N, T, No]);
+    else
+      mat = double([N, T]);
+    end
+    switch params.exportOrder
+      case 'time'
+        mat = sortrows(mat, 2);
+      case'ROI'
+        mat = sortrows(mat, 1);
+    end
+    if(params.includeSimplifiedROIorder)
+      mat = mat(:, [1 3 2]);
+    end
   catch ME
     logMsg(sprintf('Something was wrong getting loading spikes from %s in experiment %s', subpop, experiment.name), 'e');
     logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     return;
   end
   % Change for each statistic
-  exportData = sortrows(mat, 2);
+  exportData = mat;
   if(~isempty(params.subset))
     valid = (exportData(:,2) >= params.subset(1) & exportData(:,2) <= params.subset(2));
     exportData = exportData(valid, :);

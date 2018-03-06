@@ -8,13 +8,30 @@ classdef exportSpikesOptions < baseOptions
 
   properties
     % Export type
-    exportType = {'txt', 'csv'};
+    %exportType = {'txt', 'csv'};
+    exportType = {'csv', 'txt'};
 
     % Subpopulation to export (leave empty for doing it on every ROI)
     subpopulation = {'everything', ''};
     
-     % Only exports spikes within the given temporal subset
+    % Only exports spikes within the given temporal subset
     subset = [0 600];
+    
+    % What units to use when exporting spike times
+    timeUnits = {'seconds', 'milliseconds', 'frames'};
+    
+    % What order to export the spikes:
+    % - time: first on the list is the first that tfired
+    % - ROI: first on the list is the first ROI that fired
+    exportOrder = {'time', 'ROI'};
+    
+    % If true will include an additional column where the ROIs of the subpopulation have been rescaled from 1 to N (N being the subpopulation size)
+    includeSimplifiedROIorder = false;
+    
+    % Main folder to export to (only for experiment pipeline)
+    % - experiment: inside the exports folder of the experiment
+    % - project: inside the exports folder of the project
+    exportFolder = {'experiment', 'project'};
   end
   methods
     function obj = setExperimentDefaults(obj, experiment)

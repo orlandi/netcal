@@ -77,8 +77,8 @@ xlim(ax, [1 length(newmat)]);
 ylim(ax, [1 length(newmat)]);
 axis(ax, 'square', 'ij');
 box(ax, 'on');
-xlabel(ax,'ROI count');
-ylabel(ax,'ROI count');
+xlabel(ax,'ROI index');
+ylabel(ax,'ROI index');
 %mtit('trace similarity', 'yoff', 0.2);
 title(ax,'traces similarity');
 

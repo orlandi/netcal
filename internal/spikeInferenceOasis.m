@@ -56,8 +56,15 @@ else
   mainGroup = params.group;
 end
 
+if(params.training && params.parallel)
+  params.parallel = false;
+  logMsg('Parallel mode cannot be used during training', 'w');
+end
+
 members = getAllMembers(experiment, mainGroup);
 
+ncbar.setCurrentBarName('Loading traces');
+ncbar.setAutomaticBar();
 switch params.tracesType
   case 'smoothed'
     experiment = loadTraces(experiment, 'normal');
@@ -69,6 +76,8 @@ switch params.tracesType
     experiment = loadTraces(experiment, 'rawTracesDenoised');
     traces = experiment.rawTracesDenoised;
 end
+ncbar.setCurrentBarName('Running oasis');
+ncbar.unsetAutomaticBar();
 
 if(isempty(params.subset))
   subset = members;
@@ -94,6 +103,16 @@ if(params.storeModelTrace)
 end
 subsetSpikes = cell(length(subset), 1);
 
+if(params.parallel)
+  if(params.pbar > 0)
+    ncbar.setBarName('Initializing cluster');
+    ncbar.setAutomaticBar();
+  end
+  cl = parcluster('local');
+  
+  %futures(it) = parfeval(@spk_est, 4, currentTrace, par);
+  
+end
 
 % Do the actual oasis
 snList = zeros(length(subset), 1);
@@ -115,39 +134,92 @@ for it = 1:length(subset)
     varOpts{end+1} = 'sn';
     varOpts{end+1} = params.sn;
   end
-  %varOpts
-  [c_oasis, s_oasis, options] = deconvolveCa(currentTrace, params.model, ...
-              params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', varOpts{:});
-  if(params.training)
-    options
+  if(~isempty(params.pars))
+    varOpts{end+1} = 'pars';
+    varOpts{end+1} = eval(params.pars);
   end
-  snList(it) = options.sn;
-  nsList(it) = length(find(s_oasis));
-  firings = find(s_oasis);
-      
-  if(params.spikeRasterTrain)
-    subsetSpikes{it} = firings;
-  else
-    subsetSpikes{it} = experiment.t(firings);
+  if(~isempty(params.window))
+    varOpts{end+1} = 'window';
+    varOpts{end+1} = params.window;
   end
-  if(params.training)
-    trainingData.spikes = firings;
+  if(~isempty(params.shift))
+    varOpts{end+1} = 'shift';
+    varOpts{end+1} = params.shift;
   end
-  
-  % Now the generative model
-  if(params.storeModelTrace || params.training)
-    if(params.storeModelTrace)
-      modelTraces(:, it) = c_oasis;
+  %varOpts - 
+  % Conver to double just to be sure
+  if(~params.parallel)
+    [c_oasis, s_oasis, options] = deconvolveCa(double(currentTrace), params.model, ...
+                params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', varOpts{:});
+    if(params.training)
+      options
+    end
+    snList(it) = options.sn;
+    nsList(it) = length(find(s_oasis));
+    firings = find(s_oasis);
+
+    if(params.spikeRasterTrain)
+      subsetSpikes{it} = firings;
+    else
+      subsetSpikes{it} = experiment.t(firings);
     end
     if(params.training)
-      trainingData.model = c_oasis;
+      trainingData.spikes = firings;
     end
-  end
-  if(params.pbar > 0 && ~params.training)
-    ncbar.update(it/length(subset));
+
+    % Now the generative model
+    if(params.storeModelTrace || params.training)
+      if(params.storeModelTrace)
+        modelTraces(:, it) = c_oasis;
+      end
+      if(params.training)
+        trainingData.model = c_oasis;
+      end
+    end
+    if(params.pbar > 0 && ~params.training)
+      ncbar.update(it/length(subset));
+    end
+  else
+    % Do it in parallel
+    futures(it) = parfeval(@deconvolveCa, 3, double(currentTrace), params.model, ...
+                params.method, 'lambda', params.lambda, 'optimize_pars', 'optimize_b', varOpts{:});
   end
 end
+if(params.parallel)
+  numCompleted = 0;
+  ncbar.unsetAutomaticBar();
+  while numCompleted < length(subset)
+    if(params.pbar > 0)
+      ncbar.setBarName(sprintf('Running parallel MLspike (%d/%d)', numCompleted, length(subset)));
+      ncbar.update(numCompleted/length(subset));
+    end
+    [completedIdx, c_oasis, s_oasis, options] = fetchNext(futures);
+    snList(completedIdx) = options.sn;
+    nsList(completedIdx) = length(find(s_oasis));
+    firings = find(s_oasis);
 
+    if(params.spikeRasterTrain)
+      subsetSpikes{completedIdx} = firings;
+    else
+      subsetSpikes{completedIdx} = experiment.t(firings);
+    end
+    if(params.training)
+      trainingData.spikes = firings;
+    end
+
+    % Now the generative model
+    if(params.storeModelTrace || params.training)
+      if(params.storeModelTrace)
+        modelTraces(:, completedIdx) = c_oasis;
+      end
+    end
+    numCompleted = numCompleted + 1;
+    if(params.pbar > 0)
+      ncbar.update(numCompleted/length(subset));
+    end
+  end
+  cancel(futures);
+end
 if(params.training)
   barCleanup(params);
   return;

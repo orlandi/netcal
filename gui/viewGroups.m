@@ -424,10 +424,12 @@ function closeCallback(~, ~, varargin)
     experimentChanged = true;
   end
   guiSave(experiment, experimentChanged, varargin{:});
-  
-  resizeHandle = getappdata(gui, 'ResizeHandle');
-  if(isa(resizeHandle,'function_handle'))
-    resizeHandle([], []);
+
+  if(~isempty(gui))
+    resizeHandle = getappdata(gui, 'ResizeHandle');
+    if(isa(resizeHandle,'function_handle'))
+      resizeHandle([], []);
+    end
   end
   % Finally close the figure
   delete(hFigW);

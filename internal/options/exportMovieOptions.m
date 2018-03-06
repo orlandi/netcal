@@ -1,7 +1,7 @@
 classdef exportMovieOptions < baseOptions
 % Optional input parameters for exportMovieOptions
-%     Class containing the options for exporting movies
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Class containing the options for exporting movies
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 %   See also baseOptions, optionsWindow
 
@@ -9,14 +9,41 @@ classdef exportMovieOptions < baseOptions
     % Desired frame rate of the new movie
     frameRate = 20;
 
-    % Frame jump (jump X amount of frames on each iteration, 1 for no jump)
-    jump = 1;
+    % Resampling method
+    % - none: Will not do anything (this might result in the movie playing at unrealistic speeds)
+    % - sum: Will add together all frames involved in the new frame (only for downsampling). This might result in dynamic range clipping.
+    % - average: Same as sum, but dividing (only for downsampling). This might result in quality reduction due to rounding errors (for integer data).
+    resamplingMethod = {'none', 'sum', 'mean'};
+    
+    % Frame skip (if no resampling). Will skip X number of frames on each iteration, 1 or empty for no skip)
+    frameSkip = 1;
 
-    % Frame range (1 to total number of frames)
-    frameRange = [1 inf];
+    % How to select the range of the movie (affects the range parameter)
+    % - frames: range is given in frames (starts at 1)
+    % - time: range is given in seconds (starts at 0)
+    rangeSelection = {'frames', 'time'};
+    
+    % Range (see rangeSelection)
+    range = [1 inf];
 
-    % Compress movie
+    % Profile to use
+    %profile = {'Motion JPEG 2000'};
+    %profile = {'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'MPEG-4'};
+    
+    % Bits per pixel of the new movie (1 to 16)
+    bitsPerPixel = {'8', '16'};
+    
+    % If the movie should be compressed
     compressMovie = true;
+    
+    % Level of compression (0 for lossless. Use valuees larger than 1 for lossy compression)
+    compressionLevel = 0;
+    
+    % Filename of the new movie
+    baseFileName = 'exportMovie';
+    
+    % If true, will rescale everything to previous estimates of minimum and maximum intensity values
+    maximizeDynamicRange = false;
   end
   methods
     function obj = setExperimentDefaults(obj, experiment)
@@ -27,7 +54,19 @@ classdef exportMovieOptions < baseOptions
           logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
         end
         try
-          obj.frameRange = [1 experiment.numFrames];
+          obj.range = [1 experiment.numFrames];
+        catch ME
+          logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+        end
+      elseif(~isempty(experiment) && exist(experiment, 'file'))
+        exp = load(experiment, '-mat', 'folder', 'name', 'fps', 'numFrames');
+        try
+          obj.frameRate = exp.fps;
+        catch ME
+          logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+        end
+        try
+          obj.range = [1 exp.numFrames];
         catch ME
           logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
         end

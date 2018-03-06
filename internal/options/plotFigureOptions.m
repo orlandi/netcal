@@ -47,5 +47,8 @@ classdef plotFigureOptions < baseOptions
     % onlySaveFigure:
     % If true, will only save the figure. Will not be displayed on the screen (but the MATLAB renderer has to be available)
     saveOptions = struct('saveFigure', false, 'saveBaseFolder', {{'experiment', 'project'}}, 'saveFigureTag', '', 'saveFigureType', {{'pdf', 'tiff', 'png', 'jpg', 'eps'}}, 'saveFigureResolution', 300, 'saveFigureQuality', 100, 'onlySaveFigure', false);
+    
+    % Script with additional figure options that will be run at the end of figure generation
+    additionalFigureOptions = java.io.File('');
   end
 end

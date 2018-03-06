@@ -27,7 +27,10 @@ classdef exportROIcentersOptions < baseOptions
     % Numeric format to save the data (fprintf format)
     numericFormat = {'%.2f', ''};
     
-    % Mian folder to export to
+    % If true will include an additional column where the ROIs of the subpopulation have been rescaled from 1 to N (N being the subpopulation size)
+    includeSimplifiedROIorder = false;
+    
+    % Main folder to export to
     % - experiment: inside the exports folder of the experiment
     % - project: inside the exports folder of the project
     exportFolder = {'experiment', 'project'};

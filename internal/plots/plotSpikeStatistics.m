@@ -55,7 +55,6 @@ if(strcmpi(tmpStat, 'ask'))
     obj.cleanup();
     autoArrangeFigures();
   end
-  
 else
   obj = plotStatistics;
   obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
@@ -64,7 +63,6 @@ else
   end
   obj.cleanup();
 end
-
 
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)

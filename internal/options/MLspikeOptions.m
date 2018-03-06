@@ -43,7 +43,7 @@ classdef MLspikeOptions < baseOptions
     % True to also store the model trace
     storeModelTrace = false;
     
-    % If the function should be run in parallel
+    % If the function should be run in parallel (1 trace per job)
     parallel = false;
   end
   methods 

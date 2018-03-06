@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.2.4';
+currVersion = '7.3.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -58,6 +58,7 @@ import('uiextras.jTree.*');
 addpath(genpath(appFolder));
 rmpath(genpath([appFolder filesep '.git'])) % But exclude .git/
 rmpath(genpath([appFolder filesep 'old'])) % And old
+rmpath(genpath([appFolder filesep 'external' filesep 'cvx'])) % And CVX for now
 rmpath(genpath(fullfile(appFolder, 'external', 'OASIS_matlab', 'optimization', 'cvx'))); % And cvx
 rmpath(genpath(fullfile(appFolder, 'external', 'JavaTreeWrapper', 'java_src'))); % And tree wrapper sources
 subFolderList = dir(appFolder);
@@ -4540,7 +4541,7 @@ function pipelineRun(~, ~, parallelMode)
                 end
               elseif(isa(optionsClassCurrent, 'plotFigureOptions'))
                 try
-                  optionsClassCurrent.styleOptions
+                  %optionsClassCurrent.styleOptions
                   if(optionsClassCurrent.styleOptions.tileFigures)
                     autoArrangeFigures();
                   end

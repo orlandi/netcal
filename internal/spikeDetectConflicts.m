@@ -19,7 +19,7 @@ function experiment = spikeDetectConflicts(experiment, varargin)
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
 % EXPERIMENT PIPELINE
-% name: detect spike conflicts
+% name: detect spike conflicts (pattern based)
 % parentGroups: spikes
 % optionsClass: spikeDetectConflictsOptions
 % requiredFields: spikes, validPatterns, folder, name, fps
@@ -30,7 +30,7 @@ function experiment = spikeDetectConflicts(experiment, varargin)
 params.pbar = [];
 params.verbose = true;
 params = parse_pv_pairs(params, var);
-params = barStartup(params, 'Detecting conflicts', true);
+params = barStartup(params, 'Detecting conflicts (pattern based)', true);
 %--------------------------------------------------------------------------
 
 % Load previous patterns

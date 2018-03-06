@@ -84,13 +84,24 @@ for git = 1:length(groupList)
   tag = strrep(groupList{git}, ': ', '_');
   %ROIid = getROIid(experiment.ROI);
   %labels = {'ROI ID', 'X', 'Y'};
-  switch params.coordinates
-    case 'cartesian'
-      ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(1), experiment.ROI(members)), experiment.height-(cellfun(@(x)x.center(2), experiment.ROI(members))-1)];
-      fileHeader = 'ROI ID, X, Y\n';
-    case 'image'
-      ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(2), experiment.ROI(members)), cellfun(@(x)x.center(1), experiment.ROI(members))];
-      fileHeader = 'ROI ID, row, col\n';
+  if(params.includeSimplifiedROIorder)
+    switch params.coordinates
+      case 'cartesian'
+        ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)), (1:length(members))', cellfun(@(x)x.center(1), experiment.ROI(members)), experiment.height-(cellfun(@(x)x.center(2), experiment.ROI(members))-1)];
+        fileHeader = 'ROI ID, ROI ID simplified, X, Y\n';
+      case 'image'
+        ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)), (1:length(members))',  cellfun(@(x)x.center(2), experiment.ROI(members)), cellfun(@(x)x.center(1), experiment.ROI(members))];
+        fileHeader = 'ROI ID, ROI ID simplified, row, col\n';
+    end
+  else
+    switch params.coordinates
+      case 'cartesian'
+        ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(1), experiment.ROI(members)), experiment.height-(cellfun(@(x)x.center(2), experiment.ROI(members))-1)];
+        fileHeader = 'ROI ID, X, Y\n';
+      case 'image'
+        ROIlist = [cellfun(@(x)x.ID, experiment.ROI(members)),  cellfun(@(x)x.center(2), experiment.ROI(members)), cellfun(@(x)x.center(1), experiment.ROI(members))];
+        fileHeader = 'ROI ID, row, col\n';
+    end
   end
   switch params.fileType
     case 'csv'
@@ -101,12 +112,18 @@ for git = 1:length(groupList)
 
       % Create the format for the statistics
       fmt = ['%d, ' params.numericFormat, ', ' params.numericFormat, '\n'];
+      if(params.includeSimplifiedROIorder)
+        fmt = ['%d, ' fmt];
+      end
     case 'txt'
       outputFile = [dataFolder, experiment.name, '_ROI_centers_' tag '.txt'];
       fID = fopen(outputFile, 'W');
       % No header
       % Create the format for the statistics
       fmt = ['%d ' params.numericFormat, ' ' params.numericFormat, '\n'];
+      if(params.includeSimplifiedROIorder)
+        fmt = ['%d ' fmt];
+      end
   end
   
   exportData = sprintf(fmt, ROIlist');

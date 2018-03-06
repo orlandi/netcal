@@ -44,7 +44,7 @@ try
     switch(lower(severity(1)))
       case 'i',   color='black';
       case 'w',   color='blue';
-      case 'e',   color='red';
+      case 't',   color='black'; % Title
       otherwise,    color='red';beep;
     end
 
@@ -82,6 +82,9 @@ try
           msgTxt = curLine(6:end);
         else
           msgTxt = ['<font size="4" color=',color,'>',curLine,'</font>'];
+          if(strcmp(lower(severity(1)), 't'))
+            msgTxt = ['<b>', msgTxt, '</b>'];
+          end
         end
         msgTxt = [ msgTxt '<br />'];
         if(strncmp(curLine, '-----', 5))
@@ -95,6 +98,9 @@ try
         msgTxt = text(6:end);
       else
         msgTxt = ['<font size="4" color=',color,'>',text,'</font>'];
+        if(strcmp(lower(severity(1)), 't'))
+          msgTxt = ['<b>', msgTxt, '</b>'];
+        end
       end
       msgTxt = [ msgTxt '<br />'];
       if(strncmp(text, '-----', 5))

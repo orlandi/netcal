@@ -103,6 +103,12 @@ for git = 1:length(groupList)
     [members, groupName, groupIdx] = getExperimentGroupMembers(experiment, groupList{git});
   end
   
+  %%% HACK
+  if(strcmpi(params.surpriseMode, 'global'))
+    maxN = min([length(members), 100]);
+    members = members(randperm(length(members), maxN));
+  end
+  
   % Check for empty group
   if(isempty(members) && params.verbose)
     logMsg(sprintf('Found empty group: %s', groupList{git}), 'w');
@@ -124,7 +130,7 @@ for git = 1:length(groupList)
   mat = [SpikeTimes', SpikeIdx'];
   ar = sortrows(mat, 1);
   SpikeTimes = ar(:,1)';
-  SpikeTimes = SpikeTimes +(rand(size(SpikeTimes))-0.5)/experiment.fps;
+  %SpikeTimes = SpikeTimes +(rand(size(SpikeTimes))-0.5)/experiment.fps;
   
   SpikeIdx = members(ar(:,2))';
   firings.T = SpikeTimes;
@@ -150,31 +156,56 @@ for git = 1:length(groupList)
       schmittHigh = params.globalSurpriseThresholds(1);
       schmittLow = params.globalSurpriseThresholds(2);
   end
-  %[schmittHigh schmittLow]
-  firingNeurons = unique(firings.N);
-  surpriseListFrames = zeros(size(experiment.t));
-  surprise.T = [];
-  surprise.N = [];
-  for it = 1:length(firingNeurons)
-    valid = find(firings.N == firingNeurons(it));
-    tn = firings.T(valid);
-    ISI = diff(tn);
-    %plot(firings.T(valid), sortedChannels(firings.N(valid))-minC, 'k.');
-    if(~isempty(ISI))
-      [archive_burst_RS,archive_burst_length,archive_burst_start]=burstSurprise(tn,limit,RSalpha);
-      if(~isempty(archive_burst_start))
-        for it2 = 1:length(archive_burst_start)
-          validSpikes = archive_burst_start(it2):(archive_burst_start(it2)+archive_burst_length(it2)-1);
-          surprise.T = [surprise.T, tn(validSpikes)];
-          surprise.N = [surprise.N, ones(size(validSpikes))*firingNeurons(it)];
-          %plot(tn(validSpikes), ones(size(validSpikes))*sortedChannels(firingNeurons(it))-minC, '.', 'markerSize', 20);
-          surpriseFrames = round(min(tn(validSpikes))*experiment.fps):round(max(tn(validSpikes))*experiment.fps);
-          invalid = find(surpriseFrames < 1 | surpriseFrames > length(experiment.t));
-          surpriseFrames(invalid) = [];
-          surpriseListFrames(surpriseFrames) = surpriseListFrames(surpriseFrames) + 1;
+  switch params.surpriseMode
+    case 'single'
+      %[schmittHigh schmittLow]
+      firingNeurons = unique(firings.N);
+      surpriseListFrames = zeros(size(experiment.t));
+      surprise.T = [];
+      surprise.N = [];
+      for it = 1:length(firingNeurons)
+        valid = find(firings.N == firingNeurons(it));
+        tn = firings.T(valid);
+        ISI = diff(tn);
+        if(~isempty(ISI))
+          [archive_burst_RS,archive_burst_length,archive_burst_start]=burstSurprise(tn,limit,RSalpha);
+          if(~isempty(archive_burst_start))
+            for it2 = 1:length(archive_burst_start)
+              validSpikes = archive_burst_start(it2):(archive_burst_start(it2)+archive_burst_length(it2)-1);
+              surprise.T = [surprise.T, tn(validSpikes)];
+              surprise.N = [surprise.N, ones(size(validSpikes))*firingNeurons(it)];
+              surpriseFrames = round(min(tn(validSpikes))*experiment.fps):round(max(tn(validSpikes))*experiment.fps);
+              invalid = find(surpriseFrames < 1 | surpriseFrames > length(experiment.t));
+              surpriseFrames(invalid) = [];
+              surpriseListFrames(surpriseFrames) = surpriseListFrames(surpriseFrames) + 1;
+            end
+          end
         end
       end
-    end
+    case 'global'
+      %schmittHigh = 0.1;
+      %schmittLow = 0;
+      surpriseListFrames = zeros(size(experiment.t));
+      surprise.T = [];
+      surprise.N = [];
+      %tn = unique(firings.T);
+      tn = firings.T;
+      %tn = tn + (rand(size(tn))-0.5)/experiment.fps;
+      ISI = diff(tn);
+      if(~isempty(ISI))
+        [archive_burst_RS,archive_burst_length,archive_burst_start]=burstSurprise(tn,limit,RSalpha);
+        if(~isempty(archive_burst_start))
+          for it2 = 1:length(archive_burst_start)
+            validSpikes = archive_burst_start(it2):(archive_burst_start(it2)+archive_burst_length(it2)-1);
+            surprise.T = [surprise.T, tn(validSpikes)];
+            surprise.N = [surprise.N, ones(size(validSpikes))];
+            surpriseFrames = round(min(tn(validSpikes))*experiment.fps):round(max(tn(validSpikes))*experiment.fps);
+            invalid = find(surpriseFrames < 1 | surpriseFrames > length(experiment.t));
+            surpriseFrames(invalid) = [];
+            surpriseListFrames(surpriseFrames) = surpriseListFrames(surpriseFrames) + length(validSpikes);
+          end
+        end
+      end
   end
 
   y = schmitt_trigger(surpriseListFrames, schmittLow, schmittHigh);
@@ -292,7 +323,11 @@ for git = 1:length(groupList)
     %for it = 1:length(surprise.T)
     %plot(surprise.T, sortedChannels(surprise.N)-minC, 'or', 'MarkerSize', 8);
     %a1.ColorOrderIndex = 1;
-    plot(surprise.T, sortedChannels(surprise.N)-minC, 'b.');
+    if(strcmpi(params.surpriseMode, 'single'))
+      plot(surprise.T, sortedChannels(surprise.N)-minC, 'b.');
+    else
+      plot(surprise.T, surprise.N*(max(sortedChannels)-minC+2), 'b.');
+    end
     %end
     linesMap = lines(2);
     plot(detectedFullSchmitt, ones(size(detectedFullSchmitt))*max(sortedChannels(firings.N))-minC+5, 'v-', 'MarkerSize', 6, 'LineWidth', 2, 'Color', linesMap(2,:), 'MarkerFaceColor', linesMap(2,:))

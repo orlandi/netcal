@@ -7,6 +7,7 @@ classdef plotStatistics < handle
     figureHandle;
     axisHandle;
     fullStatisticsData;
+    fullStatisticsDataFull;
     statisticsName;
     labelList;
     mainGroup;
@@ -92,6 +93,7 @@ classdef plotStatistics < handle
       plotData = cell(length(checkedExperiments), 1);
       if(obj.params.pbar > 0)
         ncbar.setBarName('Gathering data');
+        ncbar.update(0);
       end
       
       obj.maxGroups = 0;
@@ -129,19 +131,19 @@ classdef plotStatistics < handle
           obj.groupList = getExperimentGroupsNames(experiment, obj.mainGroup);
         end
         plotData{i} = cell(length(obj.fullGroupList), 1);
-        for git = 1:length(obj.groupList)
-          groupIdx = find(strcmp(obj.groupList{git}, obj.fullGroupList));
+        for git = 1:length(obj.fullGroupList)
+          groupIdx = find(strcmp(obj.fullGroupList{git}, obj.groupList));
           if(isempty(groupIdx))
             continue;
           end
           % Again, for compatibility reasons
-          if(strcmpi(obj.groupList{git}, 'none'))
-            obj.groupList{git} = 'everything';
+          if(strcmpi(obj.groupList{groupIdx}, 'none'))
+            obj.groupList{groupIdx} = 'everything';
           end
           %plotData{i}{git} = getData(experiment, obj.groupList{git}, obj.params.statistic);
-          plotData{i}{groupIdx} = feval(funcHandle, experiment, obj.groupList{git}, varargin{:});
+          plotData{i}{git} = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
           if(obj.params.zeroToNan)
-            plotData{i}{groupIdx}(plotData{i}{groupIdx} == 0) = NaN;
+            plotData{i}{git}(plotData{i}{git} == 0) = NaN;
           end
         end
         obj.maxGroups = max(obj.maxGroups, length(plotData{i}));
@@ -220,6 +222,7 @@ classdef plotStatistics < handle
         case 'label average'
           % Average statistics for each experiment, and group them by label
           plotDataAveraged = cell(length(validCombinations), 1);
+          plotDataAveragedFull = cell(length(validCombinations), 1);
           switch obj.params.pipelineProject.factor
             case 'experiment'
               for it = 1:length(validCombinations)
@@ -259,8 +262,28 @@ classdef plotStatistics < handle
                   end
                 end
               end
+            case 'mixed'
+              for it = 1:length(validCombinations)
+                plotDataAveraged{it} = cell(obj.maxGroups, 1);
+                plotDataAveragedFull{it} = cell(obj.maxGroups, 1);
+                valid = [experimentsPerCombinedLabel{validCombinations(it)}{:}];
+                valid2 = arrayfun(@(x)find(x==checkedExperiments), valid, 'UniformOutput', false);
+                valid2 = cell2mat(valid2);
+                valid = valid2;
+                for git = 1:obj.maxGroups
+                  plotDataAveraged{it}{git} = [];
+                  plotDataAveragedFull{it}{git} = cell(length(valid), 1);
+                  for k = 1:length(valid)
+                    if(length(plotData) >= valid(k) && length(plotData{valid(k)}) >= git)
+                      plotDataAveraged{it}{git} = [plotDataAveraged{it}{git}; plotData{valid(k)}{git}(:)];
+                      plotDataAveragedFull{it}{git}{k} = plotData{valid(k)}{git}(:);
+                    end
+                  end
+                end
+              end
           end
           plotData = plotDataAveraged;
+          obj.fullStatisticsDataFull = plotDataAveragedFull;
           obj.groupLabels = labelsToUseJoined;
       end
 
@@ -288,10 +311,10 @@ classdef plotStatistics < handle
       end
       obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
       %obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
-      obj.figureHandle.Position = setFigurePosition(gcf, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
+      obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
       obj.axisHandle = axes;
       hold on;
-      
+    
       if(isempty(obj.params.styleOptions.xLabel))
         xlabel(obj.params.statistic);
       else
@@ -336,59 +359,23 @@ classdef plotStatistics < handle
         else
           validGroups = [validGroups, git];
         end
-        switch obj.params.pipelineExperiment.distributionEstimation
-          case 'unbounded'
-            [f, xi] = ksdensity(curData);
+        % Compute the distribution
+        [f, xi] = obj.computeDistribution(curData);
+        % The actual plot
+        switch obj.params.distributionEstimation.mode
+          case {'unbounded', 'positive', 'histogram line'}
              h = plot(xi, f, 'Color', cmap(git, :));
-          case 'positive'
-            [f, xi] = ksdensity(curData, 'support', 'positive');
-            h = plot(xi, f, 'Color', cmap(git, :));
           case 'histogram'
-            if(isempty(obj.params.pipelineExperiment.distributionBins) || (~ischar(obj.params.pipelineExperiment.distributionBins) && obj.params.pipelineExperiment.distributionBins == 0))
-              try
-                bins = sshist(curData);
-              catch
-                bins = 10;
-              end
-            elseif(ischar(obj.params.pipelineExperiment.distributionBins))
-              bins = eval(obj.params.pipelineExperiment.distributionBins);
-              if(bins == 0)
-                try
-                  bins = sshist(curData);
-                catch
-                  bins = 10;
-                end
-              end
-            else
-              bins = obj.params.pipelineExperiment.distributionBins;
-            end
-            
-            [f, xi] = hist(curData, bins);
-            % Now normalize the histogram
-            area = trapz(xi, f);
-            f = f/area;
-            h = bar(xi, f/area, 'FaceColor', cmap(git, :), 'EdgeColor', cmap(git, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
-          case 'raw'
-            if(isempty(obj.params.pipelineExperiment.distributionBins) || (~ischar(obj.params.pipelineExperiment.distributionBins) && obj.params.pipelineExperiment.distributionBins == 0))
-              try
-                bins = sshist(curData);
-              catch
-                bins = 10;
-              end
-            elseif(ischar(obj.params.pipelineExperiment.distributionBins))
-              bins = eval(obj.params.pipelineExperiment.distributionBins);
-              if(bins == 0)
-                try
-                  bins = sshist(curData);
-                catch
-                  bins = 10;
-                end
-              end
-            else
-              bins = obj.params.pipelineExperiment.distributionBins;
-            end
-            [f, xi] = hist(curData, bins);
             h = bar(xi, f, 'FaceColor', cmap(git, :), 'EdgeColor', cmap(git, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
+          case 'raw'
+            h = bar(xi, f, 'FaceColor', cmap(git, :), 'EdgeColor', cmap(git, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
+            if(isempty(obj.params.styleOptions.yLabel))
+              ylabel('count');
+            else
+              ylabel(obj.params.styleOptions.yLabel);
+            end
+          case 'raw line'
+            h = plot(xi, f, 'Color', cmap(git, :));
             if(isempty(obj.params.styleOptions.yLabel))
               ylabel('count');
             else
@@ -422,116 +409,194 @@ classdef plotStatistics < handle
       else
         obj.figVisible = 'on';
       end
-      %prevFig = gcf;
-      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
-      %obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
-      obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
-      obj.axisHandle = axes;
-      hold on;
 
       gap = 1;
       rowData = [];
       groupData = [];
 
-      switch obj.params.pipelineProject.groupingOrder
-        % Label doesn't exist anymore
-        case 'label'
-%           import iosr.statistics.*
-%           bpData = curData;
-% %           (0:(size(bpData,2)-1))*size(bpData,3)
-% %           size(bpData)
-%           obj.plotHandles = boxPlot((0:(size(bpData,2)-1))*size(bpData,3), bpData, ...
-%                             'symbolColor','k',...
-%                             'medianColor','k',...
-%                             'symbolMarker','+',...
-%                             'showLegend',false, ...
-%                             'showOutliers', false, ...
-%                             'xseparator',true,...
-%                             'rescaleGroups', true, ...
-%                             'boxcolor', cmap);
-% 
-%           ylabel(gca, [obj.params.statistic]);
-        otherwise
-          for rt = 1:obj.maxGroups
-            for kr = 1:size(curData, 1)
-              if(isempty(curData{kr}) || length(curData{kr}) < rt || isempty(curData{kr}{rt}))
-                  rowData = [rowData; NaN];
-                  groupData = [groupData; kr];
-              else
-                  rowData = [rowData; curData{kr}{rt}(:)];
-                  groupData = [groupData; ones(size(curData{kr}{rt}(:)))*((kr-1)*(obj.maxGroups+gap) + rt)];
-              end
-            end
-          end
-          % Turn into an array now
-          maxData = length(rowData);
-
-          bpData = nan(maxData, obj.maxGroups, size(curData, 1));
-          for rt = 1:obj.maxGroups
-            for kr = 1:size(curData, 1)
-              if(length(curData{kr}) >= rt)
-                bpData(1:length(curData{kr}{rt}), rt, kr) = curData{kr}{rt};
-              end
-            end
-          end
-          
-          import iosr.statistics.*
-
-          switch obj.params.pipelineProject.barGroupingOrder
-            case 'default'
-              subData = permute(bpData,[1 3 2]);
-              xList = obj.groupLabels;
-              legendList = obj.fullGroupList;
-              if(~iscell(legendList) || (iscell(legendList) && length(legendList) == 1))
-                legendList = {legendList};
-              end
-            case 'group'
-              subData = permute(bpData,[1 2 3]);
-              legendList = obj.groupLabels;
-              xList= obj.fullGroupList;
-          end
-          if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
-            cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, length(legendList)));
+      % Let's start 
+      for rt = 1:obj.maxGroups
+        for kr = 1:size(curData, 1)
+          if(isempty(curData{kr}) || length(curData{kr}) < rt || isempty(curData{kr}{rt}))
+              rowData = [rowData; NaN];
+              groupData = [groupData; kr];
           else
-            cmap = lines(length(legendList));
+              rowData = [rowData; curData{kr}{rt}(:)];
+              groupData = [groupData; ones(size(curData{kr}{rt}(:)))*((kr-1)*(obj.maxGroups+gap) + rt)];
           end
-          if(obj.params.styleOptions.invertColormap)
-            if(size(cmap, 1) == 1)
-              % If the colormap has a single entry we need to add another entry
-              if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
-                cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, 2));
-              else
-                cmap = lines(2);
+        end
+      end
+      % Turn into an array now
+      maxData = length(rowData);
+
+      bpData = nan(maxData, obj.maxGroups, size(curData, 1));
+      for rt = 1:obj.maxGroups
+        for kr = 1:size(curData, 1)
+          if(length(curData{kr}) >= rt)
+            bpData(1:length(curData{kr}{rt}), rt, kr) = curData{kr}{rt};
+          end
+        end
+      end
+
+      switch obj.params.pipelineProject.barGroupingOrder
+        case 'default'
+          subData = permute(bpData,[1 3 2]);
+          xList = obj.groupLabels;
+          legendList = obj.fullGroupList;
+          if(~iscell(legendList) || (iscell(legendList) && length(legendList) == 1))
+            legendList = {legendList};
+          end
+        case 'group'
+          subData = permute(bpData,[1 2 3]);
+          legendList = obj.groupLabels;
+          xList= obj.fullGroupList;
+      end
+      if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
+        cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, length(legendList)));
+      else
+        cmap = lines(length(legendList));
+      end
+      if(obj.params.styleOptions.invertColormap)
+        if(size(cmap, 1) == 1)
+          % If the colormap has a single entry we need to add another entry
+          if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
+            cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, 2));
+          else
+            cmap = lines(2);
+          end
+          cmap = cmap(2, :);
+        else
+          % Default behavior
+          cmap = cmap(end:-1:1, :);
+        end
+      end
+      obj.fullGroupList = {obj.fullGroupList};
+      grList = cell(length(obj.fullGroupList{1}), 1);
+      pList = cell(length(obj.fullGroupList{1}), 1);
+      intraPlist = cell(length(obj.fullGroupList{1}), 1);
+      intraGrList = cell(length(obj.fullGroupList{1}), 1);
+      nTests = cell(length(obj.fullGroupList{1}), 1);
+      for git = 1:length(obj.fullStatisticsDataFull{1})
+        grList{git} = {};
+        intraGrList{git} = {};
+        nTests{git} = 0;
+      end
+
+      switch obj.params.pipelineProject.factor
+        case 'mixed'
+          fullData = obj.fullStatisticsDataFull;
+          switch obj.params.pipelineProject.showSignificance
+            case 'none'
+            case 'partial'
+              for it = 1:length(fullData)
+                for itt = (it+1):length(fullData)
+                  % Avoid cross-comparisons
+                  if(obj.params.pipelineProject.avoidCrossComparisons)
+                    if(~any(cellfun(@(x)any(strcmp(x, strtrim(strsplit(xList{itt}, ',')))), strtrim(strsplit(xList{it}, ',')))))
+                      continue;
+                    end
+                  end
+                  % Assuming the groups are always there
+                  for git = 1:length(fullData{it})
+                    nTests{git} = nTests{git} + 1;
+                    pValueList = [];
+                    for k = 1:length(fullData{it}{git})
+                      for kk = 1:length(fullData{itt}{git})
+                        if(all(isnan(fullData{it}{git}{k})) || all(isnan(fullData{itt}{git}{kk})))
+                          pValueList= [pValueList; 1];
+                          continue;
+                        end
+                        try
+                          p = ranksum(fullData{it}{git}{k}, fullData{itt}{git}{kk});
+                          [~, p2] = kstest2(fullData{it}{git}{k}, fullData{itt}{git}{kk});
+                          %logMsg(sprintf('%s vs %s . Group: %s . Idx: %d vs %d Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{git}, k, kk, p, p2));
+                          switch obj.params.pipelineProject.significanceTest
+                            case 'Mann-Whitney'
+                              pValueList= [pValueList; p];
+                            case 'Kolmogorov-Smirnov'
+                              pValueList= [pValueList; p2];
+                          end
+                        catch ME
+                          logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+                        end
+                      end
+                    end
+                    try
+                      %n = -2*sum(log(pValueList));
+                      %fval = chi2cdf(n,2*length(pValueList));
+                      fval = mean(pValueList);
+                      logMsg(sprintf('%s vs %s . Group: %s . Avg p-value: %.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, fval));
+                      if(fval <= 0.05)
+                        pList{git} = [pList{git}; fval];
+                        grList{git}{end+1} = [it itt];
+                      end
+                    catch ME
+                      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+                    end
+                  end
+                end
+                if(obj.params.pipelineProject.computeIntraGroupComparisons)
+                  for git = 1:length(fullData{it})
+                    intraP = [];
+                    for k = 1:length(fullData{it}{git})
+                      for kk = (k+1):length(fullData{it}{git})
+                        % Check that everything isn't nan
+                        if(all(isnan(fullData{it}{git}{k})) || all(isnan(fullData{it}{git}{kk})))
+                          intraP= [intraP; 1];
+                          continue;
+                        end
+                        try
+                          p = ranksum(fullData{it}{git}{k}, fullData{it}{git}{kk});
+                          [~, p2] = kstest2(fullData{it}{git}{k}, fullData{it}{git}{kk});
+                          %logMsg(sprintf('Intragroup: %s . Group: %s . Idx: %d vs %d Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, objfullGroupList{git}, k, kk, p, p2));
+                          switch obj.params.pipelineProject.significanceTest
+                            case 'Mann-intraP'
+                              intraP= [intraP; p];
+                            case 'Kolmogorov-Smirnov'
+                              intraP= [intraP; p2];
+                          end
+                        catch ME
+                          logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+                        end
+                      end
+                    end
+                    if(mean(intraP) <= 0.05)
+                      intraPlist{git} = [intraPlist{git}; mean(intraP)];
+                      intraGrList{git}{end+1} = [it it];
+                    end
+                    logMsg(sprintf('Intragroup: %s . Group: %s . Avg p-value: %.3g', xList{it}, obj.fullGroupList{1}{git}, mean(intraP)));
+                  end
+                end
               end
-              cmap = cmap(2, :);
-            else
-              % Default behavior
-              cmap = cmap(end:-1:1, :);
-            end
           end
-          obj.fullGroupList = {obj.fullGroupList};
-          grList = {};
-          pList = [];
+        otherwise
           switch obj.params.pipelineProject.showSignificance
             case 'none'
             case 'partial'
               for it = 1:size(subData, 2)
-                for itt = 1:size(subData, 2)
-                  if(it > itt)
+                for itt = (it+1):size(subData, 2)
+                  for git = 1:size(subData, 3)
+                    if(obj.params.pipelineProject.avoidCrossComparisons)
+                      if(~any(cellfun(@(x)any(strcmp(x, strtrim(strsplit(xList{itt}, ',')))), strtrim(strsplit(xList{it}, ',')))))
+                        continue;
+                      else
+                        nTests{git} = nTests{git} + 1;
+                      end
+                    end
                     try
-                      p = ranksum(subData(:, it), subData(:, itt));
-                      [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                      logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+                      p = ranksum(subData(:, it, git), subData(:, itt, git));
+                      [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
                           if(p <= 0.05)
-                            pList = [pList; p];
-                            grList{end+1} = [it itt];
+                            pList{git} = [pList{git}; p];
+                            grList{git}{end+1} = [it itt];
                           end
                         case 'Kolmogorov-Smirnov'
                           if(p <= 0.05)
-                            pList = [pList; p2];
-                            grList{end+1} = [it itt];
+                            pList{git} = [pList{git}; p2];
+                            grList{git}{end+1} = [it itt];
                           end
                       end
                     catch ME
@@ -543,27 +608,66 @@ classdef plotStatistics < handle
             case 'all'
               for it = 1:size(subData, 2)
                 for itt = 1:size(subData, 2)
-                  if(it > itt)
-                    p = ranksum(subData(:, it), subData(:, itt));
-                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
-                    switch obj.params.pipelineProject.significanceTest
-                      case 'Mann-Whitney'
-                        pList = [pList; p];
-                        grList{end+1} = [it itt];
-                      case 'Kolmogorov-Smirnov'
-                        pList = [pList; p2];
-                        grList{end+1} = [it itt];
+                  for git = 1:size(subData, 3)
+                    if(it > itt)
+                      p = ranksum(subData(:, it), subData(:, itt));
+                      [h, p2] = kstest2(subData(:, it), subData(:, itt));
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2));
+                      switch obj.params.pipelineProject.significanceTest
+                        case 'Mann-Whitney'
+                          pList{git} = [pList{git}; p];
+                          grList{git}{end+1} = [it itt];
+                        case 'Kolmogorov-Smirnov'
+                          pList{git} = [pList{git}; p2];
+                          grList{git}{end+1} = [it itt];
+                      end
+                      grList{git}{end+1} = [it itt];
                     end
-                    grList{end+1} = [it itt];
                   end
                 end
               end
           end
-          setappdata(gcf, 'subData', subData);
-          
-          obj.plotHandles = boxPlot(xList, subData, ...
-             'symbolColor','k',...
+      end
+      % Holm-Bonferroni
+      if(obj.params.pipelineProject.HolmBonferroniCorrection)
+        switch obj.params.pipelineProject.showSignificance
+          case {'partial', 'all'}
+            for git = 1:length(nTests)
+              Ncomparisons = nTests{git};
+              fullList = [pList{git}, cellfun(@(x)x(1), grList{git})', cellfun(@(x)x(2), grList{git})'];
+              [fullList, idx] = sortrows(fullList, 1);
+              validComparisons = 0;
+              for it = 1:size(fullList, 1)
+                if(fullList(it, 1) >= 0.05/(Ncomparisons-it+1))
+                  break;
+                else
+                  validComparisons = validComparisons + 1;
+                end
+              end
+              pList{git} = pList{git}(idx(1:validComparisons));
+              grList{git} = grList{git}(idx(1:validComparisons));
+              logMsg('Valid comparisons after Holm-Bonferroni correction:');
+              for it = 1:length(pList{git})
+                logMsg(sprintf('%s vs %s . Group: %s . P= %.3g', xList{grList{git}{it}(1)}, xList{grList{it}(2)}, obj.fullGroupList{1}{git}, pList{git}(it)));
+              end
+            end
+        end
+      end
+      
+      % The actual figure creation
+      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
+      obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
+      obj.axisHandle = axes;
+      hold on;
+      box on;
+      import iosr.statistics.*
+      setappdata(gcf, 'subData', subData);
+
+      switch obj.params.pipelineProject.plotType
+        case 'boxplot'
+          try
+            obj.plotHandles = boxPlot(xList, subData, ...
+                            'symbolColor','k',...
                             'medianColor','k',...
                             'symbolMarker','+',...
                             'showLegend',false, ...
@@ -572,66 +676,233 @@ classdef plotStatistics < handle
                             'showLegend', true, ...
                             'notch', obj.params.styleOptions.notch, ...
                             'boxcolor', cmap);
-      end
-      % Now let's fix the patches
-      boxes = obj.plotHandles.handles.box;
-      if(all(arrayfun(@(x)length(unique(x.Vertices(:, 2))) == 1, boxes,  'UniformOutput', true) | arrayfun(@(x)all(isnan(x.Vertices(:, 2))), boxes,  'UniformOutput', true)))
-        singleStatistic = true;
-      else
-        singleStatistic = false;
-      end
-      % Turn the patches into simple bars
-      if(singleStatistic)
-        for it = 1:numel(boxes)
-          boxes(it).Vertices(1,2) = 0;
-          boxes(it).Vertices(end,2) = 0;
-        end
-      end
-      
-      hold on;
-      if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
-        switch obj.params.pipelineProject.significanceTest
-          case 'Mann-Whitney'
-            sigstar(grList, pList);
-          case 'Kolmogorov-Smirnov'
-            sigstar(grList, pList);
-        end
-      end
-      
-      obj.plotHandles.handles.box =  boxes;
-      
-      setappdata(obj.figureHandle, 'boxData', obj.plotHandles);
+          catch
+            obj.plotHandles = [];
+          end
 
+          try
+            % Now let's fix the patches
+            boxes = obj.plotHandles.handles.box;
+            if(all(arrayfun(@(x)length(unique(x.Vertices(:, 2))) == 1, boxes,  'UniformOutput', true) | arrayfun(@(x)all(isnan(x.Vertices(:, 2))), boxes,  'UniformOutput', true)))
+              singleStatistic = true;
+            else
+              singleStatistic = false;
+            end
 
-      title(obj.axisHandle, obj.figName);
-      
-      if(isempty(obj.params.styleOptions.xLabel))
-      else
-        xlabel(obj.params.styleOptions.xLabel);
+            % Turn the patches into simple bars if only 1 data point
+            if(singleStatistic)
+              for it = 1:numel(boxes)
+                boxes(it).Vertices(1,2) = 0;
+                boxes(it).Vertices(end,2) = 0;
+              end
+            end
+            if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
+              switch obj.params.pipelineProject.significanceTest
+                case {'Mann-Whitney', 'Kolmogorov-Smirnov'}
+                  for git = 1:size(subData, 3)
+                    if(isempty(intraPlist{git}))
+                      continue;
+                    end
+                    boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
+                    if(obj.params.pipelineProject.computeIntraGroupComparisons && strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                      newPos = cellfun(@(x)boxesPositions(x)+[-0.01 0.01], intraGrList{git}, 'UniformOutput', false);
+                      sigstar(newPos, intraPlist{git});
+                    end
+                  end
+                  for git = 1:size(subData, 3)
+                    if(isempty(pList{git}))
+                      continue;
+                    end
+                    boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
+                    newPos = cellfun(@(x)boxesPositions(x), grList{git}, 'UniformOutput', false);
+                    sigstar(newPos, pList{git});
+                  end
+              end
+            end
+            obj.plotHandles.handles.box =  boxes;
+            setappdata(obj.figureHandle, 'boxData', obj.plotHandles);
+            title(obj.axisHandle, obj.figName);
+
+            if(isempty(obj.params.styleOptions.xLabel))
+            else
+              xlabel(obj.params.styleOptions.xLabel);
+            end
+            if(isempty(obj.params.styleOptions.yLabel))
+              ylabel(obj.statisticsName);
+            else
+              ylabel(obj.params.styleOptions.yLabel);
+            end
+
+            set(obj.figureHandle,'Color','w');
+
+            set(obj.axisHandle, 'XTickLabelRotation', obj.params.styleOptions.XTickLabelRotation);
+            set(obj.axisHandle, 'YTickLabelRotation', obj.params.styleOptions.YTickLabelRotation);
+
+            title(obj.axisHandle, obj.figName);
+            set(obj.axisHandle,'Color','w');
+            set(obj.figureHandle,'Color','w');
+          catch ME
+            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+          end
+
+          ui = uimenu(obj.figureHandle, 'Label', 'Export');
+          uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
+          uimenu(ui, 'Label', 'To workspace',  'Callback', @exportToWorkspace);
+          uimenu(ui, 'Label', 'Data (statistics)',  'Callback', @(h,e)obj.exportDataAggregates(bpData, obj.exportFolder));
+          uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, obj.exportFolder));
+        case 'distribution'
+%           obj.plotHandles = boxPlot(xList, subData, ...
+%                             'symbolColor','k',...
+%                             'medianColor','k',...
+%                             'symbolMarker','+',...
+%                             'showLegend',false, ...
+%                             'showOutliers', false, ...
+%                             'groupLabels', legendList, ...
+%                             'showLegend', true, ...
+%                             'notch', obj.params.styleOptions.notch, ...
+%                             'boxcolor', cmap);
+        % Since the groups are independent. One subplot per group
+          nSquares = ceil(sqrt(size(subData, 3)));
+        
+        % Establish cmap entries - NOT this way
+%         switch obj.params.pipelineProject.factor
+%           case 'experiment'
+%             %subData: array sample - label - group
+%             numPlots = find(sum(sum(isnan(subData),3),2) == size(subData,2)*size(subData,3), 1, 'first')-1;
+%             if(isempty(numPlots) || numPlots <= 0 || numPlots > size(subData,1))
+%               numPlots = size(subData, 1);
+%             end
+%           case 'event'
+%             %subData: array sample - label - group
+%             numPlots = 1;
+%           case 'mixed'
+%             %fullData: cell label - group - experiment
+%             for it = 1:length(fullData)
+%               % Ouch
+%               numPlots = max(cellfun(@(x) max(cellfun(@length, x)), fullData));
+%             end
+%         end
+        % Establish cmap entries - NOT this way
+          switch obj.params.pipelineProject.factor
+            case 'experiment'
+              %subData: array sample - label - group
+              numColorPlots = size(subData, 2);
+            case 'event'
+              %subData: array sample - label - group
+              numColorPlots = size(subData, 2);
+            case 'mixed'
+              %fullData: cell label - group - experiment
+              numColorPlots = length(fullData);
+          end
+          for git = 1:size(subData, 3)
+            subplotHandles = [];
+            subplot(nSquares, nSquares, git);
+            hold on;
+            if(isempty(obj.params.styleOptions.xLabel))
+              xlabel(obj.params.statistic);
+            else
+              xlabel(obj.params.styleOptions.xLabel);
+            end
+            if(isempty(obj.params.styleOptions.yLabel))
+              ylabel('PDF');
+            else
+              ylabel(obj.params.styleOptions.yLabel);
+            end
+            if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
+              cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, numColorPlots));
+            else
+              cmap = lines(numColorPlots);
+            end
+            if(obj.params.styleOptions.invertColormap)
+              if(size(cmap, 1) == 1)
+                % If the colormap has a single entry we need to add another entry
+                if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
+                  cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, numColorPlots+1));
+                else
+                  cmap = lines(numColorPlots+1);
+                end
+                cmap = cmap(end:-1:1, :);
+              else
+                % Default behavior
+                cmap = cmap(end:-1:1, :);
+              end
+            end
+            if(numColorPlots > 1)
+              alpha = 0.5;
+            else
+              alpha = 1;
+            end
+            validGroups = [];
+            %for git = 1:length(obj.groupList)
+            % Get the data
+            for it = 1:numColorPlots
+               switch obj.params.pipelineProject.factor
+                case {'experiment', 'event'}
+                  numReplicas = 1;
+                case 'mixed'
+                  %fullData: cell label - group - experiment
+                  numReplicas = length(fullData{it}{git})+1;
+               end
+              for cit = 1:numReplicas
+                switch obj.params.pipelineProject.factor
+                  case {'experiment', 'event'}
+                    curData = squeeze(subData(:, it, git)); %cit is always 1
+                  case 'mixed'
+                    %fullData: cell label - group - experiment
+                    if(cit == 1)
+                      curData = squeeze(subData(:, it, git)); % First one is the average
+                    else
+                      curData = fullData{it}{git}{cit-1};
+                    end
+                end
+                if(isempty(curData))
+                  continue;
+                end
+                % Compute the distribution
+                [f, xi] = obj.computeDistribution(curData);
+                % The actual plot
+                switch obj.params.distributionEstimation.mode
+                  case {'unbounded', 'positive', 'histogram line'}
+                    h = plot(xi, f, 'Color', cmap(it, :));
+                  case 'histogram'
+                    h = bar(xi, f, 'FaceColor', cmap(it, :), 'EdgeColor', cmap(it, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
+                  case 'raw'
+                    h = bar(xi, f, 'FaceColor', cmap(it, :), 'EdgeColor', cmap(it, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
+                    if(isempty(obj.params.styleOptions.yLabel))
+                      ylabel('count');
+                    else
+                      ylabel(obj.params.styleOptions.yLabel);
+                    end
+                 case 'raw line'
+                    h = plot(xi, f, 'Color', cmap(it, :));
+                    if(isempty(obj.params.styleOptions.yLabel))
+                      ylabel('count');
+                    else
+                      ylabel(obj.params.styleOptions.yLabel);
+                    end
+                end
+                if(cit == 1)
+                  % Stronger average
+                  if(strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                    h.LineWidth = 2;
+                  end
+                  h.DisplayName = xList{it};
+                  obj.plotHandles = [obj.plotHandles; h];
+                  subplotHandles = [subplotHandles; h];
+                end
+              end
+            end
+            legend(gca, subplotHandles);
+            title([obj.figName ' - ' legendList{git}]);
+            set(gca, 'XTickLabelRotation', obj.params.styleOptions.XTickLabelRotation);
+            set(gca, 'YTickLabelRotation', obj.params.styleOptions.YTickLabelRotation);
+            box on;
+            set(gca,'Color','w');
+          end
+          set(obj.figureHandle,'Color','w');
+          ui = uimenu(obj.figureHandle, 'Label', 'Export');
+          uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
       end
-      if(isempty(obj.params.styleOptions.yLabel))
-        ylabel(obj.statisticsName);
-      else
-        ylabel(obj.params.styleOptions.yLabel);
-      end
-      
-      set(obj.figureHandle,'Color','w');
-
-      box on;
-      set(obj.axisHandle, 'XTickLabelRotation', obj.params.styleOptions.XTickLabelRotation);
-      set(obj.axisHandle, 'YTickLabelRotation', obj.params.styleOptions.YTickLabelRotation);
-    
-      title(obj.axisHandle, obj.figName);
-      box on;
-      set(obj.axisHandle,'Color','w');
-      set(obj.figureHandle,'Color','w');
-      
-      ui = uimenu(obj.figureHandle, 'Label', 'Export');
-      uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
-      uimenu(ui, 'Label', 'To workspace',  'Callback', @exportToWorkspace);
-      uimenu(ui, 'Label', 'Data (statistics)',  'Callback', @(h,e)obj.exportDataAggregates(bpData, obj.exportFolder));
-      uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, obj.exportFolder));
-
       if(obj.params.saveOptions.saveFigure)
         export_fig([obj.figFolder, obj.figName, '.', obj.params.saveOptions.saveFigureType], ...
                     sprintf('-r%d', obj.params.saveOptions.saveFigureResolution), ...
@@ -648,7 +919,115 @@ classdef plotStatistics < handle
         end
       end
     end
-   
+    %----------------------------------------------------------------------
+    function [f, xi] = computeDistribution(obj, data)
+      if(~isempty(obj.params.distributionEstimation.additionalOptions))
+        additionalOptions = obj.params.distributionEstimation.additionalOptions;
+      else
+        additionalOptions = [];
+      end
+      switch obj.params.distributionEstimation.mode
+        case 'unbounded'
+          if(isempty(additionalOptions))
+            [f, xi] = ksdensity(data);
+          else
+            try
+              evalLine = sprintf('ksdensity(data, %s)', additionalOptions);
+              [f, xi] = eval(evalLine);
+            catch
+              logMsg(sprintf('Invalid additionalOptions. Eval line: %s', evalLine), 'e');
+              return;
+            end
+          end
+           %h = plot(xi, f, 'Color', cmap(git, :));
+        case 'positive'
+          if(isempty(additionalOptions))
+            [f, xi] = ksdensity(data, 'support', 'positive');
+          else
+            try
+              evalLine = sprintf('ksdensity(data, ''support'', ''positive'', %s)', additionalOptions);
+              [f, xi] = eval(evalLine);
+            catch
+              logMsg(sprintf('Invalid additionalOptions. Eval line: %s', evalLine), 'e');
+              return;
+            end
+          end
+          %h = plot(xi, f, 'Color', cmap(git, :));
+        case {'histogram', 'histogram line'}
+          if(isempty(obj.params.distributionEstimation.distributionBins) || (~ischar(obj.params.distributionEstimation.distributionBins) && obj.params.distributionEstimation.distributionBins == 0))
+            try
+              bins = sshist(data);
+            catch
+              bins = 10;
+            end
+          elseif(ischar(obj.params.distributionEstimation.distributionBins))
+            bins = eval(obj.params.distributionEstimation.distributionBins);
+            if(bins == 0)
+              try
+                bins = sshist(data);
+              catch
+                bins = 10;
+              end
+              if(isempty(bins))
+                bins = 10;
+              end
+            end
+          else
+            bins = obj.params.distributionEstimation.distributionBins;
+          end
+          if(isempty(additionalOptions))
+            [f, xi] = hist(data, bins);
+          else
+            try
+              evalLine = sprintf('hist(data, bins, %s)', additionalOptions);
+              [f, xi] = eval(evalLine);
+            catch
+              logMsg(sprintf('Invalid additionalOptions. Eval line: %s', evalLine), 'e');
+              return;
+            end
+          end
+          % Now normalize the histogram
+          area = trapz(xi, f);
+          f = f/area;
+          %h = bar(xi, f/area, 'FaceColor', cmap(git, :), 'EdgeColor', cmap(git, :)*0.5, 'FaceAlpha', alpha, 'EdgeAlpha', alpha);
+        case {'raw', 'raw line'}
+          if(isempty(obj.params.distributionEstimation.distributionBins) || (~ischar(obj.params.distributionEstimation.distributionBins) && obj.params.distributionEstimation.distributionBins == 0))
+            try
+              bins = sshist(data);
+            catch
+              bins = 10;
+            end
+          elseif(ischar(obj.params.distributionEstimation.distributionBins))
+            bins = eval(obj.params.distributionEstimation.distributionBins);
+            if(bins == 0)
+              try
+                bins = sshist(data);
+              catch
+                bins = 10;
+              end
+              if(isempty(bins))
+                bins = 10;
+              end
+            end
+          else
+            bins = obj.params.distributionEstimation.distributionBins;
+          end
+          if(isempty(additionalOptions))
+            [f, xi] = hist(data, bins);
+          else
+            try
+              evalLine = sprintf('hist(data, bins, %s)', additionalOptions);
+              [f, xi] = eval(evalLine);
+            catch
+              logMsg(sprintf('Invalid additionalOptions. Eval line: %s', evalLine), 'e');
+              return;
+            end
+          end
+        otherwise
+          xi = [];
+          f = [];
+      end
+    end  
     %----------------------------------------------------------------------
     function updateFigure(obj, params)
       
@@ -727,6 +1106,14 @@ classdef plotStatistics < handle
     
     %----------------------------------------------------------------------
     function cleanup(obj)
+      % Execute additional figure commands
+      if(~isempty(obj.params.additionalFigureOptions) && ischar(obj.params.additionalFigureOptions))
+        obj.params.additionalFigureOptions = java.io.File(obj.params.additionalFigureOptions);
+      end
+      if(~isempty(obj.params.additionalFigureOptions) && obj.params.additionalFigureOptions.isFile)
+        %obj.params.additionalFigureOptions.getAbsoluteFile
+        run(char(obj.params.additionalFigureOptions.getAbsoluteFile));
+      end
       if(obj.params.saveOptions.onlySaveFigure)
        close(obj.figureHandle);
       end
@@ -754,7 +1141,7 @@ classdef plotStatistics < handle
             elseif(it == 2)
               lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              data.(names{it})
+              %data.(names{it})
               %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
               lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
             end

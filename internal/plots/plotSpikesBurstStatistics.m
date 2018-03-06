@@ -59,6 +59,12 @@ end
         data = length(bursts.amplitude)/experiment.totalTime;
       elseif(strcmpi(stat, 'num spikes'))
         data = bursts.amplitude;
+      elseif(strcmpi(stat, 'num participating cells'))
+        data = cellfun(@length, bursts.participators);
+      elseif(strcmpi(stat, 'ratio participating cells'))
+        [members, ~, ~] = getExperimentGroupMembers(experiment, groupName);
+        data = cellfun(@length, bursts.participators)/length(members);
+        %data = bursts.participators/length(members);
       elseif(strcmpi(stat, 'num spikes per group member'))
         [members, ~, ~] = getExperimentGroupMembers(experiment, groupName);
         data = bursts.amplitude/length(members);

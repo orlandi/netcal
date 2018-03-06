@@ -58,15 +58,15 @@ ISI_limit=diff(ISI<limit);
 %first time stamp of these intervals
 begin_int=find(ISI_limit==1)+1;
 %manage the first ISI
-if ISI(1)<limit,
+if ISI(1)<limit
     begin_int=[1 begin_int];%the first IS is under limit
-end;
+end
 %last time stamp of these intervals
 end_int=find(ISI_limit==-1);
 %manage the last ISI
-if length(end_int)<length(begin_int),
+if length(end_int)<length(begin_int)
     end_int=[end_int N];
-end;
+end
 %length of intervals of interest
 length_int=end_int-begin_int+1;
  
@@ -77,20 +77,26 @@ archive_burst_start=[];
  
 %% Going through the intervals of interest
 indic=0;
-for n_j=begin_int,
+for n_j=begin_int
     indic=indic+1;
     p_j=length_int(indic);
     subseq_RS=[];
     %test each set of spikes
-    for i=0:p_j-(l_min-1),
+    %[n_j p_j]
+    for i=0:p_j-(l_min-1)
         %length of burst tested
         q=l_min-2;
+        subsub = zeros(p_j-i, 4);
+        prevu = sum(R(n_j+i:n_j+i+q-1)); 
         while (q<p_j-i)
             q=q+1;
             %statistic
-            u=sum(R(n_j+i:n_j+i+q-1));
-            u=floor(u);
-            if q<q_lim,
+            %u=sum(R(n_j+i:n_j+i+q-1));
+            %u=floor(u);
+            prevu = prevu+R(n_j+i+q-1);
+            u = floor(prevu);
+            
+            if q<q_lim
                 %exact discrete distribution
                 k=0:(u-q)/N;
                 length_k=length(k);
@@ -98,22 +104,27 @@ for n_j=begin_int,
                   -log_fac([1 k(2:end)])-log_fac(q-k))-q*log(N))*alternate(1:length_k);
             else
                 %approximate Gaussian distribution
-                prob=normcdf((u-q*(N+1)/2)/sqrt(q*(N^2-1)/12));
-            end;
+                %prob=normcdf((u-q*(N+1)/2)/sqrt(q*(N^2-1)/12));
+                prob = 0.5 * erfc(-(u-q*(N+1)/2)/sqrt(q*(N^2-1)/12)/sqrt(2));
+                %[prob prob2]
+            end
             RS=-log(prob);
             %archive results for each subsequence [RSstatistic beginning length]
-            if RS>RSalpha,
-                subseq_RS(end+1,:)=[RS i q];
-            end;
-               end;
-    end;
+            if RS>RSalpha
+                %subseq_RS(end+1,:)=[RS i q];
+                subsub(q,:)=[RS i q, 1];
+            end
+        end
+        subseq_RS = [subseq_RS; subsub(find(subsub(:,4) == 1), 1:3)];
+    end
  
     %vet results archive to extract most significant bursts
-    if ~isempty(subseq_RS),
+    if ~isempty(subseq_RS)
         %sort RS for all subsequences
         subseq_RS=-sortrows(-subseq_RS,1);
+        %subseq_RS=-sortrows(-subseq_RS,3Z);
  
-        while ~isempty(subseq_RS),
+        while ~isempty(subseq_RS)
             %extract most surprising burst
             current_burst=subseq_RS(1,:);
             archive_burst_RS(end+1)=current_burst(1);
@@ -124,9 +135,9 @@ for n_j=begin_int,
             %keep only other bursts non-overlapping with this burst
             subseq_RS=subseq_RS(subseq_RS(:,2)+subseq_RS(:,3)-...
               1<current_burst(2)|subseq_RS(:,2)>current_burst(2)+current_burst(3)-1,:);
-        end;
-    end;
-end;
+        end
+    end
+end
  
 %sort bursts by ascending time
 [archive_burst_start,ind_sort]=sort(archive_burst_start);
