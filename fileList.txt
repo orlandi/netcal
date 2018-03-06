@@ -77,6 +77,7 @@ internal/getSigmoidConnection.m 203
 internal/getSpikesFeatures.m 14197
 internal/identifyFiringNeurons.m 2423
 internal/identifyHCG.m 7026
+internal/identifyISI.m 8023
 internal/identifySimilaritiesInTraces.m 3244
 internal/importExperimentFromWorkspace.m 531
 internal/importFilePatterns.m 4877
@@ -85,7 +86,7 @@ internal/integerLogBinning2.m 2681
 internal/isSubField.m 478
 internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
-internal/loadExperiment.m 23124
+internal/loadExperiment.m 23437
 internal/loadProject.m 4554
 internal/loadROI.m 4259
 internal/loadTraces.m 3422
@@ -134,7 +135,7 @@ internal/smoothTracesV2.m 8858
 internal/spikeDetectConflicts.m 5490
 internal/spikeDetectConflictsRate.m 4304
 internal/spikeInferenceFoopsi.m 8382
-internal/spikeInferenceMLspike.m 8111
+internal/spikeInferenceMLspike.m 8114
 internal/spikeInferenceOasis.m 7223
 internal/spikeInferencePeeling.m 4938
 internal/spikeInferenceSchmitt.m 5644
@@ -144,7 +145,7 @@ internal/traceUnsupervisedEventDetection.m 9566
 internal/treeGroupsSelection.m 6925
 internal/updateNames.m 1068
 internal/updatePath.txt 31
-internal/updateSortingMethod.m 3221
+internal/updateSortingMethod.m 3651
 internal/visualizeROI.m 4017
 internal/avalanches/avalancheAnalysisBranchingRatio.m 1848
 internal/avalanches/avalancheAnalysisDistributions.m 2135
@@ -233,6 +234,7 @@ internal/options/generateAutomaticHelpFile.m 3718
 internal/options/groupsStatisticsOptions.m 1302
 internal/options/identifyFiringNeuronsOptions.m 1419
 internal/options/identifyHCGoptions.m 1822
+internal/options/identifyISIoptions.m 2913
 internal/options/importPatternsOptions.m 1439
 internal/options/inferenceTrainingOptions.m 650
 internal/options/learningEventOptions.m 682
@@ -1662,7 +1664,7 @@ gui/viewPCA.m 42562
 gui/viewPatterns.m 40896
 gui/viewROI.m 55354
 gui/viewRecording.m 67025
-gui/viewSpikes.m 25717
+gui/viewSpikes.m 26154
 gui/viewTraces.m 159821
 gui/viewTracesMultiExperiment.m 147175
 gui/images/funding_logos.jpg 68202
@@ -1674,5 +1676,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 42595
-netcal.m 210229
+README.md 42800
+netcal.m 210601

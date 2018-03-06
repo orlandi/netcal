@@ -27,6 +27,14 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.3.1] - 2018-03-06
+
+### Added
+- New spike-based group classifier (identify ISI). Will group spikes with similar ISI statistics (uses two-tailed KS as similarity measure)
+
+### Fixed
+- Small bug fixes
+
 ## [7.3.0] - 2018-03-05
 
 ### Added
@@ -1484,6 +1492,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.3.1]: https://github.com/orlandi/netcal/tree/v7.3.1
 [7.3.0]: https://github.com/orlandi/netcal/tree/v7.3.0
 [7.2.4]: https://github.com/orlandi/netcal/tree/v7.2.4
 [7.2.3]: https://github.com/orlandi/netcal/tree/v7.2.3

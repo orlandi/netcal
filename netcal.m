@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.3.0';
+currVersion = '7.3.1';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -2438,7 +2438,7 @@ function printSavedExperimentInfo(varargin)
     case {'multiple', 'pipeline'}
       return;
   end
-  
+
   if(isempty(experimentFile))
     try
       project = getappdata(netcalMainWindow, 'project');
@@ -2459,8 +2459,11 @@ function printSavedExperimentInfo(varargin)
     
   if(~isempty(experimentFile))
     try
-      experiment = load(experimentFile, '-mat', 'name', 'handle', 'folder', 'totalTime', 'width', 'height', 'pixelType', 'numFrames', 'fps', 'metadata', 'ROI', 'traceGroupsNames', 'traceGroups');
-      stateVariables = who('-file', experimentFile);
+      %tic
+      experiment = load(experimentFile, '-mat', 'name', 'handle', 'folder', 'totalTime', 'width', 'height', 'pixelType', 'numFrames', 'fps', 'metadata', 'ROI', 'traceGroupsNames', 'traceGroups', 'rawTraces', 'traces', 'spikes');
+      %experiment = load(experimentFile, '-mat', 'name', 'handle', 'folder', 'totalTime', 'width', 'height', 'pixelType', 'numFrames', 'fps', 'metadata', 'ROI');
+      %toc
+      %stateVariables = who('-file', experimentFile); % This takes too long to load
     catch
       return;
     end
@@ -2512,19 +2515,22 @@ function printSavedExperimentInfo(varargin)
       msgList{end+1} = sprintf('<b>%s:</b> none', baseMsg);
     end
     baseMsg = 'raw traces';
-    if(any(strcmp(stateVariables, 'rawTraces')))
+    %if(any(strcmp(stateVariables, 'rawTraces')))
+    if(isfield(experiment, 'rawTraces'))
       msgList{end+1} = sprintf('<b>%s:</b> yes', baseMsg);
     else
       msgList{end+1} = sprintf('<b>%s:</b> no', baseMsg);
     end
     baseMsg = 'smoothed traces';
-    if(any(strcmp(stateVariables, 'traces')))
+    %if(any(strcmp(stateVariables, 'traces')))
+    if(isfield(experiment, 'traces'))
       msgList{end+1} = sprintf('<b>%s:</b> yes', baseMsg);
     else
       msgList{end+1} = sprintf('<b>%s:</b> no', baseMsg);
     end
     baseMsg = 'spikes';
-    if(any(strcmp(stateVariables, 'spikes')))
+    %if(any(strcmp(stateVariables, 'spikes')))
+    if(isfield(experiment, 'spikes'))
       msgList{end+1} = sprintf('<b>%s:</b> yes', baseMsg);
     else
       msgList{end+1} = sprintf('<b>%s:</b> no', baseMsg);

@@ -32,7 +32,7 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
     desiredSorting = 'ROI';
     groupType = 'everything';
     idx = 1;
-    logMsg('1. Current group is empty. Going back to everything with ROI sorting', 'e');
+    logMsg('1. Current group is empty. Going back to everything with ROI sorting', 'w');
   end
   if(isempty(desiredSorting))
     desiredSorting = getCurrentSortingOrder();
@@ -43,14 +43,14 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
   if(isstruct(desiredSorting))
     desiredSorting = 'ROI';
   end
-  % Now let's check if the order exi5sts and check it
+  % Now let's check if the order exists and check it
   if(isfield(experiment, 'traceGroupsOrder') && isfield(experiment.traceGroupsOrder, desiredSorting) && isfield(experiment.traceGroupsOrder.(desiredSorting), groupType))
     if(isempty(experiment.traceGroupsOrder.(desiredSorting).(groupType)) || idx > length(experiment.traceGroupsOrder.(desiredSorting).(groupType)))
       desiredSorting = 'ROI';
       groupType = 'everything';
       idx = 1;
       currentOrder = experiment.traceGroupsOrder.ROI.(groupType){idx};
-      logMsg('3. Current group is no longer valid. Going back to everything with ROI sorting', 'e');
+      logMsg('3. Current group is no longer valid. Going back to everything with ROI sorting', 'w');
       selectGroup([], [], groupType, idx, 'ROI');
     else
       currentOrder = experiment.traceGroupsOrder.(desiredSorting).(groupType){idx};
@@ -61,10 +61,10 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
       groupType = 'everything';
       idx = 1;
       currentOrder = experiment.traceGroupsOrder.ROI.(groupType){idx};
-      logMsg('4. Current group is no longer valid. Going back to everything with ROI sorting', 'e');
+      logMsg('4. Current group is no longer valid. Going back to everything with ROI sorting', 'w');
       selectGroup([], [], groupType, idx, 'ROI');
     else
-      logMsg(['5. Could not order ' groupType ' by ' desiredSorting '. Ordering by ROI instead'], 'e');
+      logMsg(['5. Could not order ' groupType ' by ' desiredSorting '. Ordering by ROI instead'], 'w');
       currentOrder = experiment.traceGroupsOrder.ROI.(groupType){idx};
     end
   end
@@ -74,7 +74,7 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
     groupType = 'everything';
     idx = 1;
     currentOrder = experiment.traceGroupsOrder.ROI.(groupType){idx};
-    logMsg('6. Current group is no longer valid. Going back to everything with ROI sorting', 'e');
+    logMsg('6. Current group is no longer valid. Going back to everything with ROI sorting', 'w');
     selectGroup([], [], groupType, idx, 'ROI');
   end
   
@@ -93,6 +93,14 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
   for i = 1:length(sortMenu.Children)
     if(~strcmpi(sortMenu.Children(i).Label, desiredSorting))
       sortMenu.Children(i).Checked = 'off';
+      if(isfield(experiment, 'traceGroupsOrder') && ...
+          isfield(experiment.traceGroupsOrder, sortMenu.Children(i).Label) && ...
+          isfield(experiment.traceGroupsOrder.(sortMenu.Children(i).Label), groupType) && ...
+         ~isempty(experiment.traceGroupsOrder.(sortMenu.Children(i).Label).(groupType)))
+        sortMenu.Children(i).Enable = 'on';
+      else
+        sortMenu.Children(i).Enable = 'off';
+      end
     else
       sortMenu.Children(i).Checked = 'on';
     end

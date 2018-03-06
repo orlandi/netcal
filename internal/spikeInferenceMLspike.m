@@ -125,7 +125,7 @@ if(params.training && params.parallel)
 end
 apar = [];
 apar.dt = 1/experiment.fps;
-MLspikeParams = cell(length(subset));
+MLspikeParams = cell(length(subset), 1);
 switch params.automaticEstimationMode
   case 'trainingROI'
     if(estimateA || estimateTau)

@@ -124,6 +124,15 @@ switch lower(fpc)
     if(isfield(experiment, 'classifier'))
         experiment = rmfield(experiment, 'classifier');
     end
+    % Temporary hack to delete old and way too big ML spike options class
+    try
+      if(isfield(experiment, 'MLspikeParams'))
+        if(size(experiment.MLspikeParams, 1) == size(experiment.MLspikeParams, 2))
+          experiment = rmfield(experiment, 'MLspikeParams');
+        end
+      end
+    catch
+    end
     % Fix groups structures
     experiment = checkGroups(experiment);
     if(~isempty(params.loadTraces))
