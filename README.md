@@ -27,6 +27,24 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.3.4] - 2018-04-03
+
+### Fixed
+- Small bug fixes
+
+## [7.3.3] - 2018-03-07
+
+### Added
+- Additional options can now be passed to the raster plot through an external .m file. Will be rolling this feature to all plots in the near future
+
+## [7.3.2] - 2018-03-06
+
+### Added
+- Continuous version checker (every hour)
+
+### Modified
+- Raster plot function can now plot multiple groups together (using different colors)
+
 ## [7.3.1] - 2018-03-06
 
 ### Added

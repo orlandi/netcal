@@ -1,4 +1,4 @@
-classdef plotRasterOptions < plotBaseOptions & baseOptions
+classdef plotRasterOptions < plotFigureOptions & baseOptions
 % PLOTRASTEROPTIONS Base options for a raster plot
 %   Class containing the options for a raster plot
 %
@@ -32,7 +32,7 @@ classdef plotRasterOptions < plotBaseOptions & baseOptions
     % - binAndROI: normalize per bin size and roi (firing rate pr cell)
     averageActivityNormalization = {'none', 'ROI', 'bin', 'binAndROI'};
     
-    % Line color
+    % Line color (only if 1 group i selected. Otherwise it will use the full colormap)
     lineColor = [0, 0, 0.5];
     
     % Line width
@@ -54,6 +54,7 @@ classdef plotRasterOptions < plotBaseOptions & baseOptions
         groups = getExperimentGroupsNamesFull(exp);
         if(~isempty(groups))
           obj.group = groups;
+          obj.group{end+1} = '';
         end
         if(length(obj.group) == 1)
           obj.group{end+1} = '';

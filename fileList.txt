@@ -68,7 +68,7 @@ internal/getExperimentGroupsNames.m 2159
 internal/getExperimentGroupsNamesFull.m 1241
 internal/getExperimentID.m 235
 internal/getFrame.m 4434
-internal/getHtmlColormapNames.m 1616
+internal/getHtmlColormapNames.m 1897
 internal/getKClFeatures.m 4044
 internal/getLabelList.m 2090
 internal/getPipelineParameters.m 3188
@@ -249,7 +249,7 @@ internal/options/networkInferenceXcorrOptions.m 1282
 internal/options/oasisOptions.m 2257
 internal/options/obtainFeaturesOptions.m 695
 internal/options/obtainPatternBasedFeaturesOptions.m 1021
-internal/options/optionsWindow.m 54060
+internal/options/optionsWindow.m 54079
 internal/options/patternCountClassifierOptions.m 1282
 internal/options/peelingOptions.m 2858
 internal/options/plotAverageImageOptions.m 956
@@ -262,7 +262,7 @@ internal/options/plotKClStatisticsOptions.m 1395
 internal/options/plotPermutationEntropyComplexityOptions.m 838
 internal/options/plotPopulationsStatisticsOptions.m 880
 internal/options/plotQCECOptions.m 2723
-internal/options/plotRasterOptions.m 2284
+internal/options/plotRasterOptions.m 2390
 internal/options/plotSpikeStatisticsOptions.m 1258
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
@@ -301,7 +301,7 @@ internal/plots/plotPopulationsStatistics.m 1568
 internal/plots/plotPopulationsStatisticsTreatment.m 1757
 internal/plots/plotPopulationsStatisticsTreatmentOptions.m 825
 internal/plots/plotQCEC.m 15339
-internal/plots/plotRaster.m 4674
+internal/plots/plotRaster.m 7285
 internal/plots/plotSpectrogram.m 4026
 internal/plots/plotSpikeStatistics.m 2624
 internal/plots/plotSpikeStatisticsTreatment.m 1597
@@ -322,7 +322,7 @@ external/findpeaks2.m 38133
 external/mtit.m 3955
 external/parse_pv_pairs.m 2820
 external/pick.m 3919
-external/plotSpikeRaster.m 22106
+external/plotSpikeRaster.m 22571
 external/plot_arc.m 479
 external/plotboxpos.m 2656
 external/rdir.m 12435
@@ -597,7 +597,6 @@ external/CellSort/doc/images/solaris.png 286
 external/CellSort/doc/images/up.png 162
 external/CellSort/doc/images/windows.png 286
 external/IoSR/.Rhistory 0
-external/IoSR/LICENSE 1095
 external/IoSR/README.md 1306
 external/IoSR/release-notes.md 3486
 external/IoSR/+iosr/Contents.m 6732
@@ -1361,7 +1360,6 @@ external/mlspike/help/thumbnail300x200.png 25247
 external/mlspike/help/helpsource/index.m 2397
 external/nhist/license.txt 1318
 external/nhist/nhist.m 83707
-external/oasis/LICENSE 35141
 external/oasis/README.md 2295
 external/oasis/deconvolveCa.m 12757
 external/oasis/setup.m 1254
@@ -1676,5 +1674,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 42800
-netcal.m 210601
+README.md 43217
+netcal.m 212869

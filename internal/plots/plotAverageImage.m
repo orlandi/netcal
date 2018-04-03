@@ -25,19 +25,15 @@ function experiment = plotAverageImage(experiment, varargin)
 % requiredFields: avgImg, bpp, folder, name
 
 % Pass class options
-optionsClass = plotAverageImageOptions;
-params = optionsClass().get;
-if(length(varargin) >= 1 && isa(varargin{1}, class(optionsClass)))
-  params = varargin{1}.get;
-  if(length(varargin) > 1)
-    varargin = varargin(2:end);
-  else
-    varargin = [];
-  end
-end
+%--------------------------------------------------------------------------
+[params, var] = processFunctionStartup(plotAverageImageOptions, varargin{:});
 % Define additional optional argument pairs
 params.pbar = [];
-params = parse_pv_pairs(params, varargin);
+% Parse them
+params = parse_pv_pairs(params, var);
+params = barStartup(params, 'Plotting average image');
+%--------------------------------------------------------------------------
+
 
 if(experiment.bpp == 8)
   imgData = uint8(experiment.avgImg);
@@ -46,12 +42,45 @@ elseif(experiment.bpp == 16)
 else
   imgData = uint16(experiment.avgImg);
 end
-if(params.showFigure)
-  visible = 'on';
-else
-  visible = 'off';
+
+% Consistency checks
+if(params.saveOptions.onlySaveFigure)
+  params.saveOptions.saveFigure = true;
 end
-hFig = figure('Name', 'Average fluorescence image autocorrected', 'NumberTitle', 'off', 'Visible', visible);
+if(ischar(params.styleOptions.figureSize))
+  params.styleOptions.figureSize = eval(params.styleOptions.figureSize);
+elseif(numel(params.styleOptions.figureSize) == 1)
+  params.styleOptions.figureSize = [1 1]*params.styleOptions.figureSize;
+end
+
+% Create necessary folders
+if(params.saveOptions.saveFigure)
+  switch params.saveOptions.saveBaseFolder
+    case 'experiment'
+      baseFolder = experiment.folder;
+    case 'project'
+      baseFolder = [experiment.folder '..' filesep];
+  end
+  if(~exist(baseFolder, 'dir'))
+    mkdir(baseFolder);
+  end
+    figFolder = [baseFolder 'figures' filesep];
+  if(~exist(figFolder, 'dir'))
+    mkdir(figFolder);
+  end
+end
+
+baseFigName = experiment.name;
+
+if(params.saveOptions.onlySaveFigure)  
+  visible = 'off';
+else
+  visible = 'on';
+end
+
+hFig = figure('Name', sprintf('Avg F img autocorrected: %s', experiment.name), 'NumberTitle', 'off', 'Visible', visible, 'Tag', 'netcalPlot');
+hFig.Position = setFigurePosition(gcbf, 'width', params.styleOptions.figureSize(1), 'height', params.styleOptions.figureSize(2));
+
 imagesc(imgData);
 hold on;
 ROIimgData = imagesc(ones(size(imgData)));
@@ -73,37 +102,42 @@ if(~strcmp(params.showROI, 'none') && isfield(experiment, 'ROI') && ~isempty(exp
   set(ROIimgData, 'CData', ROIimg);
 end
 
-
 axis equal tight;
 if(params.rescaleImage)
-  [minI, maxI] = autoLevelsFIJI(imgData, experiment.bpp);
+  [minI, maxI] = autoLevelsFIJI(imgData, experiment.bpp, true);
   caxis([minI maxI]);
 end
-
-colormap(params.colormap);
+cmap = eval(params.styleOptions.colormap);
+colormap(cmap);
 if(params.showColorbar)
   colorbar;
 end
-title('Average fluorescence image');
+title(sprintf('Avg F img: %s', experiment.name), 'interpreter','none');
 set(gca,'XTick',[]);
 set(gca,'YTick',[]);
 
 ui = uimenu(hFig, 'Label', 'Export');
-uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, [experiment.folder experiment.name '_averageImage']});
+     uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, [experiment.folder experiment.name '_raster']});
 
-if(params.saveFigure)
-  if(~exist(experiment.folder, 'dir'))
-    mkdir(experiment.folder);
-  end
-  figFolder = [experiment.folder 'figures' filesep];
-  if(~exist(figFolder, 'dir'))
-    mkdir(figFolder);
-  end
-  export_fig([figFolder, experiment.name, '_averageImage', params.saveFigureTag, '.', params.saveFigureType], ...
-             sprintf('-r%d', params.saveFigureResolution), ...
-             sprintf('-q%d', params.saveFigureQuality));
+if(params.saveOptions.saveFigure)
+  %[figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
+  export_fig([figFolder, baseFigName, '_raster', params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], ...
+              sprintf('-r%d', params.saveOptions.saveFigureResolution), ...
+              sprintf('-q%d', params.saveOptions.saveFigureQuality), hFig);
 end
 
-if(~params.showFigure)
+if(params.saveOptions.onlySaveFigure)
   close(hFig);
 end
+
+% Execute additional figure commands
+if(~isempty(params.additionalFigureOptions) && ischar(params.additionalFigureOptions))
+  params.additionalFigureOptions = java.io.File(params.additionalFigureOptions);
+end
+if(~isempty(params.additionalFigureOptions) && params.additionalFigureOptions.isFile)
+  run(char(params.additionalFigureOptions.getAbsoluteFile));
+end
+
+%--------------------------------------------------------------------------
+barCleanup(params);
+%--------------------------------------------------------------------------

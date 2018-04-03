@@ -183,9 +183,12 @@ classdef plotStatistics < handle
       switch obj.params.pipelineProject.groupingOrder
         case 'none'
           % Do nothing
+          plotDataAveragedFull = cell(length(validCombinations), 1);
           obj.groupLabels = project.experiments(checkedExperiments);
+          obj.fullStatisticsDataFull = plotDataAveragedFull;
         case 'label'
           plotDataAveraged = cell(length(validCombinations), 1);
+          plotDataAveragedFull = cell(length(validCombinations), 1);
           maxExpPerLabel = -inf;
           maxDataPoints = -inf;
           for it = 1:length(validCombinations)
@@ -219,6 +222,7 @@ classdef plotStatistics < handle
           expPos = cumsum(expPos);
           expPos = expPos(1:end-1);
           obj.groupLabels = labelsToUseJoined;
+          obj.fullStatisticsDataFull = plotDataAveragedFull;
         case 'label average'
           % Average statistics for each experiment, and group them by label
           plotDataAveraged = cell(length(validCombinations), 1);
@@ -240,6 +244,14 @@ classdef plotStatistics < handle
                           plotDataAveraged{it}{git}(k) = nanmean(plotData{valid(k)}{git});
                         case 'median'
                           plotDataAveraged{it}{git}(k) = nanmedian(plotData{valid(k)}{git});
+                        case 'std'
+                          plotDataAveraged{it}{git}(k) = nanstd(plotData{valid(k)}{git});
+                        case 'var'
+                          plotDataAveraged{it}{git}(k) = nanvar(plotData{valid(k)}{git});
+                        case 'skewness'
+                          plotDataAveraged{it}{git}(k) = skewness(plotData{valid(k)}{git});
+                        case 'cv'
+                          plotDataAveraged{it}{git}(k) = nanstd(plotData{valid(k)}{git})./nanmean(plotData{valid(k)}{git});
                       end
                     catch
                     end
@@ -470,18 +482,22 @@ classdef plotStatistics < handle
           cmap = cmap(end:-1:1, :);
         end
       end
-      obj.fullGroupList = {obj.fullGroupList};
-      grList = cell(length(obj.fullGroupList{1}), 1);
-      pList = cell(length(obj.fullGroupList{1}), 1);
-      intraPlist = cell(length(obj.fullGroupList{1}), 1);
-      intraGrList = cell(length(obj.fullGroupList{1}), 1);
-      nTests = cell(length(obj.fullGroupList{1}), 1);
-      for git = 1:length(obj.fullStatisticsDataFull{1})
-        grList{git} = {};
-        intraGrList{git} = {};
-        nTests{git} = 0;
-      end
+      switch obj.params.pipelineProject.showSignificance
+        case 'none'
+        otherwise
+          obj.fullGroupList = {obj.fullGroupList};
+          grList = cell(length(obj.fullGroupList{1}), 1);
+          pList = cell(length(obj.fullGroupList{1}), 1);
+          intraPlist = cell(length(obj.fullGroupList{1}), 1);
+          intraGrList = cell(length(obj.fullGroupList{1}), 1);
+          nTests = cell(length(obj.fullGroupList{1}), 1);
 
+          for git = 1:length(obj.fullStatisticsDataFull{1})
+            grList{git} = {};
+            intraGrList{git} = {};
+            nTests{git} = 0;
+          end
+      end
       switch obj.params.pipelineProject.factor
         case 'mixed'
           fullData = obj.fullStatisticsDataFull;
@@ -634,6 +650,9 @@ classdef plotStatistics < handle
           case {'partial', 'all'}
             for git = 1:length(nTests)
               Ncomparisons = nTests{git};
+              if(isempty(Ncomparisons))
+                continue;
+              end
               fullList = [pList{git}, cellfun(@(x)x(1), grList{git})', cellfun(@(x)x(2), grList{git})'];
               [fullList, idx] = sortrows(fullList, 1);
               validComparisons = 0;
@@ -715,6 +734,9 @@ classdef plotStatistics < handle
                     end
                     boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
                     newPos = cellfun(@(x)boxesPositions(x), grList{git}, 'UniformOutput', false);
+                    if(numel(newPos) == 2 && numel(pList{git}) == 1)
+                      newPos = newPos{1};
+                    end
                     sigstar(newPos, pList{git});
                   end
               end

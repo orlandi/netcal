@@ -1,9 +1,9 @@
-function projexp = plotSpikesBurstStatistics(projexp, varargin)
-% plotSpikesBurstStatistics # Plot spikes burst statistics
-% Plots statistics associated to spikes (global) bursts: amplitude, duration, IBI
+function projexp = plotSpikesBurstStatisticsTreatment(projexp, varargin)
+% plotSpikesBurstStatisticsTreatment # Plot spikes burst statistics
+% Plots statistics associated to spikes
 %
 % USAGE:
-%    projexp = plotSpikesBurstStatistics(projexp, varargin)
+%    projexp = plotFluorescenceBurstStatisticsTreatment(projexp, varargin)
 %
 % INPUT arguments:
 %    (project/experiment) - project or experiment structure
@@ -15,41 +15,24 @@ function projexp = plotSpikesBurstStatistics(projexp, varargin)
 %    (project/experiment) - project or experiment structure
 %
 % EXAMPLE:
-%    experiment = plotSpikesBurstStatistics(experiment)
-%    project = plotSpikesBurstStatistics(project)
+%    experiment = plotFluorescenceBurstStatisticsTreatment(experiment)
+%    project = plotFluorescenceBurstStatisticsTreatment(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
 % PIPELINE
-% name: plot burst statistics
-% parentGroups: spikes: bursts: plots
-% optionsClass: plotSpikesBurstStatisticsOptions
-% requiredFields: spikeBursts
+% name: plot spikes burst statistics for treatments
+% parentGroups: spikes: bursts: plots, treatments: plots
+% optionsClass: plotSpikesBurstStatisticsTreatmentOptions
+% requiredFields: spikes, spikeBursts
 
-tmpStat = varargin{1}.statistic;
-defClass = plotSpikesBurstStatisticsOptions;
-defTitle = 'Plotting burst statistics';
-if(strcmpi(tmpStat, 'all'))
-  statList = defClass.setExperimentDefaults([]).statistic;
-  statList = statList(1:end-1);
-  for it = 1:length(statList)
-    logMsg(sprintf('Plotting burst statistics for: %s', statList{it}));
-    varargin{1}.statistic = statList{it};
-    obj = plotStatistics;
-    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
-    if(obj.getData(@getData, projexp, obj.params.statistic))
-      obj.createFigure();
-    end
-    obj.cleanup();
-  end
-else
-  obj = plotStatistics;
-  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
-  if(obj.getData(@getData, projexp, obj.params.statistic))
-    obj.createFigure();
-  end
-  obj.cleanup();
+obj = plotStatisticsTreatment;
+obj.init(projexp, plotSpikesBurstStatisticsTreatmentOptions, 'Plotting spike burst statistics for treatments', varargin{:}, 'gui', gcbf);
+if(obj.getData(@getData, projexp, obj.params.statistic))
+  obj.createFigure();
 end
+obj.cleanup();
+
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)
     bursts = getExperimentGroupBursts(experiment, groupName, 'spikes');
@@ -76,5 +59,4 @@ end
       data = [];
     end
   end
-
 end

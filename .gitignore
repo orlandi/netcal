@@ -8,6 +8,7 @@ tmp/*
 *.mat
 *sublime*
 development/*
+external/cvx
 
 # Tmp files #
 #############

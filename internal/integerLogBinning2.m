@@ -1,4 +1,4 @@
-function [hits, histEdges, histCenters] = integerLogBinning(data, varargin)
+function [hits, histEdges, histCenters] = integerLogBinning2(data, varargin)
 
 % Default parameters
 params.normalize = 'full';

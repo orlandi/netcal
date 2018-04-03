@@ -101,8 +101,11 @@ classdef ncbar < handle
       obj = ncbar.getInstance();
       runningTimers = timerfind('TimerFcn', @TimerCircularScroll);
       if(~isempty(runningTimers))
-        stop(runningTimers);
-        delete(runningTimers);
+        try
+          stop(runningTimers);
+          delete(runningTimers);
+        catch
+        end
       end
       obj.close();
       obj = ncbar.getInstance();

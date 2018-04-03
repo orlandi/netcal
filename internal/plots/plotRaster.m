@@ -16,7 +16,7 @@ function experiment = plotRaster(experiment, varargin)
 % EXAMPLE:
 %    experiment = plotRaster(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
 % EXPERIMENT PIPELINE
 % name: plot raster
@@ -34,16 +34,57 @@ params.pbar = [];
 params = parse_pv_pairs(params, var);
 params = barStartup(params, 'Plotting raster');
 %--------------------------------------------------------------------------
-% Fix in case for some reason the group is a cell
-if(iscell(params.group))
-  mainGroup = params.group{1};
-else
-  mainGroup = params.group;
-end
-members = getAllMembers(experiment, mainGroup);
 
-if(params.saveFigure)
-  switch params.saveBaseFolder
+
+% Get ALL subgroups in case of parents
+if(strcmpi(params.group, 'all') || strcmpi(params.group, 'ask'))
+  groupList = getExperimentGroupsNames(experiment);
+else
+  groupList = getExperimentGroupsNames(experiment, params.group);
+end
+% If ask, open the popup
+if(strcmpi(params.group, 'ask'))
+  [selection, ok] = listdlg('PromptString', 'Select groups to use', 'ListString', groupList, 'SelectionMode', 'multiple');
+  if(~ok)
+    success = false;
+    return;
+  end
+  groupList = groupList(selection);
+end
+fullMembers = [];
+for git = 1:length(groupList)
+  % Again, for compatibility reasons
+  if(strcmpi(groupList{git}, 'none'))
+    groupList{git} = 'everything';
+  end
+  members = getExperimentGroupMembers(experiment, groupList{git});
+  fullMembers = [fullMembers; members(:)];
+  
+  if(isempty(members))
+    logMsg(sprintf('Group %s is empty', groupList{git}), 'w');
+    continue;
+  end
+  if(length(groupList) > 1)
+    cmap = eval(sprintf('%s (%d)', params.styleOptions.colormap, length(groupList)));
+    %cmap = lines(length(groupList));
+  else
+    cmap = params.lineColor;
+  end
+end
+
+% Consistency checks
+if(params.saveOptions.onlySaveFigure)
+  params.saveOptions.saveFigure = true;
+end
+if(ischar(params.styleOptions.figureSize))
+  params.styleOptions.figureSize = eval(params.styleOptions.figureSize);
+elseif(numel(params.styleOptions.figureSize) == 1)
+  params.styleOptions.figureSize = [1 1]*params.styleOptions.figureSize;
+end
+
+% Create necessary folders
+if(params.saveOptions.saveFigure)
+  switch params.saveOptions.saveBaseFolder
     case 'experiment'
       baseFolder = experiment.folder;
     case 'project'
@@ -57,15 +98,18 @@ if(params.saveFigure)
     mkdir(figFolder);
   end
 end
-baseFigName = experiment.name;
-  
-if(params.showFigure)
-  visible = 'on';
-else
-  visible = 'off';
-end
-hFig = figure('Name', [experiment.name ' Raster plot'], 'NumberTitle', 'off', 'Visible', visible, 'Tag', 'netcalPlot');
 
+baseFigName = experiment.name;
+
+if(params.saveOptions.onlySaveFigure)  
+  visible = 'off';
+else
+  visible = 'on';
+end
+
+hFig = figure('Name', [experiment.name ' Raster plot'], 'NumberTitle', 'off', 'Visible', visible, 'Tag', 'netcalPlot');
+hFig.Position = setFigurePosition(gcbf, 'width', params.styleOptions.figureSize(1), 'height', params.styleOptions.figureSize(2));
+hold on;
 % Here the plot
 Nspikes = 0;
 LineFormat = [];
@@ -73,17 +117,18 @@ LineFormat.Color = params.lineColor;
 LineFormat.LineWidth = params.lineWidth;
 LineFormat.LineStyle = params.lineStyle;
 
-currentOrder = members;
+currentOrder = fullMembers;
 for it = 1:length(currentOrder)
     Nspikes = Nspikes+sum(~isnan(experiment.spikes{currentOrder(it)}(:)));
 end
 experiment.spikes = cellfun(@(x)x(:)', experiment.spikes, 'UniformOutput', false);
+maxY = length(fullMembers);
 if(Nspikes > 0)
   if(params.plotAverageActivity)
     if(isempty(params.averageActivityBinning))
       params.averageActivityBinning = 1/experiment.fps;
     end
-    subplot(2, 1, 1);
+    subplot(4, 1, 1);
     dt = params.averageActivityBinning;
     binnedSpikes = [experiment.spikes{currentOrder}];
     binnedSpikes = floor(binnedSpikes/dt);
@@ -109,38 +154,76 @@ if(Nspikes > 0)
     end
     title([experiment.name ' Firing rate']);
     %ylim([0 0.3]);
-    subplot(2, 1, 2);
+    subplot(4, 1, 2:4);
+    hold on;
   end
-  [~,~] = plotSpikeRaster(experiment.spikes(currentOrder), 'PlotType', 'vertLine', 'LineFormat', LineFormat);
+  % Now the multiple raster
+  curOffset = 0;
+  for git = 1:length(groupList)
+    % Again, for compatibility reasons
+    if(strcmpi(groupList{git}, 'none'))
+      groupList{git} = 'everything';
+    end
+    % Skip the group with all members
+    if(strfind(groupList{git}, 'all members'))
+      continue;
+    end
+    % Skip the group with all members
+    if(strfind(groupList{git}, 'all members'))
+      continue;
+    end
+    if(strfind(groupList{git}, 'not on largest HCG'))
+      continue;
+    end
+    members = getExperimentGroupMembers(experiment, groupList{git});
+    if(~isempty(members))
+      subSpikes = experiment.spikes(members);
+      LineFormat.Color = cmap(git, :);
+      [~, ~, h] = plotSpikeRaster(subSpikes, 'TrialOffset', curOffset, 'PlotType', 'vertLine', 'LineFormat', LineFormat);
+      h.DisplayName = groupList{git};
+      curOffset = curOffset + length(members);
+    end
+  end
+  maxY = curOffset;
+  if(length(groupList) > 1)
+    legend;
+  end
+  %[~,~] = plotSpikeRaster(experiment.spikes(currentOrder), 'PlotType', 'vertLine', 'LineFormat', LineFormat);
 end
 hFig.Visible = visible;
 
 xlabel('time (s)');
-ylabel('ordered ROI subset');
-ylim([0.5 length(currentOrder)+0.5]);
+ylabel('ordered ROI index');
+ylim([0.5, (maxY + 0.5)]);
 xlim([min(experiment.t) max(experiment.t)]);
 box on;
-hold on;
 title([experiment.name ' Raster plot']);
 set(gcf,'Color','w');
-pos = get(hFig, 'Position');
-pos(4) = pos(3)/((1+sqrt(5))/2);
-set(hFig, 'Position', pos);
+%pos = get(hFig, 'Position');
+%pos(4) = pos(3)/((1+sqrt(5))/2);
+%set(hFig, 'Position', pos);
 
 ui = uimenu(hFig, 'Label', 'Export');
      uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, [experiment.folder experiment.name '_raster']});
 
-if(params.saveFigure)
+if(params.saveOptions.saveFigure)
   %[figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
-  export_fig([figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType], ...
-              sprintf('-r%d', params.saveFigureResolution), ...
-              sprintf('-q%d', params.saveFigureQuality), hFig);
+  export_fig([figFolder, baseFigName, '_raster', params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], ...
+              sprintf('-r%d', params.saveOptions.saveFigureResolution), ...
+              sprintf('-q%d', params.saveOptions.saveFigureQuality), hFig);
 end
 
-if(~params.showFigure)
+if(params.saveOptions.onlySaveFigure)
   close(hFig);
 end
 
+% Execute additional figure commands
+if(~isempty(params.additionalFigureOptions) && ischar(params.additionalFigureOptions))
+  params.additionalFigureOptions = java.io.File(params.additionalFigureOptions);
+end
+if(~isempty(params.additionalFigureOptions) && params.additionalFigureOptions.isFile)
+  run(char(params.additionalFigureOptions.getAbsoluteFile));
+end
 
 %--------------------------------------------------------------------------
 barCleanup(params);

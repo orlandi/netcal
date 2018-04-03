@@ -1,10 +1,10 @@
-classdef plotAverageImageOptions < baseOptions & plotBaseOptions
+classdef plotAverageImageOptions < plotFigureOptions & baseOptions
 % PLOTAVERAGEIMAGEOPTIONS options for plotting the average image
 %   Class containing the parameters for avalanche analysis
 %
 %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
-%   See also plotAverageImage, plotBaseOptions, baseOptions, optionsWindow
+%   See also plotAverageImage, plotFigureOptions, baseOptions, optionsWindow
 
   properties
     % To plot the ROI image as an overlay:
@@ -16,11 +16,18 @@ classdef plotAverageImageOptions < baseOptions & plotBaseOptions
     
     % Transparency for the ROI image overlay (0 fully transparent, 1 opaque)
     ROItransparency = 0.5;
+    
+    % Automatically adjust image contrast
+    rescaleImage = true;
+    
+    % Show colorbar (true/false)
+    showColorbar = true;
   end
   methods
-    function t = plotAverageImageOptions(varargin)
-      t@baseOptions(varargin{:});
-      t@plotBaseOptions(varargin{:});
+    function obj = setExperimentDefaults(obj, experiment)
+      obj.styleOptions.colormap = 'gray';
+      obj.saveOptions.saveFigureType = 'tiff';
     end
   end
 end
+

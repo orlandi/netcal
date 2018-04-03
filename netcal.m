@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.3.1';
+currVersion = '7.3.4';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -71,6 +71,8 @@ end
 warning('on', 'MATLAB:dispatcher:nameConflict');
 warning('on', 'MATLAB:Java:DuplicateClass');
 openFiguresList = [];
+updateTimer = [];
+updateIsRunning = false;
 
 %% Splash screen
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,6 +320,13 @@ function closeCallback(hObject, ~, ~)
 
     switch choice
       case 'Yes'
+        if(~isempty(updateTimer))
+          try
+            stop(updateTimer);
+            delete(updateTimer);
+          catch
+          end
+        end
         menuProjectSave(hObject);
         saveOptions();
         if(~isempty(projectTree))
@@ -340,6 +349,13 @@ function closeCallback(hObject, ~, ~)
         return;
     end
   else
+    if(~isempty(updateTimer))
+      try
+        stop(updateTimer);
+        delete(updateTimer);
+      catch
+      end
+    end
     saveOptions();
     if(~isempty(projectTree))
       if(isprop(projectTree, 'Root') && ~isempty(projectTree.Root))
@@ -2664,7 +2680,13 @@ function releaseNotesChecker()
 end
 
 %--------------------------------------------------------------------------
-function needsUpdating = updateChecker()
+function needsUpdating = updateChecker(varargin)
+  updateIsRunning = true;
+  if(nargin < 1)
+    silent = false;
+  else
+    silent = varargin{1};
+  end
   needsUpdating = false;
   % Check if updater is true on the preferences
   netcalOptionsCurrent = getappdata(netcalMainWindow, 'netcalOptionsCurrent');
@@ -2674,19 +2696,26 @@ function needsUpdating = updateChecker()
   end
 
   if(strcmpi(netcalOptionsCurrent.update, 'never'))
+    if(~silent)
       logMsg('Not checking for updates...', netcalMainWindow, 'w');
+      updateIsRunning = false;
       return;
+    end
   end
-
-  logMsg('Checking for updates...', netcalMainWindow);
+  if(~silent)
+    logMsg('Checking for updates...', netcalMainWindow);
+  end
 
   options = weboptions('ContentType','json', 'Timeout', 15);
   try
-    data = webread([updaterSource 'version'], options);
+    data = webread([updaterSource 'version'], 'host', char(getHostName(java.net.InetAddress.getLocalHost)), options);
   catch ME
+    if(~silent)
       logMsg('Checking failed', netcalMainWindow, 'e');
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
-      return;
+    end
+    updateIsRunning = false;
+    return;
   end
 
   serverVersion = data.version;
@@ -2714,18 +2743,41 @@ function needsUpdating = updateChecker()
     logMsg('-----', netcalMainWindow)
     return;
   elseif(serverVersion(1) < currentVersion(1))
-    logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    if(~silent)
+      logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    end
   elseif(serverVersion(2) > currentVersion(2))
     needsUpdating = true;
   elseif(serverVersion(2) < currentVersion(2))
-    logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    if(~silent)
+      logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    end
   elseif(serverVersion(3) > currentVersion(3))
     needsUpdating = true;
   elseif(serverVersion(3) < currentVersion(3))
-    logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    if(~silent)
+      logMsg('Current version is higher than server version', netcalMainWindow, 'w');
+    end
   else
-    logMsg('Current version is up to date.', netcalMainWindow);
+    if(~silent)
+      logMsg('Current version is up to date.', netcalMainWindow);
+      %%% Start the silent timer here
+       if(isempty(updateTimer))
+         % Every 4 hours
+         updateTimer = timer('TimerFcn', @timerUpdate, ...
+                            'BusyMode', 'drop', 'ExecutionMode','FixedRate',...
+                            'StartDelay', 3600*4, 'Period', 3600*4, 'Tag', 'updateTimer', 'ErrorFcn', @timerUpdateError);
+         start(updateTimer);
+       end
+    end
   end
+%    if(isempty(updateTimer))
+%      updateTimer = timer('TimerFcn', @timerUpdate, ...
+%                         'BusyMode', 'drop', 'ExecutionMode','FixedRate',...
+%                         'StartDelay', 10, 'Period', 10, 'Tag', 'updateTimer', 'ErrorFcn', @timerUpdateError);
+%      start(updateTimer);
+%    end
+
   if(needsUpdating && strcmpi(netcalOptionsCurrent.update, 'ask'))
     choice = questdlg('New version found. Do you want to update?', ...
                       'Update NETCAL', ...
@@ -2733,7 +2785,16 @@ function needsUpdating = updateChecker()
     switch choice
       case 'Yes'
       otherwise
-        logMsg('Skipping update');
+        logMsg('Skipping update', netcalMainWindow);
+        %%% Disable the timer here
+         if(~isempty(updateTimer))
+           try
+            stop(updateTimer);
+            delete(updateTimer);
+           catch
+           end
+         end
+        updateIsRunning = false;
         return;
     end
   end
@@ -2758,7 +2819,27 @@ function needsUpdating = updateChecker()
       ncbar.close();
     end
   end
+  updateIsRunning = false;
 end
+
+
+%--------------------------------------------------------------------------
+function timerUpdate(~, ~)
+  %needsUpdating = updateChecker(true);
+  % Only check if an update is not already running, e.g., the dialog box is open
+  if(~updateIsRunning)
+    needsUpdating = updateChecker(true);
+    if(needsUpdating)
+      return;
+    end
+  end
+end
+
+%--------------------------------------------------------------------------
+function timerUpdateError(~, ~)
+  stop(updateTimer);
+end
+
 
 %--------------------------------------------------------------------------
 function success = updateFileByFile(varargin)

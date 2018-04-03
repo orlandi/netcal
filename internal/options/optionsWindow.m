@@ -1199,7 +1199,7 @@ end
       end
     elseif(strcmp(dataType,'colormap'))
       cbIsEditable = false;
-      htmlStrings = getHtmlColormapNames({'parula', 'morgenstemning', 'jet', 'isolum', 'lines'}, 100, 15);
+      htmlStrings = getHtmlColormapNames({'parula', 'parula_update17a' 'morgenstemning', 'jet', 'isolum', 'lines'}, 100, 15);
 
       colormapList = htmlStrings;
       editor = com.jidesoft.grid.LegacyListComboBoxCellEditor(colormapList);

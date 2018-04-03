@@ -1,4 +1,4 @@
-function [xPoints, yPoints] = plotSpikeRaster(spikes,varargin)
+function [xPoints, yPoints, h] = plotSpikeRaster(spikes,varargin)
 % PLOTSPIKERASTER Create raster plot from binary spike data or spike times
 %   Efficiently creates raster plots with formatting support. Faster than
 %   common implementations. Multiple plot types and parameters available!
@@ -15,6 +15,7 @@ function [xPoints, yPoints] = plotSpikeRaster(spikes,varargin)
 %   Output:
 %       xPoints - vector of x points used for the plot.
 %       yPoints - vector of y points used for the plot.
+%       h - returns the plot / image handle.
 %
 %   Parameters:
 %       PlotType - default 'horzline'. Several types of plots available:
@@ -62,7 +63,10 @@ function [xPoints, yPoints] = plotSpikeRaster(spikes,varargin)
 %
 %       TimePerBin - default 0.001 (1 millisecond).
 %           Sets the duration of each timebin for binary spike train data.
-% 
+%
+%       TrialOffset - default 0.
+%           Offset to add to the trial number (in the y axis)
+%
 %       SpikeDuration - default 0.001 (1 millisecond).
 %           Sets the horizontal spike length for cell spike time data.
 %
@@ -114,12 +118,14 @@ function [xPoints, yPoints] = plotSpikeRaster(spikes,varargin)
 %% $Revision : 1.2 $
 %% DEVELOPED : 8.1.0.604 (R2013a)
 %% FILENAME  : plotSpikeRaster.m
+%% Modified by Javier G. Orlandi 2018 for NETCAL (added trialOffset)
 
 %% Set Defaults and Load optional arguments
 LineFormat.Color = [0.2 0.2 0.2];
 MarkerFormat.MarkerSize = 1;
 MarkerFormat.Color = [0.2 0.2 0.2];
 MarkerFormat.LineStyle = 'none';
+h = [];
 
 p = inputParser;
 p.addRequired('spikes',@(x) islogical(x) || iscell(x));
@@ -130,6 +136,7 @@ p.addParamValue('MarkerFormat',MarkerFormat,@isstruct);
 p.addParamValue('AutoLabel',0, @islogical);
 p.addParamValue('XLimForCell',[NaN NaN],@(x) isnumeric(x) && isvector(x));
 p.addParamValue('TimePerBin',0.001,@(x) isnumeric(x) && isscalar(x));
+p.addParamValue('TrialOffset',0,@(x) isnumeric(x) && isscalar(x));
 p.addParamValue('SpikeDuration',0.001,@(x) isnumeric(x) && isscalar(x));
 p.addParamValue('RelSpikeStartTime',0,@(x) isnumeric(x) && isscalar(x));
 p.addParamValue('RasterWindowOffset',NaN,@(x) isnumeric(x) && isscalar(x));
@@ -145,6 +152,7 @@ markerFormat = struct2opt(p.Results.MarkerFormat);
 autoLabel = p.Results.AutoLabel;
 xLimForCell = p.Results.XLimForCell;
 timePerBin = p.Results.TimePerBin;
+trialOffset = p.Results.TrialOffset;
 spikeDuration = p.Results.SpikeDuration;
 relSpikeStartTime = p.Results.RelSpikeStartTime;
 rasterWindowOffset = p.Results.RasterWindowOffset;
@@ -174,7 +182,7 @@ if islogical(spikes)
     
     % Note: xlim and ylim are much, much faster than axis or set(gca,...).
     xlim([0+relSpikeStartTime nTimes+1+relSpikeStartTime]);
-    ylim([0 nTrials+1]);        
+    ylim([0 nTrials+1]+trialOffset);        
     
     switch plotType
         case 'horzline'
@@ -193,7 +201,7 @@ if islogical(spikes)
                     
             xPoints = xPoints(:);
             yPoints = yPoints(:);
-            plot(xPoints,yPoints,'k',lineFormat{:});
+            h = plot(xPoints,yPoints+trialOffset,'k',lineFormat{:});
         case 'vertline'
             %% Vertical Lines
             % Find the trial (yPoints) and timebin (xPoints) of each spike
@@ -211,7 +219,7 @@ if islogical(spikes)
 
             xPoints = xPoints(:);
             yPoints = yPoints(:);
-            plot(xPoints,yPoints,'k',lineFormat{:});
+            h = plot(xPoints,yPoints+trialOffset,'k',lineFormat{:});
         case 'horzline2'
             %% Horizontal lines, for many timebins
             % Plots a horizontal line the width of a time bin for each
@@ -265,7 +273,7 @@ if islogical(spikes)
                 end
             end
             
-            plot(xPoints, yPoints,'k', lineFormat{:});
+            h = plot(xPoints, yPoints+trialOffset,'k', lineFormat{:});
             
         case 'vertline2'
             %% Vertical lines, for many trials
@@ -302,7 +310,7 @@ if islogical(spikes)
                 end
             end
             
-            plot(xPoints, yPoints, 'k', lineFormat{:});
+            h = plot(xPoints, yPoints+trialOffset, 'k', lineFormat{:});
             
         case 'scatter'
             %% Dots or other markers (scatterplot style)
@@ -310,11 +318,11 @@ if islogical(spikes)
             % spike
             [yPoints,xPoints] = find(spikes==1);
             xPoints = xPoints + relSpikeStartTime;
-            plot(xPoints,yPoints,'.k',markerFormat{:});
+            h = plot(xPoints,yPoints+trialOffset,'.k',markerFormat{:});
             
         case 'imagesc'
             %% Imagesc
-            imagesc(spikes);
+            h = imagesc(spikes);
             % Flip the colormap since the default is white for 1, black for
             % 0.
             colormap(flipud(colormap('gray')));
@@ -384,7 +392,7 @@ else % Equivalent to elseif iscell(spikes).
         % axis is expanded 0.1%, so you can see initial and final spikes.
     end
     xlim(xLimForCell);
-    ylim([0 nTrials+1]);
+    ylim([0 nTrials+1]+trialOffset);
     
     if strcmpi(plotType,'vertline') || strcmpi(plotType,'horzline')
         %% Vertical or horizontal line logic
@@ -442,7 +450,7 @@ else % Equivalent to elseif iscell(spikes).
         end
         
         % Plot everything at once! We will reverse y-axis direction later.
-        plot(xPoints, yPoints, 'k', lineFormat{:});
+        h = plot(xPoints, yPoints+trialOffset, 'k', lineFormat{:});
         
     elseif strcmpi(plotType,'scatter')
         %% Dots or other markers (scatterplot style)
@@ -460,7 +468,7 @@ else % Equivalent to elseif iscell(spikes).
         yPoints = [ trials{:} ];
         
         % Now we can plot! We will reverse y-axis direction later.
-        plot(xPoints,yPoints,'.k',markerFormat{:});
+        h = plot(xPoints,yPoints+trialOffset,'.k',markerFormat{:});
         
     elseif strcmpi(plotType,'imagesc') || strcmpi(plotType,'vertline2') || strcmpi(plotType,'horzline2')
         error('Can''t use imagesc/horzline2/vertline2 with cell array. Use with logical array of binary spike train data.');

@@ -65,8 +65,8 @@ if autoArrange==0
 end
 
 if autoArrange == 1
-    grid = [2 2 2 2 2 2 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4;
-            2 2 2 2 3 3 3 3 3 4 4 4 5 5 5 5 5 5 5 5 6 6 6 7 7 7 7 7]';
+    grid = [2 2 2 2 2 2 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 5 5 5 5 5 5 5;
+            2 2 2 2 3 3 3 3 3 4 4 4 5 5 5 5 5 5 5 5 6 6 6 7 7 7 7 7 7 7 7 7 7 7 7]';
    
     if n_fig > length(grid)
         warning('too many figures(maximum = %d)',length(grid))
