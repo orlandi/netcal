@@ -37,7 +37,7 @@ classdef preprocessExperimentOptions < baseOptions
     fast@logical = false;
 
     % Only analyzes the frames between initial and final (in seconds), e.g., [0 600] for the first 600 seconds. Set as [] or [0 inf] to process everything (2D vector of positive doubles)
-    subset = [0 600];
+    subset = [0 inf];
 
     % Options for background image correction. If active, it will substract (or add) the selected background image to every frame, ALWAYS. This will affect every call to the original movie. e.g., viewing videos, extracting traces, ...
     % active:

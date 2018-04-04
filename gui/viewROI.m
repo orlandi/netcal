@@ -82,6 +82,7 @@ hs.menuMoveROI = uimenu(hs.menuModify, 'Label', 'Move all ROIs', 'Callback', @me
 hs.menuResizeROI = uimenu(hs.menuModify, 'Label', 'Resize all ROIs', 'Callback', @menuResizeROI);
 hs.menuResizeROI = uimenu(hs.menuModify, 'Label', 'Fix ROI overlaps', 'Callback', @fixROIoverlapsButton);
 hs.menuResizeROI = uimenu(hs.menuModify, 'Label', 'Fix ROI shapes', 'Callback', @fixROIshapeButton);
+hs.menuModifyReassign = uimenu(hs.menuModify, 'Label', 'Reassign All IDs', 'Enable', 'on', 'Callback', @menuModifyReassign);
 
 hs.menuDelete  = uimenu(hs.mainWindow, 'Label', 'Delete ROI');
 hs.menuDeleteClear = uimenu(hs.menuDelete, 'Label', 'All', 'Callback', @menuClear);
@@ -91,7 +92,6 @@ hs.menuDeleteArea = uimenu(hs.menuDelete, 'Label', 'Area', 'Callback', @menuDele
 hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences');
 hs.menuPreferencesList = uimenu(hs.menuPreferences, 'Label', 'Preferences', 'Callback', @preferences);
 hs.menuPreferencesRealSize = uimenu(hs.menuPreferences, 'Label', 'Real Size', 'Enable', 'on', 'Callback', @menuPreferencesRealSize);
-hs.menuPreferencesReassign = uimenu(hs.menuPreferences, 'Label', 'Reassign IDs', 'Enable', 'on', 'Callback', @menuPreferencesReassign);
 
 hs.menuHotkeys = uimenu(hs.mainWindow, 'Label', 'Hotkeys');
 hs.menuHotkeysPan = uimenu(hs.menuHotkeys, 'Label', 'Pan', 'Accelerator', 'P', 'Callback', @hotkeyPan);
@@ -454,11 +454,19 @@ function removeBackground(~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuPreferencesReassign(~, ~, ~)
-  for i = 1:length(ROI)
-    ROI{i}.ID = i;
+function menuModifyReassign(~, ~, ~)
+  choice = questdlg('This will reassign all ROI IDs (so that they are consecutive numbers). Are you sure?', ...
+                            'Changing ROI IDs', ...
+                            'Yes', 'No', 'Cancel', 'Cancel');
+  switch choice
+    case 'Yes'
+      for i = 1:length(ROI)
+        ROI{i}.ID = i;
+      end
+      logMsg('ROI IDs reassigned');
+    otherwise
+      return;
   end
-  logMsg('ROI IDs reassigned');
 end
 
 %--------------------------------------------------------------------------

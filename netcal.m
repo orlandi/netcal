@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.3.4';
+currVersion = '7.4.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -83,7 +83,7 @@ splash = splashScreen();
 hs.mainWindow = figure('Visible','off',...
                        'Resize','on',...
                        'Toolbar', 'none',...
-                       'Tag','mainWindow', ...
+                       'Tag','netcalMainWindow', ...
                        'DockControls','off',...
                        'NumberTitle', 'off',...
                        'ResizeFcn', @resizeCallback, ...
@@ -640,11 +640,13 @@ end
 
 %--------------------------------------------------------------------------
 function menuExperimentAdd(~, ~, varargin)
+  project = getappdata(netcalMainWindow, 'project');
   if(nargin < 3)
-    newExperiment = loadExperiment();
+    [newExperiment, project] = loadExperiment('project', project);
   else
-    newExperiment = loadExperiment(varargin{:});
+    [newExperiment, project] = loadExperiment(varargin{:}, 'project', project);
   end
+  setappdata(netcalMainWindow, 'project', project);
   if(isempty(newExperiment))
     return;
   end
@@ -660,7 +662,6 @@ function menuExperimentAdd(~, ~, varargin)
   end
 
   if(~isempty(newExperiment))
-    project = getappdata(netcalMainWindow, 'project');
     % First pass to check if the experiment name has already been used
     for it = 1:size(project.experiments,2)
       if(strcmpi(project.experiments{it}, newExperiment.name))
@@ -694,12 +695,15 @@ function menuExperimentAdd(~, ~, varargin)
   end
 end
 
+%--------------------------------------------------------------------------
 function menuExperimentAddSilent(varargin)
-  newExperiment = loadExperiment(varargin{:}, 'verbose', false, 'pbar', 0);
+  project = getappdata(netcalMainWindow, 'project');
+  [newExperiment, project] = loadExperiment(varargin{:}, 'verbose', false, 'pbar', 0, 'project', project);
+  setappdata(netcalMainWindow, 'project', project);
+  
   if(isempty(newExperiment))
     return;
   end
-  project = getappdata(netcalMainWindow, 'project');
   if(any(strcmp(project.experiments, newExperiment.name)))
     logMsg('An experiment with this name already exists. Add through the menus instead', netcalMainWindow, 'e');
     return;
@@ -777,7 +781,7 @@ function menuExperimentAddBatch(~, ~, ~)
   for i = 1:length(filesToImport)
     experimentFile = names{filesToImport(i)};
     try
-      newExperiment = loadExperiment(experimentFile, 'verbose', false, 'filterIndex', filterIndex, 'pbar', 2, 'project', project);
+      [newExperiment, project] = loadExperiment(experimentFile, 'verbose', false, 'filterIndex', filterIndex, 'pbar', 2, 'project', project);
     catch ME 
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
       logMsg(sprintf('Something went wrong importing experiment %s', experimentFile), 'e');
@@ -1141,7 +1145,7 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
             ncbar.increaseCurrentBar();
 
             ncbar.setCurrentBarName('Loading experiment...');
-            experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', p);
+            [experiment, project] = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', p);
 
             if(isempty(experiment))
                 logMsg(['Something went wrong loading experiment ' experimentName], 'e');
@@ -1636,7 +1640,7 @@ function success = importExperiment(fileName, varargin)
     end
     project = getappdata(netcalMainWindow, 'project');
     success = 0;
-    newExperiment = loadExperiment(fileName, 'verbose', false, 'project', project);
+    [newExperiment, project] = loadExperiment(fileName, 'verbose', false, 'project', project);
     newExperimentOriginalName = newExperiment.name;
     newExperiment.name = [newExperiment.name appendText];
     if(~isempty(newExperiment))
@@ -1795,7 +1799,7 @@ function menuAggregatedPopulationStatistics(~, ~, groupType)
   % Load the data
   ncbar('Processing experiments');
   for it = 1:length(checkedExperiments)
-    experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
+    [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
     for it2 = 1:length(selectedPopulations)
       try
         members = getExperimentGroupMembers(experiment, selectedPopulations{it2});
@@ -1925,7 +1929,6 @@ function menuAggregatedCompareExperiments(~, ~)
   
   ncbar('Processing experiments');
   for it = 1:2:length(checkedExperiments)
-    %experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
     experiment = load([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames', 'ROI', 'name');
     experimentAfter = load([project.folderFiles project.experiments{checkedExperiments(it+1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames', 'ROI', 'name');
     [idx, ID, success] = findValidROI(experiment, experimentAfter);
@@ -1985,7 +1988,7 @@ function menuAggregatedPCA(~, ~, ~)
   experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
   if(~isfield(experiment, 'traceGroups'))
     % First check loading the full experiment (in case the groups are old)
-    experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], 'verbose', false, 'project', project);
+    [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], 'verbose', false, 'project', project);
     if(~isfield(experiment, 'traceGroups'))
       logMsg('No trace groups found', 'e');
       return;
@@ -2013,7 +2016,7 @@ function menuAggregatedPCA(~, ~, ~)
     end
     if(~isfield(experiment, 'traceGroups') || isempty(experiment.traceGroups))
       % First check loading the full experiment (in case the groups are old)
-      experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'verbose', false, 'project', project);
+      [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'verbose', false, 'project', project);
       if(~isfield(experiment, 'traceGroups') || isempty(experiment.traceGroups))
         errMsg = sprintf('traceGroups missing on experiment %s', project.experiments{checkedExperiments(it)});
         logMsg(errMsg, 'e');
@@ -2083,7 +2086,7 @@ function menuAggregatedStimulationPCA(~, ~, ~)
   experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
   if(~isfield(experiment, 'traceGroups'))
     % First check loading the full experiment (in case the groups are old)
-    experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], 'verbose', false, 'project', project);
+    [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], 'verbose', false, 'project', project);
     if(~isfield(experiment, 'traceGroups'))
       logMsg('No trace groups found', 'e');
       return;
@@ -2111,7 +2114,7 @@ function menuAggregatedStimulationPCA(~, ~, ~)
     end
     if(~isfield(experiment, 'traceGroups') || isempty(experiment.traceGroups))
       % First check loading the full experiment (in case the groups are old)
-      experiment = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'verbose', false, 'project', project);
+      [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'verbose', false, 'project', project);
       if(~isfield(experiment, 'traceGroups') || isempty(experiment.traceGroups))
         errMsg = sprintf('traceGroups missing on experiment %s', project.experiments{checkedExperiments(it)});
         logMsg(errMsg, 'e');

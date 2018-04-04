@@ -1,4 +1,4 @@
-function experiment = loadExperiment(varargin)
+function [experiment, project] = loadExperiment(varargin)
 % LOADEXPERIMENT loads a movie file associated to a given experiment. Currently supports HIS, DCIMG, AVI, TIF, EXP, MAT filetypes
 %
 % USAGE:
@@ -28,7 +28,17 @@ params.pbar = [];
 params.filterIndex = [];
 params.defaultFolder = [];
 experiment = [];
-
+project = [];
+% Try to get the app handle to manage log msgs (since drag and drop does not define gcbf)
+if(~isempty(gcbf)) % First try from the callback list (will work for menus)
+  appHandle = gcbf;
+  else % If not, try to get the main figure looking for the tag and take the 1st one. If there's more than one window open, you are screwed
+  appHandle = findobj('Type','Figure', 'Tag','netcalMainWindow');
+  if(length(appHandle) > 1)
+    appHandle = [];
+  end
+end
+      
 formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF;*.MJ2', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN, *.BTF, *.MJ2)';...
                '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
                '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
@@ -72,6 +82,10 @@ else
         return;
     end
 end
+if(isempty(project))
+  project = params.project;
+end
+
 if(~params.verbose)
   params.pbar = 0;
 end
@@ -85,7 +99,7 @@ switch lower(fpc)
     % update the experiment name in case it does not coincide with the .exp
     % file
     if(~strcmp(fpb, experiment.name))
-      logMsg(sprintf('Experiment name changed from %s to %s', experiment.name, fpb));
+      logMsg(sprintf('Experiment name changed from %s to %s', experiment.name, fpb), appHandle);
     end
     experiment.name = fpb;
     oldFolder = experiment.folder;
@@ -106,7 +120,7 @@ switch lower(fpc)
       end
       end
     catch ME
-      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), appHandle, 'e');
     end
     if(~isempty(params.project))
       experiment.folder = [params.project.folder experiment.name filesep];
@@ -153,17 +167,21 @@ switch lower(fpc)
 
       experiment.metadata = '';
       experiment.numFrames = numFiles;
-
-      answer = inputdlg('Enter the video framerate',...
-                    'Framerate', [1 60], {'20'});
-      if(isempty(answer))
-          logMsg('Invalid frame rate', 'e');
+      % Check/set the FPS
+      if(~isempty(project) && isfield(project, 'defaultFPSoptionsCurrent') && project.defaultFPSoptionsCurrent.useAsDefault)
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
+        logMsg(sprintf('Setting framerate to: %d', frameRate), appHandle);
+      else
+        [success, curOptions, ~] = preloadOptions([], defaultFPSoptions, gcbf, true, false);
+        if(~success)
+          logMsg('Operation cancelled', appHandle, 'w');
           barCleanup(params);
           return;
+        end
+        project.defaultFPSoptionsCurrent = curOptions;
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
       end
-      frameRate = str2double(strtrim(answer{1}));
       experiment.fps = frameRate;
-
       experiment.totalTime = experiment.numFrames/experiment.fps;
       fileInfo = imfinfo(experiment.handle);
 
@@ -210,15 +228,21 @@ switch lower(fpc)
       if(~isempty(metadata) && isfield(metadata, 'vExpTim1'))
         experiment.fps = 1/str2double(metadata.vExpTim1);
       else
-        answer = inputdlg('Enter the video framerate',...
-                      'Framerate', [1 60], {'20'});
-        if(isempty(answer))
-            logMsg('Invalid frame rate', 'e');
-            barCleanup(params);
-            return;
+      % Check/set the FPS
+      if(~isempty(project) && isfield(project, 'defaultFPSoptionsCurrent') && project.defaultFPSoptionsCurrent.useAsDefault)
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
+        logMsg(sprintf('Setting framerate to: %d', frameRate), appHandle);
+      else
+        [success, curOptions, ~] = preloadOptions([], defaultFPSoptions, gcbf, true, false);
+        if(~success)
+          logMsg('Operation cancelled', appHandle, 'w');
+          barCleanup(params);
+          return;
         end
-        frameRate = str2double(strtrim(answer{1}));
-        experiment.fps = frameRate;
+        project.defaultFPSoptionsCurrent = curOptions;
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
+      end
+      experiment.fps = frameRate;
       end
 
       experiment.totalTime = experiment.numFrames/experiment.fps;
@@ -425,17 +449,22 @@ switch lower(fpc)
     if(~isempty(metadata) && isfield(metadata, 'vExpTim1'))
       experiment.fps = 1/str2double(metadata.vExpTim1);
     else
-      answer = inputdlg('Enter the video framerate',...
-                    'Framerate', [1 60], {'20'});
-      if(isempty(answer))
-          logMsg('Invalid frame rate', 'e');
+      % Check/set the FPS
+      if(~isempty(project) && isfield(project, 'defaultFPSoptionsCurrent') && project.defaultFPSoptionsCurrent.useAsDefault)
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
+        logMsg(sprintf('Setting framerate to: %d', frameRate), appHandle);
+      else
+        [success, curOptions, ~] = preloadOptions([], defaultFPSoptions, gcbf, true, false);
+        if(~success)
+          logMsg('Operation cancelled', appHandle, 'w');
           barCleanup(params);
           return;
+        end
+        project.defaultFPSoptionsCurrent = curOptions;
+        frameRate = project.defaultFPSoptionsCurrent.frameRate;
       end
-      frameRate = str2double(strtrim(answer{1}));
       experiment.fps = frameRate;
     end
-    
     experiment.totalTime = experiment.numFrames/experiment.fps;
     experiment.saveFile = [experiment.name '.exp'];
   case '.his'
@@ -490,14 +519,14 @@ switch lower(fpc)
     experiment.bpp = bitsPerPixel;
     experiment.fps = 1/str2double(metadata.vExpTim1);
     if(experiment.numFrames == 0)
-      logMsg('Found 0 frames. HIS file might be corrupt. Trying to recover it', 'r');
+      logMsg('Found 0 frames. HIS file might be corrupt. Trying to recover it', appHandle, 'r');
       experiment.numFrames = 1000000; % 1 million -anybody is going to record more than 1 million frames? Probably not
       [experiment, success] = precacheHISframes(experiment, 'mode', 'fast', 'force', true);
       if(~success)
         experiment.numFrames = 0;
-        logMsg('Could not recover the file', 'r');
+        logMsg('Could not recover the file', appHandle, 'r');
       else
-        logMsg(sprintf('Succesfully recovered HIS file. %d frames found', experiment.numFrames));
+        logMsg(sprintf('Succesfully recovered HIS file. %d frames found', experiment.numFrames), appHandle);
       end
     end
     experiment.totalTime = experiment.numFrames/experiment.fps;
@@ -511,7 +540,7 @@ switch lower(fpc)
       elseif(isfield(testMat, 'data') && isfield(testMat.data, 'expsys'))
         filterIndex = 9;
       else
-        logMsg('Could not determine type of MAT file');
+        logMsg('Could not determine type of MAT file', appHandle);
         barCleanup(params);
         return;
       end
@@ -620,7 +649,7 @@ switch lower(fpc)
       experiment.saveFile = [experiment.name '.exp'];
   end  
   otherwise
-    logMsg('Invalid extension', 'e');
+    logMsg('Invalid extension', appHandle, 'e');
     barCleanup(params);
     return;
 end

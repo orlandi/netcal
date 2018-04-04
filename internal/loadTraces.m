@@ -1,4 +1,4 @@
-function [experiment, success] = loadTraces(experiment, type)
+function [experiment, success] = loadTraces(experiment, type, varargin)
 % LOADTRACES loads experiment traces from a previously saved experiment
 %
 % USAGE:
@@ -20,6 +20,16 @@ function [experiment, success] = loadTraces(experiment, type)
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 % See also loadExperiment
+
+%--------------------------------------------------------------------------
+% Define additional optional argument pairs
+params.pbar = 0; % 0 by default, so it is only created if we want to
+params.verbose = false;
+
+% Parse them
+params = parse_pv_pairs(params, varargin);
+params = barStartup(params, 'Loading traces', true);
+%--------------------------------------------------------------------------
 
 success = false;
 
@@ -52,8 +62,10 @@ for i = 1:length(bigFields)
   if(isfield(experiment, bigFields{i}) && ischar(experiment.(bigFields{i})))
     dataFolder = [experiment.folder 'data' filesep];
     rawFile = [dataFolder experiment.name '_' bigFields{i} '.dat'];
-
     try
+      if(params.pbar > 0)
+        ncbar.setCurrentBarName(sprintf('Loading %s data', bigFields{i}));
+      end
       load(rawFile, '-mat');
       success = true;
     catch
@@ -82,6 +94,9 @@ for i = 1:length(bigFields)
         if(fullFile(1) == 0 || ~exist(fullFile, 'file'))
           logMsg(['Invalid ' bigFields{i} ' file'], 'e');
           success = false;
+          %--------------------------------------------------------------------------
+          barCleanup(params);
+          %--------------------------------------------------------------------------
           return;
         else
           try
@@ -103,3 +118,7 @@ for i = 1:length(bigFields)
     success = true;
   end
 end
+
+%--------------------------------------------------------------------------
+barCleanup(params);
+%--------------------------------------------------------------------------

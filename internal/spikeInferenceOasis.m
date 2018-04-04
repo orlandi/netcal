@@ -63,8 +63,10 @@ end
 
 members = getAllMembers(experiment, mainGroup);
 
-ncbar.setCurrentBarName('Loading traces');
-ncbar.setAutomaticBar();
+if(params.pbar > 0)
+  ncbar.setCurrentBarName('Loading traces');
+  ncbar.setAutomaticBar();
+end
 switch params.tracesType
   case 'smoothed'
     experiment = loadTraces(experiment, 'normal');
@@ -76,8 +78,10 @@ switch params.tracesType
     experiment = loadTraces(experiment, 'rawTracesDenoised');
     traces = experiment.rawTracesDenoised;
 end
-ncbar.setCurrentBarName('Running oasis');
-ncbar.unsetAutomaticBar();
+if(params.pbar > 0)
+  ncbar.setCurrentBarName('Running oasis');
+  ncbar.unsetAutomaticBar();
+end
 
 if(isempty(params.subset))
   subset = members;
@@ -187,7 +191,9 @@ for it = 1:length(subset)
 end
 if(params.parallel)
   numCompleted = 0;
-  ncbar.unsetAutomaticBar();
+  if(params.pbar > 0)
+    ncbar.unsetAutomaticBar();
+  end
   while numCompleted < length(subset)
     if(params.pbar > 0)
       ncbar.setBarName(sprintf('Running parallel MLspike (%d/%d)', numCompleted, length(subset)));

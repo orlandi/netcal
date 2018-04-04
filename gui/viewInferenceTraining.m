@@ -33,11 +33,16 @@ textFontSize = 10;
 minGridBorder = 1;
 trainingMode = 'peeling';
 selectedROI = 1;
-if(~isfield(experiment, 'inferenceTrainingData'))
-  experiment.inferenceTrainingData = [];
+try
+  if(~isfield(experiment, 'inferenceTrainingData'))
+    experiment.inferenceTrainingData = [];
+  elseif(isfield(experiment.inferenceTrainingData, 'mode'))
+    trainingMode = experiment.inferenceTrainingData.mode;
+  end
+catch
 end
 ROIid = getROIid(experiment.ROI);
-experiment = loadTraces(experiment, 'all');
+experiment = loadTraces(experiment, 'all', 'pbar', []);
 if(isfield(experiment, 'traces'))
   traces = experiment.traces;
   t = experiment.t;
@@ -100,6 +105,7 @@ uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
+uix.Empty('Parent', hs.mainWindowGrid);
 
 %% COLUMN START
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,18 +117,32 @@ hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFram
 set(hs.mainWindowFramesAxes, 'ButtonDownFcn', @rightClick);
 
 
-% Pages buttons -----------------------------------------------------------
-% Below image panel
-%uix.Empty('Parent', hs.mainWindowGrid);
-hs.mainWindowBottomButtons = uix.HButtonBox( 'Parent', hs.mainWindowGrid);
+% Training buttons -----------------------------------------------------------
+hs.mainWindowBottomButtons = uix.HBox( 'Parent', hs.mainWindowGrid);
 %uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Burst detection (threshold)', 'FontSize', textFontSize, 'callback', @burstDetectionThreshold);
-uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Peeling', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'peeling'});
-uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Foopsi', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'foopsi'});
-uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Schmitt', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'schmitt'});
-uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'oasis', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'oasis'});
-uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'MLspike', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'MLspike'});
+uix.Empty('Parent', hs.mainWindowBottomButtons);
+uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Peeling', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'peeling', []});
+uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Foopsi', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'foopsi', []});
+uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Schmitt', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'schmitt', []});
+uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'oasis', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'oasis', []});
+uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'MLspike', 'FontSize', textFontSize, 'callback', {@inferenceTraining, 'MLspike', []});
+uix.Empty('Parent', hs.mainWindowBottomButtons);
 %uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Options', 'FontSize', textFontSize, 'callback', @inferenceOptions);
-set(hs.mainWindowBottomButtons, 'ButtonSize', [125 15], 'Padding', 0, 'Spacing', 15);
+set(hs.mainWindowBottomButtons, 'Widths', [-1 1 1 1 1 1 -1]*125, 'Padding', 15, 'Spacing', 5);
+
+
+% Pages buttons -----------------------------------------------------------
+hs.mainWindowPagesButtons = uix.HBox( 'Parent', hs.mainWindowGrid);
+%uicontrol('Parent', hs.mainWindowBottomButtons, 'String', 'Burst detection (threshold)', 'FontSize', textFontSize, 'callback', @burstDetectionThreshold);
+uix.Empty('Parent', hs.mainWindowPagesButtons);
+uicontrol('Parent', hs.mainWindowPagesButtons, 'String', '< Previous ROI', 'FontSize', textFontSize, 'callback', {@inferenceTraining, [], 'previousROI'});
+uix.Empty('Parent', hs.mainWindowPagesButtons);
+uicontrol('Parent', hs.mainWindowPagesButtons, 'String', 'Random ROI', 'FontSize', textFontSize, 'callback', {@inferenceTraining, [], 'randomROI'});
+uix.Empty('Parent', hs.mainWindowPagesButtons);
+uicontrol('Parent', hs.mainWindowPagesButtons, 'String', '> Next ROI', 'FontSize', textFontSize, 'callback', {@inferenceTraining, [], 'nextROI'});
+uix.Empty('Parent', hs.mainWindowPagesButtons);
+%set(hs.mainWindowPagesButtons, 'ButtonSize', [125 15], 'Padding', 0, 'Spacing', 15);
+set(hs.mainWindowPagesButtons, 'Widths', [-1 1 1 1 1 1 -1]*125, 'Padding', 15, 'Spacing', 5);
 
 % Now the log panel
 hs.logPanelParent = uix.Panel('Parent', hs.mainWindowGrid, ...
@@ -141,11 +161,12 @@ uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
+uix.Empty('Parent', hs.mainWindowGrid);
 
 %% Final init
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 set(hs.mainWindowGrid, 'Widths', [minGridBorder -1 minGridBorder], ...
-  'Heights', [minGridBorder -1 125 100 minGridBorder]);
+  'Heights', [minGridBorder -1 55 55 100 minGridBorder]);
 cleanMenu();
 updateMenus();
 
@@ -246,7 +267,18 @@ function closeCallback(~, ~, varargin)
 end
 
 %--------------------------------------------------------------------------
-function inferenceTraining(hObject, eventData, mode)
+function inferenceTraining(hObject, eventData, mode, changeROI)
+  % First pass for preexisting options
+  if(~isempty(changeROI))
+    switch changeROI
+      case 'previousROI'
+        mode = experiment.inferenceTrainingData.mode;
+      case 'nextROI'
+        mode = experiment.inferenceTrainingData.mode;
+      case 'randomROI'
+        mode = experiment.inferenceTrainingData.mode;
+    end
+  end
   switch mode
     case 'peeling'
       optionsClass = peelingOptions;
@@ -269,13 +301,44 @@ function inferenceTraining(hObject, eventData, mode)
       inferenceHandle = 'spikeInferenceMLspike';
       trainingMode = 'MLspike';
   end
-  
-  [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, gcbf, true, false);
+  if(~isempty(changeROI))
+    [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, gcbf, false, true);
+  else
+    [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, gcbf, true, false);
+  end
   if(~success)
     return;
   end
   if(~isempty(optionsClassCurrent.trainingROI))
     selectedROI = find(ROIid == optionsClassCurrent.trainingROI);
+    % Check that the selectedROI belongs to the selected group
+    members = getExperimentGroupMembers(experiment, optionsClassCurrent.group);
+    if(~any(members == selectedROI))
+      logMsg('Selected ROI does not belong to the target group. Running anyway', 'w');
+    end
+    % Now we try to change the ROI
+    if(~isempty(changeROI))
+      members = getExperimentGroupMembers(experiment, optionsClassCurrent.group);
+      switch changeROI
+        case 'previousROI'
+          curROIpos = find(members == selectedROI);
+          curROIpos = curROIpos - 1;
+          if(curROIpos < 1)
+            curROIpos = 1;
+          end
+          selectedROI = members(curROIpos);
+        case 'nextROI'
+          curROIpos = find(members == selectedROI);
+          curROIpos = curROIpos + 1;
+          if(curROIpos > length(members))
+            curROIpos = length(members);
+          end
+          selectedROI = members(curROIpos);
+        case 'randomROI'
+          selectedROI = members(randperm(length(members), 1));
+      end
+      optionsClassCurrent.trainingROI = experiment.ROI{selectedROI}.ID;
+    end
   else
     members = getExperimentGroupMembers(experiment, optionsClassCurrent.group);
     selectedROI = members(randperm(length(members), 1));
@@ -283,6 +346,8 @@ function inferenceTraining(hObject, eventData, mode)
   end
   
   [experiment, inferenceTrainingData] = feval(inferenceHandle, experiment, optionsClassCurrent, 'subset', selectedROI, 'training', true);
+  logMsg(sprintf('Successfully ran %s on ROI: %d. Found %d spikes', mode, experiment.ROI{selectedROI}.ID, length(inferenceTrainingData.spikes)));
+  inferenceTrainingData.mode = mode;
   experiment.inferenceTrainingData = inferenceTrainingData;
 
   experiment.([class(optionsClass) 'Current']) = optionsClassCurrent;
