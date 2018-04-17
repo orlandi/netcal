@@ -22,7 +22,7 @@ function experiment = spikeDetectConflictsRate(experiment, varargin)
 % name: detect spike conflicts (rate based)
 % parentGroups: spikes
 % optionsClass: spikeDetectConflictsRateOptions
-% requiredFields: spikes, validPatterns, folder, name, fps
+% requiredFields: spikes, folder, name, fps
 % producedFields: conflictingSpikes
 
 [params, var] = processFunctionStartup(spikeDetectConflictsRateOptions, varargin{:});

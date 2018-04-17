@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.4.0';
+currVersion = '7.4.1';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -892,26 +892,62 @@ end
 %--------------------------------------------------------------------------
 function menuExperimentChangeFPS(~, ~)
   project = getappdata(netcalMainWindow, 'project');
-  experiment = loadCurrentExperiment(project, 'pbar', 0);
-  answer = inputdlg('Enter the new framerate (fps)',...
-                      'FPS change', [1 60], {num2str(experiment.fps)});
-  if(isempty(answer))
-      return;
+  switch experimentSelectionMode % Single / multiple / pipeline
+    case 'single'
+      experiment = loadCurrentExperiment(project, 'pbar', 0);
+      answer = inputdlg('Enter the new framerate (fps)',...
+                          'FPS change', [1 60], {num2str(experiment.fps)});
+      if(isempty(answer))
+          return;
+      end
+      answer{1} = str2double(strtrim(answer{1}));
+      logMsg(sprintf('FPS changed from %.2f to %.2f', experiment.fps, answer{1}), 'w');
+      logMsg('You will need to reanalyze anything involving times other than the raw traces', 'w');
+      oldfps = experiment.fps;
+      experiment.fps = answer{1};
+      experiment.totalTime = experiment.numFrames/experiment.fps;
+      if(isfield(experiment, 't'))
+        experiment.t = experiment.t*oldfps/experiment.fps;
+      end
+      if(isfield(experiment, 'rawT'))
+        experiment.rawT = experiment.rawT*oldfps/experiment.fps;
+      end
+
+      saveExperiment(experiment, 'verbose', true);
+    otherwise
+      checkedExperiments = find(project.checkedExperiments);
+      newFPS = [];
+      ncbar('Changing FPS', '');
+      for it = 1:length(checkedExperiments)
+        ncbar.setActiveBar(1);
+        ncbar.update(it/length(checkedExperiments));
+        experimentName = project.experiments{checkedExperiments(it)};
+        experimentFile = [project.folderFiles experimentName '.exp'];
+        experiment = loadExperiment(experimentFile, 'project', project, 'pbar', 2);
+        if(it == 1)
+          answer = inputdlg(sprintf('You are about to change the frame rate of %d experiments. Enter the new framerate (fps)', length(checkedExperiments)),...
+                           'FPS change', [1 60], {num2str(experiment.fps)});
+          if(isempty(answer))
+            ncbar.close();
+            return;
+          end
+          newFPS = str2double(strtrim(answer{1}));        
+        end
+        oldfps = experiment.fps;
+        experiment.fps = newFPS;
+        experiment.totalTime = experiment.numFrames/experiment.fps;
+        if(isfield(experiment, 't'))
+          experiment.t = experiment.t*oldfps/experiment.fps;
+        end
+        if(isfield(experiment, 'rawT'))
+          experiment.rawT = experiment.rawT*oldfps/experiment.fps;
+        end
+        saveExperiment(experiment, 'verbose', true, 'pbar', 2);
+      end
+      ncbar.close();
+      logMsg(sprintf('FPS changed to %.2f', newFPS), 'w');
+      logMsg('You will need to reanalyze anything involving times other than the raw traces', 'w');
   end
-  answer{1} = str2double(strtrim(answer{1}));
-  logMsg(sprintf('FPS changed from %.2f to %.2f', experiment.fps, answer{1}), 'w');
-  logMsg('You will need to reanalyze anything involving times other than the traces', 'w');
-  oldfps = experiment.fps;
-  experiment.fps = answer{1};
-  experiment.totalTime = experiment.numFrames/experiment.fps;
-  if(isfield(experiment, 't'))
-    experiment.t = experiment.t*oldfps/experiment.fps;
-  end
-  if(isfield(experiment, 'rawT'))
-    experiment.rawT = experiment.rawT*oldfps/experiment.fps;
-  end
-  
-  saveExperiment(experiment, 'verbose', true);
   updateMenu();
   updateProjectTree();
   printSavedExperimentInfo();
@@ -920,79 +956,106 @@ end
 %--------------------------------------------------------------------------
 function menuExperimentChangeHandle(~, ~)
   project = getappdata(netcalMainWindow, 'project');
-  experiment = loadCurrentExperiment(project, 'pbar', 0);
-  
-  formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN)';...
-               '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
-               '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
-               '*.AVI', 'AVI files (*.AVI)';...
-               '*.TIF,*.TIFF', 'TIF sequence/multitif (*.TIF,*.TIFF)';...
-               '*.EXP', 'NETCAL experiment (*.EXP)'; ...
-               '*.BIN', 'NETCAL binary experiment (*.BIN)'; ...
-               '*.MAT', 'quick_dev (*.MAT)'; ...
-               '*.MAT', 'CRCNS datasets (*.MAT)'};
-  [fileName, pathName, filterIndex] = uigetfile(formatsList,'Select new movie file', experiment.folder);
-  fileName = [pathName fileName];
-  if(~fileName | ~exist(fileName, 'file')) %#ok<BDSCI,OR2,BDLGI>
-    return;
-  end
-  logMsg(sprintf('Experiment handle changed from %s to %s', experiment.handle, fileName), 'w');
-  experiment.handle = fileName;
-  logMsg('You will need to reanalyze everything', 'w');
-  saveExperiment(experiment, 'verbose', true);
-  updateMenu();
-  updateProjectTree();
-  printSavedExperimentInfo();
-end
+  switch experimentSelectionMode % Single / multiple / pipeline
+    case 'single'
+      experiment = loadCurrentExperiment(project, 'pbar', 0);
 
-%--------------------------------------------------------------------------
-function menuExperimentRestoreBackup(~, ~)
-  project = getappdata(netcalMainWindow, 'project');
-  experimentName = project.experiments{project.currentExperiment};
-  experimentFile = [project.folderFiles experimentName '.exp'];
-  experimentBackupFile = [project.folderFiles experimentName '.bak'];
-  experimentHourlyBackupFile = [project.folderFiles experimentName '.bkh'];
-  
-  choice = questdlg(sprintf('Are you sure you want to restore the backup of experiment %s ? Last changes will be lost', experimentName), ...
-                    'Restore experiment backup', ...
-                    'Restore previous backup', 'Restore hourly backup', 'Cancel', 'Cancel');
-  switch choice
-      case 'Restore previous backup'
-      if(exist(experimentBackupFile, 'file') ~= 2)
-        logMsg('No backup found', 'w');
+      formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN)';...
+                   '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
+                   '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
+                   '*.AVI', 'AVI files (*.AVI)';...
+                   '*.TIF,*.TIFF', 'TIF sequence/multitif (*.TIF,*.TIFF)';...
+                   '*.EXP', 'NETCAL experiment (*.EXP)'; ...
+                   '*.BIN', 'NETCAL binary experiment (*.BIN)'; ...
+                   '*.MAT', 'quick_dev (*.MAT)'; ...
+                   '*.MAT', 'CRCNS datasets (*.MAT)'};
+      [fileName, pathName, filterIndex] = uigetfile(formatsList,'Select new movie file', experiment.folder);
+      fileName = [pathName fileName];
+      if(~fileName | ~exist(fileName, 'file')) %#ok<BDSCI,OR2,BDLGI>
         return;
       end
-      copyfile(experimentBackupFile, experimentFile);
-      logMsg(sprintf('Previous backup restored for experiment %s', experimentName));
-      case 'Restore hourly backup'
-      if(exist(experimentHourlyBackupFile, 'file') ~= 2)
-        logMsg('No backup found', 'w');
-        return;
-      end
-      copyfile(experimentHourlyBackupFile, experimentFile);
-      logMsg(sprintf('Hourly backup restored for experiment %s', experimentName));
-      case 'Cancel'
+      logMsg(sprintf('Experiment handle changed from %s to %s', experiment.handle, fileName), 'w');
+      experiment.handle = fileName;
+      logMsg('You will need to reanalyze everything', 'w');
+      saveExperiment(experiment, 'verbose', true);
+      updateMenu();
+      updateProjectTree();
+      printSavedExperimentInfo();
+    otherwise
+      checkedExperiments = find(project.checkedExperiments);
+      for it = 1:length(checkedExperiments)
+        experimentName = project.experiments{checkedExperiments(it)};
+        experimentFile = [project.folderFiles experimentName '.exp'];
+        experiment = loadExperiment(experimentFile, 'project', project, 'verbose', true);
+        formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN)';...
+                   '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
+                   '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
+                   '*.AVI', 'AVI files (*.AVI)';...
+                   '*.TIF,*.TIFF', 'TIF sequence/multitif (*.TIF,*.TIFF)';...
+                   '*.EXP', 'NETCAL experiment (*.EXP)'; ...
+                   '*.BIN', 'NETCAL binary experiment (*.BIN)'; ...
+                   '*.MAT', 'quick_dev (*.MAT)'; ...
+                   '*.MAT', 'CRCNS datasets (*.MAT)'};
+        [fileName, pathName, filterIndex] = uigetfile(formatsList,'Select new movie file', experiment.folder);
+        fileName = [pathName fileName];
+        if(~fileName | ~exist(fileName, 'file')) %#ok<BDSCI,OR2,BDLGI>
           return;
+        end
+        logMsg(sprintf('Experiment handle changed from %s to %s', experiment.handle, fileName), 'w');
+        experiment.handle = fileName;
+        logMsg('You will need to reanalyze everything', 'w');
+        saveExperiment(experiment, 'verbose', true);
+        updateMenu();
+        updateProjectTree();
+        printSavedExperimentInfo();
+      end
   end
-  updateMenu();
-  updateProjectTree();
-  printSavedExperimentInfo();
 end
 
 %--------------------------------------------------------------------------
 function menuExperimentChangeNumFrames(~, ~)
   project = getappdata(netcalMainWindow, 'project');
-  experiment = loadCurrentExperiment(project, 'pbar', 0);
-  answer = inputdlg('Enter the new number of frames',...
-                      'numFrames change', [1 60], {num2str(experiment.numFrames)});
-  if(isempty(answer))
-      return;
+  switch experimentSelectionMode % Single / multiple / pipeline
+    case 'single'
+      experiment = loadCurrentExperiment(project, 'pbar', 0);
+      answer = inputdlg('Enter the new number of frames',...
+                          'numFrames change', [1 60], {num2str(experiment.numFrames)});
+      if(isempty(answer))
+          return;
+      end
+      answer{1} = str2double(strtrim(answer{1}));
+      logMsg(sprintf('numFrames changed from %d to %d', experiment.numFrames, answer{1}), 'w');
+      experiment.numFrames = answer{1};
+      experiment.totalTime = experiment.numFrames/experiment.fps;
+      saveExperiment(experiment, 'verbose', true);
+      
+    otherwise
+      checkedExperiments = find(project.checkedExperiments);
+      newNumFrames = [];
+      ncbar('Changing number of frames', '');
+      for it = 1:length(checkedExperiments)
+        ncbar.setActiveBar(1);
+        ncbar.update(it/length(checkedExperiments));
+        experimentName = project.experiments{checkedExperiments(it)};
+        experimentFile = [project.folderFiles experimentName '.exp'];
+        experiment = loadExperiment(experimentFile, 'project', project, 'pbar', 2);
+        if(it == 1)
+          answer = inputdlg(sprintf('You are about to change the number of frames of %d experiments. Enter the new number of frames', length(checkedExperiments)),...
+                           'Number of frames change', [1 60], {num2str(experiment.numFrames)});
+          if(isempty(answer))
+            ncbar.close();
+            return;
+          end
+          newNumFrames = str2double(strtrim(answer{1}));
+        end
+        oldNumFrames = experiment.numFrames;
+        experiment.numFrames = newNumFrames;
+        experiment.totalTime = experiment.numFrames/experiment.fps;
+        saveExperiment(experiment, 'verbose', true, 'pbar', 2);
+      end
+      ncbar.close();
+      logMsg(sprintf('numFrames changed from %d to %d', oldNumFrames,  experiment.numFrames), 'w');
   end
-  answer{1} = str2double(strtrim(answer{1}));
-  logMsg(sprintf('numFrames changed from %.2f to %.2f', experiment.numFrames, answer{1}), 'w');
-  experiment.numFrames = answer{1};
-  experiment.totalTime = experiment.numFrames/experiment.fps;
-  saveExperiment(experiment, 'verbose', true);
   updateMenu();
   updateProjectTree();
   printSavedExperimentInfo();
@@ -1024,6 +1087,41 @@ function menuExperimentForceHISprecaching(~, ~, mode)
       end
   end
   saveExperiment(experiment, 'verbose', true);
+  updateMenu();
+  updateProjectTree();
+  printSavedExperimentInfo();
+end
+
+
+%--------------------------------------------------------------------------
+function menuExperimentRestoreBackup(~, ~)
+  project = getappdata(netcalMainWindow, 'project');
+  experimentName = project.experiments{project.currentExperiment};
+  experimentFile = [project.folderFiles experimentName '.exp'];
+  experimentBackupFile = [project.folderFiles experimentName '.bak'];
+  experimentHourlyBackupFile = [project.folderFiles experimentName '.bkh'];
+  
+  choice = questdlg(sprintf('Are you sure you want to restore the backup of experiment %s ? Last changes will be lost', experimentName), ...
+                    'Restore experiment backup', ...
+                    'Restore previous backup', 'Restore hourly backup', 'Cancel', 'Cancel');
+  switch choice
+      case 'Restore previous backup'
+      if(exist(experimentBackupFile, 'file') ~= 2)
+        logMsg('No backup found', 'w');
+        return;
+      end
+      copyfile(experimentBackupFile, experimentFile);
+      logMsg(sprintf('Previous backup restored for experiment %s', experimentName));
+      case 'Restore hourly backup'
+      if(exist(experimentHourlyBackupFile, 'file') ~= 2)
+        logMsg('No backup found', 'w');
+        return;
+      end
+      copyfile(experimentHourlyBackupFile, experimentFile);
+      logMsg(sprintf('Hourly backup restored for experiment %s', experimentName));
+      case 'Cancel'
+          return;
+  end
   updateMenu();
   updateProjectTree();
   printSavedExperimentInfo();
@@ -2414,6 +2512,18 @@ function updateMenu()
       end
     end
   end
+  % Some overrides might be avilable on batch mode
+  if(~isempty(project) && ~strcmp(experimentSelectionMode, 'single'))
+    hs.menu.experiment.override.root.Enable = 'on';
+    if(isfield(project, 'experiments') && ~isempty(project.experiments))
+      hs.menu.experiment.override.fps.Enable = 'on';
+      hs.menu.experiment.override.handle.Enable = 'on';
+      hs.menu.experiment.override.numFrames.Enable = 'on';
+      %hs.menu.experiment.override.precaching.Enable = 'on';
+      %hs.menu.experiment.override.precachingExtensive.Enable = 'on';
+    end
+  end
+  
   if(~isempty(project))
     printProjectInfo(project);
   end

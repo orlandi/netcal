@@ -619,6 +619,9 @@ classdef plotStatisticsTreatment < handle
         hold on;
         grList = {};
         pList = [];
+        %%% HACK
+        obj.params.pipelineProject.showSignificance = 'partial';
+        obj.params.pipelineProject.significanceTest = 'Kolmogorov-Smirnov';
         switch obj.params.pipelineProject.showSignificance
           case 'none'
           case 'partial'

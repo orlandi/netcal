@@ -25,15 +25,16 @@ classdef exportMovieOptions < baseOptions
     
     % Range (see rangeSelection)
     range = [1 inf];
-
-    % Profile to use
-    %profile = {'Motion JPEG 2000'};
-    %profile = {'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'MPEG-4'};
+    
+    %Please note that on pipeline mode the profile is always Motion JPEG 2000
+    
+    % Profile to use.
+    profile = {'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'Motion JPEG 2000', 'MPEG-4'};
     
     % Bits per pixel of the new movie (1 to 16)
     bitsPerPixel = {'8', '16'};
     
-    % If the movie should be compressed
+    % If the movie should be compressed (only if the profile allows it)
     compressMovie = true;
     
     % Level of compression (0 for lossless. Use valuees larger than 1 for lossy compression)
@@ -42,7 +43,7 @@ classdef exportMovieOptions < baseOptions
     % Filename of the new movie
     baseFileName = 'exportMovie';
     
-    % If true, will rescale everything to previous estimates of minimum and maximum intensity values
+    % If true, will rescale everything to previous estimates of minimum and maximum intensity values. Only works if the movie has already been preprocessed
     maximizeDynamicRange = false;
   end
   methods

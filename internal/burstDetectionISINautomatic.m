@@ -287,9 +287,8 @@ for git = 1:length(groupList)
     
     valid = find(pkListRes == nPeaks, 1, 'first');
     minProminence = pkList(valid)*params.peakMultiplier;
-    minProminence
     [pks, locs, w, p] = findpeaks2(newY, newX, 'MinPeakProminence', minProminence, 'MinPeakDistance', minBurstSeparation, 'Annotate', 'extents');
-    % Incrase the duration
+    % Increase the duration
     w(:, 1) = w(:, 1) - diff(w, 1, 2)/4;
     w(:, 2) = w(:, 2) + diff(w, 1, 2)/4;
 

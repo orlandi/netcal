@@ -150,7 +150,7 @@ for it = 1:length(subset)
     varOpts{end+1} = 'shift';
     varOpts{end+1} = params.shift;
   end
-  %varOpts - 
+%  varOpts
   % Conver to double just to be sure
   if(~params.parallel)
     [c_oasis, s_oasis, options] = deconvolveCa(double(currentTrace), params.model, ...

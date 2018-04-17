@@ -29,26 +29,28 @@ function ROI = refineROIthreshold(stillImage, ROI, varargin)
 %
 % See also autoDetectROI loadExperiment loadROI
 
-if(nargin >= 3 && isa(varargin{1}, 'refineROIthresholdOptions'))
-    params = varargin{1}.get;
-    params = parse_pv_pairs(params, varargin(2:end));
-else
-    params.verbose = true;
-    params.minimumPixels = 8;
-    params.convex = true;
-    params.plot = true;
-    params.threshold = 0.3;
-    params = parse_pv_pairs(params, varargin);
-end
+[params, var] = processFunctionStartup(refineROIthresholdOptions, varargin{:});
+% Define additional optional argument pairs
+params.pbar = [];
+params.verbose = true;
+params = parse_pv_pairs(params, var);
+params = barStartup(params, 'Refinining ROI thresholds', true);
+%--------------------------------------------------------------------------
+% 
+% if(nargin >= 3 && isa(varargin{1}, 'refineROIthresholdOptions'))
+%     params = varargin{1}.get;
+%     params = parse_pv_pairs(params, varargin(2:end));
+% else
+%     params.verbose = true;
+%     params.minimumPixels = 8;
+%     params.convex = true;
+%     params.plot = true;
+%     params.threshold = 0.3;
+%     params = parse_pv_pairs(params, varargin);
+% end
 
 threshold = params.threshold;
 
-if(params.verbose)
-  logMsgHeader('Refining ROI with a threshold', 'start');
-end
-if(params.verbose)
-    progbar('Refining ROI shape');
-end
 testImg = normalizeImage(stillImage);
 testImg(testImg < threshold) = 0;
 if(params.plot)
@@ -80,12 +82,11 @@ for i = 1:length(ROI)
         %    fprintf('ROI %d contains %d valid pixels (out of %d)\n', i, length(validPixels), length(pixels));
         end
     end
-    if(mod(i,floor(length(ROI)/100)) == 0)
-        progbar(i/length(ROI));
+    if(params.pbar > 0)
+        ncbar.update(i/length(ROI));
     end
 
 end
-progbar(1);
 if(~isempty(invalid))
     ROI(invalid) = [];
     if(params.verbose)
@@ -97,6 +98,6 @@ if(params.plot)
     visualizeROI(normalizeImage(stillImage), ROI);
 end
 
-if(params.verbose)
-  logMsgHeader('Done!','finish');
-end
+%--------------------------------------------------------------------------
+barCleanup(params);
+%--------------------------------------------------------------------------

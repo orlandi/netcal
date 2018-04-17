@@ -525,12 +525,15 @@ classdef plotStatistics < handle
                         try
                           p = ranksum(fullData{it}{git}{k}, fullData{itt}{git}{kk});
                           [~, p2] = kstest2(fullData{it}{git}{k}, fullData{itt}{git}{kk});
+                          [~, p3] = ttest2(fullData{it}{git}{k}, fullData{itt}{git}{kk});
                           %logMsg(sprintf('%s vs %s . Group: %s . Idx: %d vs %d Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{git}, k, kk, p, p2));
                           switch obj.params.pipelineProject.significanceTest
                             case 'Mann-Whitney'
                               pValueList= [pValueList; p];
                             case 'Kolmogorov-Smirnov'
                               pValueList= [pValueList; p2];
+                            case 'Ttest2'
+                              pValueList= [pValueList; p3];
                           end
                         catch ME
                           logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
@@ -570,6 +573,8 @@ classdef plotStatistics < handle
                               intraP= [intraP; p];
                             case 'Kolmogorov-Smirnov'
                               intraP= [intraP; p2];
+                            case 'Ttest2'
+                              intraP= [intraP; p3];
                           end
                         catch ME
                           logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
@@ -602,7 +607,8 @@ classdef plotStatistics < handle
                     try
                       p = ranksum(subData(:, it, git), subData(:, itt, git));
                       [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
-                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2));
+                      [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
                           if(p <= 0.05)
@@ -612,6 +618,11 @@ classdef plotStatistics < handle
                         case 'Kolmogorov-Smirnov'
                           if(p <= 0.05)
                             pList{git} = [pList{git}; p2];
+                            grList{git}{end+1} = [it itt];
+                          end
+                        case 'Ttest2'
+                          if(p <= 0.05)
+                            pList{git} = [pList{git}; p3];
                             grList{git}{end+1} = [it itt];
                           end
                       end
@@ -628,13 +639,17 @@ classdef plotStatistics < handle
                     if(it > itt)
                       p = ranksum(subData(:, it), subData(:, itt));
                       [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2));
+                      [h, p3] = ttest2(subData(:, it), subData(:, itt));
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
                           pList{git} = [pList{git}; p];
                           grList{git}{end+1} = [it itt];
                         case 'Kolmogorov-Smirnov'
                           pList{git} = [pList{git}; p2];
+                          grList{git}{end+1} = [it itt];
+                        case 'Ttest2'
+                          pList{git} = [pList{git}; p3];
                           grList{git}{end+1} = [it itt];
                       end
                       grList{git}{end+1} = [it itt];
@@ -717,7 +732,7 @@ classdef plotStatistics < handle
             end
             if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
               switch obj.params.pipelineProject.significanceTest
-                case {'Mann-Whitney', 'Kolmogorov-Smirnov'}
+                case {'Mann-Whitney', 'Kolmogorov-Smirnov', 'Ttest2'}
                   for git = 1:size(subData, 3)
                     if(isempty(intraPlist{git}))
                       continue;

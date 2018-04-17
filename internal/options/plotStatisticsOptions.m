@@ -78,13 +78,14 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % Type of statistical test to use
     % - Mann-Whitney: uses two-tailed Mann-Whitney test
     % - Kolmogorov-Smirnov: uses two-tailed kolmogorov-Smirnov test
+    % - Ttest2; two-sample t-test
     % avoidCrossComparisons:
     % If true, will not compute significance between groups that do not share labels
     % computeIntraGroupComparisons:
     % (Only for mixed factor) If true, will also compute significance across samples from the same group
     % HolmBonferroniCorrection:
     % If true, will apply Holm-Bonferroni connection to any significance checks
-    pipelineProject = struct('plotType', {{'boxplot', 'distribution'}}, 'groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event', 'mixed'}}, 'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov'}}, 'avoidCrossComparisons', true, 'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
+    pipelineProject = struct('plotType', {{'boxplot', 'distribution'}}, 'groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event', 'mixed'}}, 'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'}}, 'avoidCrossComparisons', true, 'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
     
     % If true will turn any zero values into NaNs (so they are not used for the statistics. Useful when working with rates and things like that
     zeroToNan = true;
