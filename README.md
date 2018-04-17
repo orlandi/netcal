@@ -27,6 +27,34 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [7.4.1] - 2018-04-16
+
+### Added
+- Batch change of framerate for multiple experiments
+- Batch change of multiple experiment handles
+- Batch change of number of frames for multiple experiments
+- Unpaired two-tailed t-test statistic
+
+### Fixed
+- Refine ROI threshold was using old progress bar code
+- Movie export profile was not being correctly assigned in some cases
+- Rate-based spike conflict fixing was asking for unecessary variables
+
+
+## [7.4.0] - 2018-04-03
+
+### Added
+- Option to remember selected FPS on avi and btf files
+- Option to move one ROI at a time (or random) on Spike Inference Training
+
+### Modified
+- Option to redo ROI index list is now on the Modify ROI menu
+- loadTraces now tells you what is loading (sometimes)
+- Default range of preprocessing temporal subset (from 600s to inf)
+
+### Fixed
+- Bug when training with OASIS failed due to the ncbar not being present
+
 ## [7.3.4] - 2018-04-03
 
 ### Fixed
