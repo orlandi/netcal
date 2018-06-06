@@ -317,13 +317,17 @@ if(params.exportAverageTrace)
   if(params.computeLowerPercentileTrace)
     fileName = [figFolder experiment.name '_loweTrace.' figFormat];
     hFig2 = plotAvgTrace(experiment, 'off', experiment.avgTraceLower, 'lower');
-    export_fig(fileName, '-nocrop', '-r300')
+    try %#ok<TRYNC>
+      export_fig(fileName, '-nocrop', '-r300')
+    end
     close(hFig2);
   end
   if(params.computeHigherPercentileTrace)
     fileName = [figFolder experiment.name '_higherTrace.' figFormat];
     hFig2 = plotAvgTrace(experiment, 'off', experiment.avgTraceHigher, 'higher');
-    export_fig(fileName, '-nocrop', '-r300')
+    try %#ok<TRYNC>
+      export_fig(fileName, '-nocrop', '-r300')
+    end
     close(hFig2);
   end
   

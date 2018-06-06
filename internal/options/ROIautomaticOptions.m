@@ -8,12 +8,12 @@ classdef ROIautomaticOptions < baseOptions
 
   properties
     % Prefered automatic ROI detection method
-    automaticType = {'threshold', 'quick_dev', 'splitThreshold'};
+    automaticType = {'threshold', 'quick_dev', 'splitThreshold', 'thresholdSmall'};
 
     % Typical cell size (in pixels, only applicable to quick_dev and splitThreshold). The actual instruction is  to delete any objects with less pixels than max(9, (sizeAutomaticCellSize/2-1)^2);
     sizeAutomaticCellSize = 13;
 
-    % Threshold to use (between 0 and 1, only applicable to automatic threshold)
+    % Threshold to use (between 0 and 1, only applicable to thresohld and splitThreshold)
     sizeAutomaticThreshold = 0.1;
     
     % Filter type (to remove noise in the signal, only for quick_dev)
@@ -22,12 +22,19 @@ classdef ROIautomaticOptions < baseOptions
     % To try to remove background noise before detecting ROI (this is the
     % same as pressing the remove background button on the view ROI screen,
     % so if you pressed it there, don't do it here)
-    removeBackgroundFirst = false;
+    % active:
+    % If the opration will be performed or not
+    % characteristicCellSize:
+    % Typical cell size (in pixels, only applicable to background removing)
+    % saturationThresholds:
+    % This set of lower and upper threhsolds (between 0 and 1) will be used to define the background levels
+    backgroundRemoval = struct('active', false, 'characteristicCellSize', 13, 'saturationThresholds', [0.2 0.3]);
     
-    % Remove dead pixels (if your camera has them)
-    removeDeadPixels = true;
-    
-    % Dead pixel multiplier (mean+multiplier*std of the signal is considered a dead pixel)
-    deadPixelMultiplier = 10;
+    % To try and remove dead pixels first from the image (those that are much brigther than the rest of the image
+    % active:
+    % If the opration will be performed or not
+    % deadPixelMultiplier:
+    % Any pixel with fluorescence above mean+multiplier*std of all the image values is considered a dead pixel
+    deadPixelRemoval = struct('active', false, 'deadPixelMultiplier', 10);
   end
 end

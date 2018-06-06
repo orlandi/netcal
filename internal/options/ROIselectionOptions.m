@@ -12,8 +12,5 @@ classdef ROIselectionOptions < baseOptions
 
     % Desired size for the active contour procedure (side in pixels, use an even number)
     sizeActiveContour = 4;
-    
-    % Typical cell size (in pixels, only applicable to background removing)
-    sizeAutomaticCellSize = 13;
   end
 end

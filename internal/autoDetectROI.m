@@ -26,10 +26,10 @@ params = parse_pv_pairs(params, var);
 params = barStartup(params, ['Autodetecting ROI: ' strrep(params.automaticType,'_','-')]);
 %--------------------------------------------------------------------------
 
-if(params.removeBackgroundFirst)
-  stillImage = round((2^8-1)*(normalizeImage(stillImage, 'lowerSaturation', 0.2, 'upperSaturation', 0.3)));
-  stillImage = stillImage - imgaussfilt(stillImage, params.sizeAutomaticCellSize/2);
-  stillImage(stillImage <0) = 0;
+if(params.backgroundRemoval.active)
+  stillImage = round((2^16-1)*(normalizeImage(stillImage, 'lowerSaturation', params.backgroundRemoval.saturationThresholds(1), 'upperSaturation', params.backgroundRemoval.saturationThresholds(2))));
+  stillImage = stillImage - imgaussfilt(stillImage, params.backgroundRemoval.characteristicCellSize/2);
+  stillImage(stillImage < 0) = 0;
 end
 
 switch params.automaticType
@@ -38,10 +38,10 @@ switch params.automaticType
     ncbar.setAutomaticBar();
   end
     % Remove dead pixels
-    if(params.removeDeadPixels)
+    if(params.deadPixelRemoval.active)
       me = mean(double(stillImage(:)));
       se = std(double(stillImage(:)));
-      deadPixels = find(stillImage > me+params.deadPixelMultiplier*se);
+      deadPixels = find(stillImage > me+params.deadPixelRemoval.deadPixelMultiplier*se);
       stillImage(deadPixels) = NaN;
       logMsg(sprintf('%d dead pixels removed', length(deadPixels)));
     end
@@ -56,6 +56,8 @@ switch params.automaticType
     bw2 = imfill(filteredImg,'holes'); 
     bw3 = imopen(bw2, ones(4,4)); 
     bw4 = bwareaopen(bw3, 10); 
+    %bw3 = imopen(bw2, ones(2,2)); 
+    %bw4 = bwareaopen(bw3, 4); 
     bw4_perim = bwperim(bw4); 
 
     B = bwconncomp(bw4);
@@ -79,10 +81,10 @@ switch params.automaticType
       ncbar.setAutomaticBar();
     end
 
-    if(params.removeDeadPixels)
+    if(params.deadPixelRemoval.active)
       me = mean(double(stillImage(:)));
       se = std(double(stillImage(:)));
-      deadPixels = find(stillImage > me+params.deadPixelMultiplier*se);
+      deadPixels = find(stillImage > me+params.deadPixelRemoval.deadPixelMultiplier*se);
       stillImage(deadPixels) = NaN;
       logMsg(sprintf('%d dead pixels removed', length(deadPixels)));
     end
@@ -207,10 +209,10 @@ switch params.automaticType
       ncbar.setAutomaticBar();
     end
     % Remove dead pixels
-    if(params.removeDeadPixels)
+    if(params.deadPixelRemoval.active)
       me = mean(double(stillImage(:)));
       se = std(double(stillImage(:)));
-      deadPixels = find(stillImage > me+params.deadPixelMultiplier*se);
+      deadPixels = find(stillImage > me+params.deadPixelRemoval.deadPixelMultiplier*se);
       stillImage(deadPixels) = NaN;
       logMsg(sprintf('%d dead pixels removed', length(deadPixels)));
     end
@@ -334,8 +336,47 @@ switch params.automaticType
         currROI = currROI + 1;
       end
     end
-  ROI = ROI';
-  logMsg(sprintf('%d ROI found (%d before splitting and minimum area checks, %d too small). ', length(ROI), CC.NumObjects, invalidROI));
+    ROI = ROI';
+    logMsg(sprintf('%d ROI found (%d before splitting and minimum area checks, %d too small). ', length(ROI), CC.NumObjects, invalidROI));
+  case 'thresholdSmall'
+    if(params.pbar > 0)
+      ncbar.setAutomaticBar();
+    end
+    % Remove dead pixels
+    if(params.deadPixelRemoval.active)
+      me = mean(double(stillImage(:)));
+      se = std(double(stillImage(:)));
+      deadPixels = find(stillImage > me+params.deadPixelRemoval.deadPixelMultiplier*se);
+      stillImage(deadPixels) = NaN;
+      logMsg(sprintf('%d dead pixels removed', length(deadPixels)));
+    end
+
+    normalizedStillImage = (stillImage-min(stillImage(:)))/(max(stillImage(:))-min(stillImage(:)));
+
+    filteredImg = normalizedStillImage;
+    filteredImg(filteredImg < params.sizeAutomaticThreshold) = 0;
+    filteredImg(filteredImg > params.sizeAutomaticThreshold) = 1;
+
+    filteredImg(isnan(filteredImg))=0;
+    bw2 = imfill(filteredImg,'holes'); 
+    bw3 = imopen(bw2, ones(2,2)); 
+    bw4 = bwareaopen(bw3, 4); 
+    bw4_perim = bwperim(bw4); 
+
+    B = bwconncomp(bw4);
+
+    ROI = cell(B.NumObjects, 1);
+
+    for i = 1:length(ROI)
+      if(params.pbar > 0)
+        ncbar.update(i/length(ROI));
+      end
+      ROI{i}.ID = i;
+      ROI{i}.pixels = B.PixelIdxList{i}';
+      [y, x] = ind2sub(size(normalizedStillImage), ROI{i}.pixels);
+      ROI{i}.center = [mean(x), mean(y)];
+      ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
+    end
 end
 
 if(params.verbose)

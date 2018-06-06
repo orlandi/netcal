@@ -2,7 +2,7 @@ function experiment = automaticROIdetection(experiment, varargin)
 % AUTOMATICROIDETECTION automatically detects ROI
 %
 % USAGE:
-%    experiment = smoothTraces(experiment, varargin)
+%    experiment = automaticROIdetection(experiment, varargin)
 %
 % INPUT arguments:
 %    experiment - experiment structure

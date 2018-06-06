@@ -27,6 +27,26 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.0.0] - 2018-06-06
+
+### Added
+- Full implementation of CellSort-like (Mukamel 2009) activity-based ROI detection. Selects ROIs after a PCA/ICA dimensionality reduction. Implemented within the denoiser and the pipeline -> fluorescence -> cellsort. Guide coming soon!
+- Pattern count classifier now also creates intersection groups (if pattern overlapping is allowed). Example: you can now end up with traces that belong to both neuron and glia populations in a new subgroup
+- New project export feature. You can export the project to a new folder with only a subset of experiments and a subset dditional data (traces, denoisedData, etc) for reduced project size. Useful to share with collaborators
+- On the traces window you can now sort traces by some ROI properties. Size, position, etc.
+- Option to disable saving the experiment on some figure plots. This will result in a speed up on the pipeline when you are only interested in just plotting stuff.
+- Added fast mode for trace extraction (not recommended, only useful for cellsort ROI detection).
+- Ability to view the PCA and ICA temporal components on the traces menu (after denoising).
+
+### Modified
+- Several ROI visualization options now work with weighted ROIs. Weighted ROIs only appeear in the cellsort ROI detection (for now).
+- Simplified the saveProject file.
+- Lots of changes to the denoiser. Now ICA is always performed after PCA.
+
+### Fixes
+- Lots of small bug fixes
+
+
 ## [7.4.1] - 2018-04-16
 
 ### Added
@@ -1538,6 +1558,8 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[7.4.1]: https://github.com/orlandi/netcal/tree/v7.4.1
+[7.4.0]: https://github.com/orlandi/netcal/tree/v7.4.0
 [7.3.1]: https://github.com/orlandi/netcal/tree/v7.3.1
 [7.3.0]: https://github.com/orlandi/netcal/tree/v7.3.0
 [7.2.4]: https://github.com/orlandi/netcal/tree/v7.2.4

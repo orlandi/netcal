@@ -1,7 +1,10 @@
-function [minIntensity, maxIntensity] = autoLevelsFIJI(imData, bpp, autoReset, updateAuto)
+function [minIntensity, maxIntensity] = autoLevelsFIJI(imData, bpp, autoReset, updateAuto, excludeZero)
   persistent auto;
   if(isempty(auto))
     auto = 10000;
+  end
+  if(nargin < 5)
+    excludeZero = false;
   end
   if(nargin < 4)
     updateAuto = true;
@@ -15,7 +18,9 @@ function [minIntensity, maxIntensity] = autoLevelsFIJI(imData, bpp, autoReset, u
       auto = 5000;
     end
   end  
-      
+  if(excludeZero)
+    imData = imData(imData > 0);
+  end
   pixelCount = numel(imData);
   limit = pixelCount/2;
   threshold = pixelCount/auto;

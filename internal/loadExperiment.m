@@ -106,18 +106,17 @@ switch lower(fpc)
 %     params.project
 %     oldFolder
     try
-      if(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]))
+      % If the experiment folder and the correspondeent project folder do not coincide. And the file does not exist, copy it.
+      if(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]) && ~exist([params.project.folder experiment.name filesep], 'dir'))
         [status, msg, msgID] = copyfile(oldFolder, [params.project.folder experiment.name filesep], 'f');
-      
-      if(status == 0)
-        [tfpa tfpb tfpc] = fileparts(fileName);
-%         [tfpa filesep '..' filesep experiment.name]
-%         [params.project.folder experiment.name filesep]
-        [status, msg, msgID] = copyfile([tfpa filesep '..' filesep experiment.name], [params.project.folder experiment.name filesep], 'f');
-%         status
-%         msg
-%         msgID
-      end
+        if(status == 0)
+          [tfpa tfpb tfpc] = fileparts(fileName);
+          [status, msg, msgID] = copyfile([tfpa filesep '..' filesep experiment.name], [params.project.folder experiment.name filesep], 'f');
+        end
+      elseif(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]))
+        logMsg('Looks like the experiment folder has changed. Updating');
+        experiment.folder = [params.project.folder experiment.name filesep];
+        saveExperiment(experiment, 'pbar', 0, 'verbose', false);
       end
     catch ME
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), appHandle, 'e');
@@ -510,6 +509,11 @@ switch lower(fpc)
             end
         end
     end
+    if(isempty(metadata))
+      logMsg('Something went wrong with the .HIS file. Could not load the metadata', 'e');
+      return;
+    end
+    
     fclose(fid);
     experiment.metadata = metadata;
     experiment.numFrames = nSeries;

@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '7.4.1';
+currVersion = '8.0.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -500,6 +500,154 @@ function menuProjectSave(~, ~)
     logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
   end
   ncbar.close();
+end
+
+%--------------------------------------------------------------------------
+function menuProjectExport(~, ~)
+  project = getappdata(netcalMainWindow, 'project');
+  
+  defOptions = exportProjectOptions;
+  defOptions.exportFolder = project.folder;
+  defOptions.newProjectName = [project.name '_exported'];
+  [success, projectExportOptionsCurrent] = preloadOptions([], defOptions, gcbf, true, false);
+  if(~success)
+    return;
+  end
+  
+  if(~projectExportOptionsCurrent.exportFolder | ~exist(projectExportOptionsCurrent.exportFolder, 'dir')) %#ok<BDSCI,OR2,BDLGI>
+    logMsg('Invalid export folder. Are you sure the folder exists?', 'e');
+    return;
+  end
+  fileList = rdir([projectExportOptionsCurrent.exportFolder filesep, '**']);
+  if(~isempty(fileList))
+    choice = questdlg(sprintf('Found: %d files in the export directory. It should be empty. Do you want to continue?', length(fileList)), ...
+    'Export project', ...
+    'Yes', 'No', 'Cancel', 'Cancel');
+
+    switch choice
+      case 'Yes'
+      case 'No'
+        return;
+      case 'Cancel'
+        return;
+    end
+  end
+  
+  onlyChecked = projectExportOptionsCurrent.exportOnlyCheckedExperiments;
+  project = getappdata(netcalMainWindow, 'project');
+  bigFields = getBigFields();
+  validFields = [];
+  validFieldsText = {};
+  validFieldsSize = [];
+  fileList = {};
+  ncbar.automatic('Checking for existing files');
+  if(onlyChecked)
+    validExperiments = find(project.checkedExperiments);
+  else
+    validExperiments = 1:length(project.checkedExperiments);
+  end
+  for it1 = 1:length(bigFields)
+    curField = bigFields{it1};
+    extension = '.DAT';
+    %fileList{it1} = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')']);
+    fileList{it1} = [];
+    for it2 = 1:length(validExperiments)
+      %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
+      fileList{it1} = [fileList{it1}; dir([project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep, project.experiments{validExperiments(it2)}, '_', curField, lower(extension)])];
+    end
+    curSize = 0;
+    if(numel(fileList{it1}) == 0)
+      continue;
+    end
+    for it2 = 1:length(fileList{it1})
+      curSize = curSize+fileList{it1}(it2).bytes;
+    end
+    if(curSize/1e6 > 1e3)
+      curSizeText = sprintf('%s: %.2f GB', curField, curSize/1e9);
+    else
+      curSizeText = sprintf('%s: %.2f MB', curField, curSize/1e6);
+    end
+    validFields  = [validFields; it1];
+    validFieldsText{end+1} = curSizeText;
+    validFieldsSize = [validFieldsSize; curSize];
+  end
+  fileList = fileList(validFields);
+  extension = '.EXP';
+  fileListExp = [];
+  sizeExp = 0;
+  for it2 = 1:length(validExperiments)
+    %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
+    fileListExp = [fileListExp; dir([project.folderFiles, project.experiments{validExperiments(it2)}, lower(extension)])];
+    sizeExp = sizeExp +fileListExp(it2).bytes;
+  end
+  %fileListExp = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' extension '$'')']);
+ 
+  ncbar.close();
+  
+  if(~isempty(validFieldsText))
+    [fieldsToExport, success] = listdlg('PromptString', 'Select additional data files to export', 'SelectionMode', 'multiple', 'ListString', validFieldsText, 'ListSize', [500 300]);
+    if(~success)
+      fieldsToExport = [];
+    end
+    fullFileList = fileListExp;
+    totalSize = sizeExp;
+    for it1 = 1:numel(fieldsToExport)
+      curList = fileList{fieldsToExport(it1)};
+      fullFileList = [fullFileList; curList];
+      totalSize = totalSize + validFieldsSize(fieldsToExport(it1));
+    end
+  else
+    totalSize = sizeExp;
+    fullFileList = fileListExp;
+  end
+  logMsg(sprintf('We will be exporting %d files with a total size of %.3f GB\n', length(fullFileList), totalSize/1e9));
+  
+  
+  % Need to redo:
+  % checkedExperiments
+  % experiments
+  % labels
+  % name
+  % folder
+  % folderFiles
+  newProject = project;
+  newProject.checkedExperiments = newProject.checkedExperiments(validExperiments);
+  newProject.experiments = newProject.experiments(validExperiments);
+  newProject.labels = newProject.labels(validExperiments);
+  newProject.name = projectExportOptionsCurrent.newProjectName;
+  newProject.folder = fullfile([projectExportOptionsCurrent.exportFolder filesep]);
+  newProject.folderFiles = [newProject.folder 'projectFiles' filesep];
+  if(~exist(newProject.folderFiles, 'dir'))
+    mkdir(newProject.folderFiles);
+  end
+  % Let's copy all the files first
+  curFolder = project.folder;
+  newFolder = newProject.folder;
+  ncbar.automatic(sprintf('Copying files to the new folder (%d/%d)', 0, length(fullFileList)));
+  for it1 = 1:length(fullFileList)
+    oldFile = [fullFileList(it1).folder filesep fullFileList(it1).name];
+    newFile = strrep(oldFile, curFolder, newFolder);
+    %fprintf('%s to %s\n', oldFile, newFile);
+    % Create the new folder
+    [fpa, ~, ~] = fileparts(newFile);
+    if(~exist(fpa, 'dir'))
+      mkdir(fpa);
+    end
+    % Now copy the files
+    [success, msg, msgID] = copyfile(oldFile, newFile, 'f');
+    if(~success)
+      logMsg(sprintf('Something went wrong copy file %s to %s. Msg: %s', oldFile, newFile, msg), 'e');
+      return;
+    end
+    ncbar.setCurrentBarName(sprintf('Copying files to the new folder (%d/%d)', it1, length(fullFileList)));
+  end
+  ncbar.close();
+  saveProject(newProject);
+  
+  project.projectExportOptionsCurrent = projectExportOptionsCurrent;
+  setappdata(netcalMainWindow, 'project', project);
+  setappdata(netcalMainWindow, 'projectExportOptionsCurrent', projectExportOptionsCurrent);
+  logMsg('Project succesfully exported');
 end
 
 %--------------------------------------------------------------------------
@@ -2484,6 +2632,7 @@ function updateMenu()
   if(~isempty(project))
     hs.menu.project.close.Enable = 'on';
     hs.menu.project.save.Enable = 'on';
+    hs.menu.project.export.Enable = 'on';
     hs.menu.project.rename.Enable = 'on';
   end
 
@@ -2589,7 +2738,9 @@ function printSavedExperimentInfo(varargin)
   if(~isempty(experimentFile))
     try
       %tic
+      warning('off', 'MATLAB:load:variableNotFound');
       experiment = load(experimentFile, '-mat', 'name', 'handle', 'folder', 'totalTime', 'width', 'height', 'pixelType', 'numFrames', 'fps', 'metadata', 'ROI', 'traceGroupsNames', 'traceGroups', 'rawTraces', 'traces', 'spikes');
+      warning('on', 'MATLAB:load:variableNotFound');
       %experiment = load(experimentFile, '-mat', 'name', 'handle', 'folder', 'totalTime', 'width', 'height', 'pixelType', 'numFrames', 'fps', 'metadata', 'ROI');
       %toc
       %stateVariables = who('-file', experimentFile); % This takes too long to load
@@ -2635,6 +2786,11 @@ function printSavedExperimentInfo(varargin)
       end
     else
       msgList{end+1} = sprintf('None');
+    end
+    if(isfield(experiment, 'denoisedData'))
+      msgList{end+1} = '-------';
+      baseMsg = 'Denoised data';
+      msgList{end+1} = sprintf('<b>%s:</b> yes', baseMsg);
     end
     msgList{end+1} = '-------';
     baseMsg = 'ROI';
@@ -3345,6 +3501,7 @@ function menu = initializeMenu(~, ~)
   menu.project.loadRecent = uimenu(menu.project.root, 'Label', 'Load recent project...');
   menu.project.loadRecentList = [];
   menu.project.save = uimenu(menu.project.root, 'Label', 'Save project', 'Accelerator', 'S', 'Callback', @menuProjectSave);
+  menu.project.export = uimenu(menu.project.root, 'Label', 'Export project', 'Callback', @menuProjectExport);
   menu.project.rename = uimenu(menu.project.root, 'Label', 'Rename project', 'Callback', @menuProjectRename);
   menu.project.close = uimenu(menu.project.root, 'Label', 'Close project', 'Callback', @menuProjectClose);
   menu.project.update.root = uimenu(menu.project.root, 'Label', 'Update', 'Separator', 'on');
@@ -4041,7 +4198,7 @@ function list = pipelineFuctionList()
   fileList = rdir([appFolder filesep 'internal' filesep, '**', filesep, '*.*'],...
     'regexp(lower(name), ''(\.m)$'')');
   if(DEVELOPMENT)
-    fileListDev = rdir([appFolder filesep 'internalDevelopment' filesep, '**', filesep, '*.*'],...
+    fileListDev = rdir([appFolder filesep 'development' filesep 'internal' filesep, '**', filesep, '*.*'],...
       'regexp(lower(name), ''(\.m)$'')');
     fileList = [fileList; fileListDev];
   end  
@@ -4630,7 +4787,7 @@ function pipelineRun(~, ~, parallelMode)
       
       nodeList{f}.Name = sprintf('<html><font color="red">%s</font></html>', regexprep(nodeList{f}.Name, '<[^>]*>', ''));
       analysisFunction = functionHandleList{f};
-      logMsg(sprintf('Running function %s', analysisFunction));
+      logMsg(sprintf('%d. Running function %s', f, analysisFunction));
 
       if(isempty(modeList{f}))
         logMsg(sprintf('Function mode not found. Assuming experiment'), 'w');
@@ -4721,7 +4878,16 @@ function pipelineRun(~, ~, parallelMode)
               end
               % Save the experiment if there are changes
               if(~isequaln(oldExperiment, experiment))
-                saveExperiment(experiment, 'verbose', false, 'pbar', 3);
+                % First check if the option to save the experiment exists
+                try
+                  if(~isempty(optionsList{f}) && isa(optionsClassCurrent, 'plotFigureOptions') && ~optionsClassCurrent.saveOptions.saveExperiment)
+                    logMsg('Skipping saving experiment');
+                  else
+                    saveExperiment(experiment, 'verbose', false, 'pbar', 3);
+                  end
+                catch
+                  saveExperiment(experiment, 'verbose', false, 'pbar', 3);
+                end
               end
             catch ME
               logMsg(sprintf('Something went wrong while processing %s on %s', analysisFunction, experimentName), 'e');
@@ -5262,17 +5428,17 @@ function modules = loadModules()
       {'Exponents', 'avalancheExponents', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisExponents, avalancheOptions}, 'avalanches', []}, ...
     {'Network inference', 'networkInference', 'analysis', [], 'traces', []}, ...
       {'Partial correlation', 'networkInferenceXcorr', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceXcorr, networkInferenceXcorrOptions}, 'spikes', []}};
-    if(DEVELOPMENT)
-      modules = {modules{:}, ...
-      {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceTMDI, networkInferenceTMDIOptions}, 'spikes', []}, ...
-      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTE, networkInferenceGTEOptions}, 'spikes', []}, ...
-      {'Granger Causality', 'networkInferenceGC', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGC, networkInferenceGCOptions}, 'spikes', []}};
-    else
+%     if(DEVELOPMENT)
+%       modules = {modules{:}, ...
+%       {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceTMDI, networkInferenceTMDIOptions}, 'spikes', []}, ...
+%       {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTE, networkInferenceGTEOptions}, 'spikes', []}, ...
+%       {'Granger Causality', 'networkInferenceGC', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGC, networkInferenceGCOptions}, 'spikes', []}};
+%     else
       modules = {modules{:}, ...
       {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', [], 'spikes', []}, ...
       {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', [], 'spikes', []}, ...
       {'Granger Causality', 'networkInferenceGC', 'networkInference', [], 'spikes', []}};
-    end
+%     end
   modules = {modules{:}, ...
   {'View', 'view', [], [], [], [], false, 'single'}, ...
     {'Recording', 'viewRecording', 'view', {@menuNewGuiWindow, @viewRecording}, 'handle', []}, ...

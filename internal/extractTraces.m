@@ -55,7 +55,12 @@ else
   firstFrame = 1;
   lastFrame = experiment.numFrames;
 end
-selectedFrames = firstFrame:lastFrame;
+if(params.fast)
+  frameGap = 10;
+else
+  frameGap = 1;
+end
+selectedFrames = firstFrame:frameGap:lastFrame;
 
 numFrames = length(selectedFrames);
 traces = zeros(numFrames, length(ROI));
@@ -95,9 +100,17 @@ for i = 1:length(selectedFrames)
     %signCoincidence(i-1) = max(positiveD, numPixels-positiveD)/numPixels;
     signCoincidence(i-1) = abs(positiveD-negativeD)/numPixels;
   end
-  for j = 1:length(ROI)
-    traces(i, j) = avgFunc(currentFrame(ROI{j}.pixels));
+  if(isfield(ROI{1}, 'weights'))
+    for j = 1:length(ROI)
+      traces(i, j) = sum(currentFrame(ROI{j}.pixels).*ROI{j}.weights)/sum(ROI{j}.weights);
+      %traces(i, j) = avgFunc(currentFrame(ROI{j}.pixels));
+    end
+  else
+    for j = 1:length(ROI)
+      traces(i, j) = avgFunc(currentFrame(ROI{j}.pixels));
+    end
   end
+  
   % Do something with the frames
   if(params.pbar > 0)
     ncbar.update(i/numFrames);

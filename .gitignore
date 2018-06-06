@@ -9,6 +9,8 @@ tmp/*
 *sublime*
 development/*
 external/cvx
+*.m
+!netcal.m
 
 # Tmp files #
 #############

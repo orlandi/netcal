@@ -16,7 +16,7 @@ function experiment = patternCountClassification(experiment, varargin)
 % EXAMPLE:
 %    experiment = patternCountClassification(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 
 % EXPERIMENT PIPELINE
 % name: classify with pattern counts
@@ -89,6 +89,7 @@ switch params.mode
     trainingGroups = trainingGroups + 1;
     basePatternList{end+1} = 'undefined';
     experiment.traceGroups.patternCountClassifier = cell(trainingGroups, 1);
+    experiment.traceGroupsOrder.ROI.patternCountClassifier = cell(trainingGroups, 1);
     experiment.traceGroupsNames.patternCountClassifier = basePatternList;
     hits = [];
     for it = 1:(trainingGroups-1)
@@ -105,31 +106,48 @@ switch params.mode
     undefined = setdiff(1:size(newFeatures, 1), hits);
     experiment.traceGroups.patternCountClassifier{end} = undefined;
     experiment.traceGroupsOrder.ROI.patternCountClassifier{end} = undefined;
+    % Let's do the pairwise intersection
+    nGroups = length(basePatternList);
+    if(nGroups > 2)
+      for it1 = 1:(nGroups-1)
+        for it2 = (it1+1):(nGroups-1)
+          experiment.traceGroupsNames.patternCountClassifier
+          gr1 = experiment.traceGroups.patternCountClassifier{it1};
+          gr2 = experiment.traceGroups.patternCountClassifier{it2};
+          experiment.traceGroups.patternCountClassifier
+          valid = intersect(gr1, gr2);
+          experiment.traceGroups.patternCountClassifier{end+1} = valid;
+          experiment.traceGroupsOrder.ROI.patternCountClassifier{end+1} = valid;
+          basePatternList{end+1} = sprintf('%s and %s', basePatternList{it1}, basePatternList{it2});
+        end
+      end
+      experiment.traceGroupsNames.patternCountClassifier = basePatternList;
+    end
 end
 
-for it = 1:trainingGroups
-    logMsg(sprintf('%d traces belong to population %s', length(experiment.traceGroups.patternCountClassifier{it}), experiment.traceGroupsNames.patternCountClassifier{it}));
+for it = 1:length(experiment.traceGroupsNames.patternCountClassifier)
+  logMsg(sprintf('%d traces belong to population %s', length(experiment.traceGroups.patternCountClassifier{it}), experiment.traceGroupsNames.patternCountClassifier{it}));
 end
 
 % Now the similarity stuff
 logMsg(sprintf('Obtaining similarities'));
 experiment.traceGroupsOrder.similarity.classifier = cell(trainingGroups, 1);
-for i = 1:trainingGroups
-    if(~isempty(experiment.traceGroups.patternCountClassifier{i}))
-      try
-        experiment = loadTraces(experiment, 'smoothed');
-        %size(experiment.traces)
-        %experiment.traceGroups.patternCountClassifier{i}
-        [~, order, ~] = identifySimilaritiesInTraces(...
-          experiment, experiment.traces(:, experiment.traceGroups.patternCountClassifier{i}), ...
-          'showSimilarityMatrix', false, ...
-          'similarityMatrixTag', ...
-          ['_traceSimilarity_' experiment.traceGroupsNames.patternCountClassifier{i}], 'verbose', false, 'pbar', params.pbar);
-        experiment.traceGroupsOrder.similarity.patternCountClassifier{i} = experiment.traceGroups.patternCountClassifier{i}(order);
-      catch ME
-        logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
-      end
+for i = 1:length(experiment.traceGroupsNames.patternCountClassifier)
+  if(~isempty(experiment.traceGroups.patternCountClassifier{i}))
+    try
+      experiment = loadTraces(experiment, 'smoothed');
+      %size(experiment.traces)
+      %experiment.traceGroups.patternCountClassifier{i}
+      [~, order, ~] = identifySimilaritiesInTraces(...
+        experiment, experiment.traces(:, experiment.traceGroups.patternCountClassifier{i}), ...
+        'showSimilarityMatrix', false, ...
+        'similarityMatrixTag', ...
+        ['_traceSimilarity_' experiment.traceGroupsNames.patternCountClassifier{i}], 'verbose', false, 'pbar', params.pbar);
+      experiment.traceGroupsOrder.similarity.patternCountClassifier{i} = experiment.traceGroups.patternCountClassifier{i}(order);
+    catch ME
+      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     end
+  end
 end
 
 %--------------------------------------------------------------------------

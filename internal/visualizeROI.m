@@ -76,6 +76,9 @@ if(params.color)
         newPerimeter = logical(tmpImg);
       elseif(strcmp(params.mode, 'fast'))
         newPerimeter = ROI{i}.pixels;
+        if(isfield(ROI{i}, 'weights'))
+          newPerimeterWeights = ROI{i}.weights/max(ROI{i}.weights);
+        end
       else % Should return error
         newPerimeter = bwperim(tmpImg);
       end
@@ -93,6 +96,11 @@ if(params.color)
       out_red(newPerimeter)   = color_uint8(1);
       out_green(newPerimeter) = color_uint8(2);
       out_blue(newPerimeter)  = color_uint8(3);
+      if(isfield(ROI{i}, 'weights') && strcmp(params.mode, 'fast'))
+        out_red(newPerimeter)   = uint8(double(out_red(newPerimeter)).*newPerimeterWeights);
+        out_green(newPerimeter) = uint8(double(out_green(newPerimeter)).*newPerimeterWeights);
+        out_blue(newPerimeter)  = uint8(double(out_blue(newPerimeter)).*newPerimeterWeights);
+      end
     end
 
     % Form an RGB truecolor image by concatenating the channel matrices along

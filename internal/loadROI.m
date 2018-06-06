@@ -107,7 +107,7 @@ elseif(strcmp(params.mode, 'raw'))
         ROI{i}.center = [mean(x), mean(y)];
         ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
     end
-elseif(strcmp(params.mode, 'rawNew'))
+elseif(strcmp(params.mode, 'rawNew')) % This is legacy mode
     N = size(ROIdata,1);
     ROI = cell(N, 1);
     for i = 1:N

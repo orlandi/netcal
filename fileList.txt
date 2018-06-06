@@ -89,7 +89,7 @@ internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
 internal/loadExperiment.m 25152
 internal/loadProject.m 4554
-internal/loadROI.m 4259
+internal/loadROI.m 4281
 internal/loadTraces.m 4318
 internal/logMessage.m 3541
 internal/logMsg.m 669
@@ -303,7 +303,7 @@ internal/plots/plotPopulationsStatistics.m 1568
 internal/plots/plotPopulationsStatisticsTreatment.m 1757
 internal/plots/plotPopulationsStatisticsTreatmentOptions.m 825
 internal/plots/plotQCEC.m 15339
-internal/plots/plotRaster.m 7634
+internal/plots/plotRaster.m 7680
 internal/plots/plotSpectrogram.m 4026
 internal/plots/plotSpikeStatistics.m 2624
 internal/plots/plotSpikeStatisticsTreatment.m 1597
@@ -1665,7 +1665,7 @@ gui/traceFixer.m 28896
 gui/viewCompareExperiments.m 78901
 gui/viewDenoiser.m 30873
 gui/viewGroups.m 51406
-gui/viewInferenceTraining.m 25523
+gui/viewInferenceTraining.m 25561
 gui/viewPCA.m 42562
 gui/viewPatterns.m 40896
 gui/viewROI.m 55645
@@ -1682,5 +1682,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 43271
+README.md 44272
 netcal.m 218592

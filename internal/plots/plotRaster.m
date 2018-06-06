@@ -152,7 +152,7 @@ if(Nspikes > 0)
     if(~isempty(params.averageActivityScale))
       ylim(params.averageActivityScale);
     end
-    title([experiment.name ' Firing rate']);
+    title([experiment.name ' Firing rate'], 'interpreter', 'none');
     %ylim([0 0.3]);
     subplot(4, 1, 2:4);
     hold on;
@@ -197,7 +197,7 @@ ylabel('ordered ROI index');
 ylim([0.5, (maxY + 0.5)]);
 xlim([min(experiment.t) max(experiment.t)]);
 box on;
-title([experiment.name ' Raster plot']);
+title([experiment.name ' Raster plot'], 'interpreter', 'none');
 set(gcf,'Color','w');
 %pos = get(hFig, 'Position');
 %pos(4) = pos(3)/((1+sqrt(5))/2);
@@ -213,16 +213,16 @@ if(params.saveOptions.saveFigure)
               sprintf('-q%d', params.saveOptions.saveFigureQuality), hFig);
 end
 
-if(params.saveOptions.onlySaveFigure)
-  close(hFig);
-end
-
 % Execute additional figure commands
 if(~isempty(params.additionalFigureOptions) && ischar(params.additionalFigureOptions))
   params.additionalFigureOptions = java.io.File(params.additionalFigureOptions);
 end
 if(~isempty(params.additionalFigureOptions) && params.additionalFigureOptions.isFile)
   run(char(params.additionalFigureOptions.getAbsoluteFile));
+end
+
+if(params.saveOptions.onlySaveFigure)
+  close(hFig);
 end
 
 %--------------------------------------------------------------------------

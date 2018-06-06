@@ -56,7 +56,10 @@ experiment = checkGroups(experiment);
 [~, curOptions] = preloadOptions(experiment, inferenceTrainingOptions, gui, false, false);
 experiment.inferenceTrainingOptionsCurrent = curOptions;
 
-setappdata(gui, 'inferenceTrainingOptionsCurrent', experiment.inferenceTrainingOptionsCurrent);
+try
+  setappdata(gui, 'inferenceTrainingOptionsCurrent', experiment.inferenceTrainingOptionsCurrent);
+catch
+end
 
 %% Create components
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -351,7 +354,10 @@ function inferenceTraining(hObject, eventData, mode, changeROI)
   experiment.inferenceTrainingData = inferenceTrainingData;
 
   experiment.([class(optionsClass) 'Current']) = optionsClassCurrent;
-  setappdata(gui, [class(optionsClass) 'Current'], optionsClassCurrent);
+  try
+    setappdata(gui, [class(optionsClass) 'Current'], optionsClassCurrent);
+  catch
+  end
   updateImage();
 end
 

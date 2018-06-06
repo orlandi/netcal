@@ -104,5 +104,8 @@ function updateSortingMethod(~, ~, desiredSorting, gui, varargin)
     else
       sortMenu.Children(i).Checked = 'on';
     end
+    if(strcmpi(sortMenu.Children(i).Label, 'ROI feature'))
+      sortMenu.Children(i).Enable = 'on';
+    end
   end
 end

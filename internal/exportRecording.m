@@ -59,8 +59,8 @@ if(isempty(exportMovieOptionsCurrent.frameSkip) || exportMovieOptionsCurrent.fra
   exportMovieOptionsCurrent.frameSkip = 1;
 end
 
-%newMovie = VideoWriter(fileName, exportMovieOptionsCurrent.profile);
-newMovie = VideoWriter(fileName, 'Motion JPEG 2000');
+newMovie = VideoWriter(fileName, exportMovieOptionsCurrent.profile);
+%newMovie = VideoWriter(fileName, 'Motion JPEG 2000');
 if(~params.compressMovie)
   newMovie.LosslessCompression = false;
 else
@@ -109,16 +109,6 @@ numFrames = length(frameList);
 
 [fid, experiment] = openVideoStream(experiment);
 format = 1;
-% if(~isempty(newMovie.VideoFormat))
-%   switch newMovie.VideoFormat
-%     case 'RGB24'
-%       format = 3;
-%     case 'Grayscale'
-%       format = 1;
-%   end
-% else
-%   format = 1;
-% end
 
 if(params.maximizeDynamicRange && isfield(experiment, 'intensityRange') && ~isempty(experiment.intensityRange))
   minI = experiment.intensityRange(1);

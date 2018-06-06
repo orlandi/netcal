@@ -90,7 +90,7 @@ hs.menuDeleteIndividual = uimenu(hs.menuDelete, 'Label', 'Individual', 'Callback
 hs.menuDeleteArea = uimenu(hs.menuDelete, 'Label', 'Area', 'Callback', @menuDeleteArea);
 
 hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences');
-hs.menuPreferencesList = uimenu(hs.menuPreferences, 'Label', 'Preferences', 'Callback', @preferences);
+hs.menuPreferencesList = uimenu(hs.menuPreferences, 'Label', 'General', 'Callback', @preferences);
 hs.menuPreferencesRealSize = uimenu(hs.menuPreferences, 'Label', 'Real Size', 'Enable', 'on', 'Callback', @menuPreferencesRealSize);
 
 hs.menuHotkeys = uimenu(hs.mainWindow, 'Label', 'Hotkeys');
@@ -443,12 +443,19 @@ end
 
 %--------------------------------------------------------------------------
 function removeBackground(~, ~)
-  ncbar.automatic('Removing background');
-  currFrame = round((2^8-1)*(normalizeImage(currFrame, 'lowerSaturation', 0.2, 'upperSaturation', 0.3)));
-  currFrame = currFrame - imgaussfilt(currFrame, experiment.ROIselectionOptionsCurrent.sizeAutomaticCellSize/2);
+  [success, backgroundRemovalOptionsCurrent] = preloadOptions(experiment, backgroundRemovalOptions, gui, true, false);
+  if(~success)
+    return;
+  end
+  experiment.backgroundRemovalOptionsCurrent = backgroundRemovalOptionsCurrent;
+  if(experiment.bpp == 8 || experiment.bpp == 16)
+    bpp = experiment.bpp;
+  else
+    bpp = 8;
+  end
+  currFrame = round((2^bpp-1)*(normalizeImage(currFrame, 'lowerSaturation', experiment.backgroundRemovalOptionsCurrent.saturationThresholds(1), 'upperSaturation', experiment.backgroundRemovalOptionsCurrent.saturationThresholds(2))));
+  currFrame = currFrame - imgaussfilt(currFrame, experiment.backgroundRemovalOptionsCurrent.characteristicCelSize/2);
   currFrame(currFrame <0) = 0;
-  bpp = 8;
-  ncbar.close();
   [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, bpp, true);
   updateImage();
 end

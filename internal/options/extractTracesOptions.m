@@ -13,9 +13,13 @@ classdef extractTracesOptions < baseOptions
     %If not empty, only analyzes the frames between initial and final (in seconds)
     subset = [0 600];
 
-     % How to perform the average for each ROI:
-     % - 'mean' - uses the mean of each ROI fluorescence
-     % - 'median' - uses the median of each ROI fluorescence
+    % If true, will only pick one out of every 10 frames. Do not use it
+    % unless you have a good reason for it
+    fast = false;
+    
+    % How to perform the average for each ROI:
+    % - 'mean' - uses the mean of each ROI fluorescence
+    % - 'median' - uses the median of each ROI fluorescence
     averageType = {'mean', 'median'};
   end
   methods 

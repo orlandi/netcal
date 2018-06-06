@@ -57,6 +57,7 @@ frameBursts = [];
 frameBurstsIdx = [];
 frameBurstsColor = [];
 burstsPixels = [];
+hFigComponents = [];
 populationsOverlay = [];
 framePopulationsColor =[];
 populationsPixels = [];
@@ -64,13 +65,23 @@ autoLevelsReset = true;
 currentCmap = gray;
 avgTraceCorrection = 'none';
 baseLineCorrection = false;
+loop = true;
+denoisedSubset = [];
+activeComponents = [];
+showMeans = true;
 
 % Check if the handle exists. If not, update it - needs to go here for login purposes
-[newExperiment, success] = experimentHandleCheck(experiment);
-if(~success)
-  return;
+if(isfield(experiment, 'tag') && strcmp(experiment.tag, 'dummy'))
+  try
+    %[newExperiment, success] = experimentHandleCheck(experiment);
+    newExperiment = experiment;
+  catch
+  end
+  success = true;
+else
+  [newExperiment, success] = experimentHandleCheck(experiment);
+  [newExperiment, success] = precacheHISframes(newExperiment);
 end
-[newExperiment, success] = precacheHISframes(newExperiment);
 if(~success)
   return;
 end
@@ -128,6 +139,7 @@ end
 
 hs.menu.preferences.root = uimenu(hs.mainWindow, 'Label', 'Preferences', 'Enable', 'on');
 hs.menu.preferences.realSize = uimenu(hs.menu.preferences.root, 'Label', 'Real Size', 'Enable', 'on', 'Callback', @menuPreferencesRealSize);
+hs.menu.preferences.loop = uimenu(hs.menu.preferences.root, 'Label', 'Loop movie', 'Enable', 'on', 'Callback', @menuPreferencesLoop, 'Checked', 'on');
 
 %%% Create menus that are only enabled if requisites are met
 hs.menu.preferences.avgTraceCorrection.root = uimenu(hs.menu.preferences.root, 'Label', 'Average trace correction', 'Enable', 'off');
@@ -274,9 +286,18 @@ hs.mainWindowFramesAxes = axes('Parent', axesContainer);
 hs.mainWindowFramesAxes2 = [];
 
 %%% Preinitialize the video
-[fID, experiment] = openVideoStream(experiment);
-
-currFrame = getFrame(experiment, 1, fID);
+if(isfield(experiment, 'tag') && strcmp(experiment.tag, 'dummy'))
+  %try
+  %  [fID, experiment] = openVideoStream(experiment);
+  %  currFrame = getFrame(experiment, 1, fID);
+  %catch
+    fID = [];
+    currFrame = experiment.avgImg;
+  %end
+else
+  [fID, experiment] = openVideoStream(experiment);
+  currFrame = getFrame(experiment, 1, fID);
+end
 
 currFrame2 = [];
 
@@ -582,10 +603,10 @@ function frameChange(~, ~)
         case 1
           currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
         case 2
-          currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
+          currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
         case 3
           currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
-          currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
+          currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
           %currFrame2 = currFrame;
       end
       if(~strcmpi(avgTraceCorrection, 'none'))
@@ -1020,41 +1041,46 @@ end
 
 %--------------------------------------------------------------------------
 function moviePlay(~, ~)
-    movieRunning = ~movieRunning;
-    if(movieRunning)
-        moviePlayButton.String = 'Stop';
-    else
-        moviePlayButton.String = 'Play';
-    end
-    initialTime = clock;
-    initialFrame = hs.mainWindowFramesSlider.Value;
-    while(movieRunning && hs.mainWindowFramesSlider.Value < hs.mainWindowFramesSlider.Max)
-        closestFrame = round(initialFrame+etime(clock, initialTime)*str2double(frameRateText.String));
-        if(closestFrame > hs.mainWindowFramesSlider.Max)
-            closestFrame = hs.mainWindowFramesSlider.Max;
-        end
-        hs.mainWindowFramesSlider.Value = closestFrame;
-        currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
-        switch currentMovie
-          case 1
-            currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
-          case 2
-            currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
-          case 3
-            currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
-            currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
-            %currFrame2 = currFrame;
-        end
-        if(~strcmpi(avgTraceCorrection, 'none'))
-          applyAvgTraceCorrection();
-        end
-        updateImage();
-        drawnow;
-    end
-    if(hs.mainWindowFramesSlider.Value == hs.mainWindowFramesSlider.Max)
-        movieRunning = false;
-        moviePlayButton.String = 'Play';
-    end
+  movieRunning = ~movieRunning;
+  if(movieRunning)
+      moviePlayButton.String = 'Stop';
+  else
+      moviePlayButton.String = 'Play';
+  end
+  initialTime = clock;
+  initialFrame = hs.mainWindowFramesSlider.Value;
+  while(movieRunning && (loop || hs.mainWindowFramesSlider.Value < hs.mainWindowFramesSlider.Max))
+      closestFrame = round(initialFrame+etime(clock, initialTime)*str2double(frameRateText.String));
+      if(closestFrame > hs.mainWindowFramesSlider.Max)
+          closestFrame = hs.mainWindowFramesSlider.Max;
+      end
+      hs.mainWindowFramesSlider.Value = closestFrame;
+      currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
+      switch currentMovie
+        case 1
+          currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+        case 2
+          currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+        case 3
+          currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+          currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+          %currFrame2 = currFrame;
+      end
+      if(~strcmpi(avgTraceCorrection, 'none'))
+        applyAvgTraceCorrection();
+      end
+      updateImage();
+      drawnow();
+      if(loop && hs.mainWindowFramesSlider.Value == hs.mainWindowFramesSlider.Max)
+        hs.mainWindowFramesSlider.Value = 1;
+        initialTime = clock;
+        initialFrame = 1;
+      end
+  end
+  if(hs.mainWindowFramesSlider.Value == hs.mainWindowFramesSlider.Max)
+      movieRunning = false;
+      moviePlayButton.String = 'Play';
+  end
 end
 
 %--------------------------------------------------------------------------
@@ -1138,11 +1164,11 @@ function currentFrameChange(hObject, ~)
       case 1
         currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
       case 2
-        currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
+        currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
       case 3
         currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
         %currFrame2 = currFrame;
-        currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame);
+        currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
     end
     if(~strcmpi(avgTraceCorrection, 'none'))
       applyAvgTraceCorrection();
@@ -1160,6 +1186,16 @@ function menuPreferencesRealSize(~, ~, ~)
   mainWindowResize(gcbo);
   updateImage();
   if(realSize)
+    hs.menu.preferences.realSize.Checked = 'on';
+  else
+    hs.menu.preferences.realSize.Checked = 'off';
+  end
+end
+
+%--------------------------------------------------------------------------
+function menuPreferencesLoop(~, ~, ~)
+  loop = ~loop;
+  if(loop)
     hs.menu.preferences.realSize.Checked = 'on';
   else
     hs.menu.preferences.realSize.Checked = 'off';
@@ -1206,9 +1242,15 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
   switch selected
     case 'original'
       currentMovie = 1;
+      if(isempty(fID))
+        [fID, experiment] = openVideoStream(experiment);
+      end
     case 'denoised'
       currentMovie = 2;
     case 'both'
+      if(isempty(fID))
+        [fID, experiment] = openVideoStream(experiment);
+      end
       currentMovie = 3;
   end
   % 1 original - 2 denoised - 3 both - using ints instead of strings to speed up frame grabbing
@@ -1255,7 +1297,11 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
       box on;
       
       hs.mainWindowFramesAxes.UIContextMenu = hs.rightClickMenu.root;
-      
+%       if(~isempty(hFigComponents) && ishandle(hFigComponents))
+%         close(hFigComponents)
+%       else
+%         hFigComponents = createComponentsFigure();
+%       end
     case 3
       if(ischar(experiment.denoisedData))
         ncbar.automatic('Loading denoised data');
@@ -1341,17 +1387,149 @@ end
 
 %--------------------------------------------------------------------------
 function rightClickPlotNeuronTrace(~, ~, type)
-    clickedPoint = round(get(hs.mainWindowFramesAxes,'currentpoint'));
-    plotSingleNeuronTrace(clickedPoint, type);
+  clickedPoint = round(get(hs.mainWindowFramesAxes,'currentpoint'));
+  plotSingleNeuronTrace(clickedPoint, type);
 end
 
 
 %--------------------------------------------------------------------------
 function exportCurrentImage(~, ~)
-    [fileName, pathName] = uiputfile({'*.png'; '*.tiff'}, 'Save current image', experiment.folder); 
-    if(fileName ~= 0)
-        export_fig([pathName fileName], hs.mainWindowFramesAxes);
+  [fileName, pathName] = uiputfile({'*.png'; '*.tiff'}, 'Save current image', experiment.folder); 
+  if(fileName ~= 0)
+    export_fig([pathName fileName], hs.mainWindowFramesAxes);
+  end
+end
+
+%--------------------------------------------------------------------------
+function hFigC = createComponentsFigure()
+  hSize = 500;
+  vSize = 500;
+  hFigC = figure('Visible', 'on',...
+                 'Resize','on',...
+                 'Toolbar', 'figure',...
+                 'Tag','components selector', ...
+                 'NumberTitle', 'off',...
+                 'DockControls','off',...
+                 'MenuBar', 'none',...
+                 'Name', ['Components selector: ' experiment.name]);
+
+  % Main grid
+  hc.mainWindowGrid = uix.Grid('Parent', hFigC);
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%% COLUMN START
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Empty left
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%% COLUMN START
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  uix.Empty('Parent', hc.mainWindowGrid);
+  hc.buttonRow = uix.VBox('Parent', hc.mainWindowGrid);
+  Ncomponents = experiment.denoisedData(1).Ncomponents;
+  activeComponents = ones(Ncomponents, 1);
+  if(Ncomponents > 500)
+    Ncomponents = 500;
+    logMsg('Num selectable components limited to 500. Setting the rest to 0', 'w');
+      for it = 1:length(experiment.denoisedData)
+        experiment.denoisedData(it).score(:, 501:end) = 0;
+        experiment.denoisedData(it).coeff(:, 501:end) = 0;
+      end
+  end
+  Nrows = ceil(sqrt(Ncomponents));
+  Ncols = ceil(Ncomponents/Nrows);
+  curComponent = 0;
+  %componentList = zeros(Ncomponents, 1);
+  componentList = [];
+  buttonRowList = [];
+  for it1 = 1:Nrows
+    b = uix.HButtonBox( 'Parent', hc.buttonRow);
+    for it2 = 1:Ncols
+      curComponent = curComponent + 1;
+      if(curComponent > Ncomponents)
+        uicontrol('Style', 'text', 'Parent', b, 'String', '', 'FontSize', 8, 'HorizontalAlignment', 'center');
+      else
+        componentList = [componentList; uicontrol('Style', 'togglebutton', 'Parent', b, 'String', sprintf('%d', curComponent), 'FontSize', 8, 'HorizontalAlignment', 'center', 'Callback', {@selectComponent, curComponent})];
+      end
+      
     end
+    set(b, 'ButtonSize', [hSize/Ncols (vSize-35)/Nrows], 'Spacing', 0, 'Padding', 0);
+    buttonRowList = [buttonRowList; b];
+  end
+  set(hc.buttonRow, 'Heights', floor((vSize-35)/Nrows)*ones(1, Nrows), 'Padding', 0, 'Spacing', 0);
+  
+  hc.buttonRowBottom = uix.HButtonBox('Parent', hc.mainWindowGrid);
+  componentListAll = uicontrol('Style', 'togglebutton', 'Parent', hc.buttonRowBottom, 'String', 'All', 'FontSize', 8, 'HorizontalAlignment', 'center', 'Callback', {@selectComponent, 'all'});
+  componentListNone = uicontrol('Style', 'togglebutton', 'Parent', hc.buttonRowBottom, 'String', 'None', 'FontSize', 8, 'HorizontalAlignment', 'center', 'Callback', {@selectComponent, 'none'});
+  uicontrol('Style', 'togglebutton', 'Parent', hc.buttonRowBottom, 'String', 'Show Means', 'FontSize', 8, 'HorizontalAlignment', 'center', 'Callback', @selectMeans, 'Value', 1);
+  set(hc.buttonRowBottom, 'ButtonSize', [80 20], 'Spacing', 25, 'Padding', 0);
+  uix.Empty('Parent', hc.mainWindowGrid);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%% COLUMN START
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Empty right
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+  uix.Empty('Parent', hc.mainWindowGrid);
+  
+  set(hc.mainWindowGrid, 'Widths', [minGridBorder -1 minGridBorder], 'Heights', [minGridBorder -1 30 minGridBorder]);
+  hFigC.Position = setFigurePosition(hFigW, 'width', hSize, 'height', vSize);
+  selectComponent([], [], 'all');
+  
+  %------------------------------------------------------------------------
+  function selectMeans(hObject, ~)
+    if(hObject.Value == 1)
+      showMeans = true;
+    else
+      showMeans = false;
+    end
+    frameChange();
+    [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, experiment.bpp, true, true, true);
+  end
+  %------------------------------------------------------------------------
+  function selectComponent(hObject, ~, curComponent)
+    % To see which components need to be selected
+    if(strcmp(curComponent, 'all'))
+      for it = 1:length(componentList)
+        componentList(it).Value = 1;
+      end
+    elseif(strcmp(curComponent, 'none'))
+      for it = 1:length(componentList)
+        componentList(it).Value = 0;
+      end
+    else
+      % Select a single component
+      % Don't need to do anything since I will read all values
+    end
+    % Update global buttons accordingly
+    selectedComponents = ~~arrayfun(@(x)x.Value, componentList);
+    if(all(selectedComponents))
+      componentListAll.Value = 1;
+    else
+      componentListAll.Value = 0;
+    end
+    if(all(~selectedComponents))
+      componentListNone.Value = 1;
+    else
+      componentListNone.Value = 0;
+    end
+    % Every time there is a button click, update the list of active components
+    activeComponents(selectedComponents) = 1;
+    activeComponents(~selectedComponents) = 0;
+    denoisedSubset = experiment.denoisedData;
+    for it = 1:length(denoisedSubset)
+      denoisedSubset(it).score = denoisedSubset(it).score(:, find(activeComponents));
+      denoisedSubset(it).coeff = denoisedSubset(it).coeff(:, find(activeComponents));
+    end
+    frameChange();
+    [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, experiment.bpp, true, true, true);
+  end
 end
 
 %--------------------------------------------------------------------------
@@ -1585,13 +1763,14 @@ function plotBursts()
 end
 
 %--------------------------------------------------------------------------
-function plotPopulations()
-  delete(populationsOverlay);
+function plotPopulations(varargin)
   
-  axes(hs.mainWindowFramesAxes);
+  delete(populationsOverlay);
+  %axes(hs.mainWindowFramesAxes);
   hold on;
   populationsOverlay = imagesc(zeros([experiment.height experiment.width 3]), 'HitTest', 'off');
   hold off;
+  
   set(populationsOverlay, 'AlphaData', zeros([experiment.height experiment.width]));
   overlayFrameA = zeros([experiment.height experiment.width]);
   overlayFrameR = zeros([experiment.height experiment.width]);

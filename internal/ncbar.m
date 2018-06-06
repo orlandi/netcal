@@ -381,7 +381,7 @@ classdef ncbar < handle
       ndx = curBar;
       % Check if we need updating - at least 1% change
       %if(~force && abs(fraction-obj.progData(ndx).currentFraction) < 0.005)
-      if(~force && abs(fraction-obj.progData(ndx).currentFraction) < 0.0005)
+      if(~force && abs(fraction-obj.progData(ndx).currentFraction) < 0.005)
         return;
       end
       if(fraction == 0)

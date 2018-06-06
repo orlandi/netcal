@@ -1,4 +1,4 @@
-function img = getDenoisedFrame(experiment, frame, denoisedBlocksPerFrame)
+function img = getDenoisedFrame(experiment, frame, denoisedBlocksPerFrame, subsetData, showMeans)
 % GETDENOISEDFRAME get a given frame from a denoised movie
 %
 % USAGE:
@@ -22,23 +22,56 @@ function img = getDenoisedFrame(experiment, frame, denoisedBlocksPerFrame)
 % Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 % See also: loadExperiment
 
-  selectedFrame = frame;
+if(nargin < 4 || isempty(subsetData))
+  denoisedData = experiment.denoisedData;
+else
+  denoisedData = subsetData;
+end
+if(nargin < 5)
+  showMeans = true;
+end
   
-  img = nan(experiment.height, experiment.width);
-  validBlocks = find(denoisedBlocksPerFrame(:,1) <= selectedFrame & denoisedBlocksPerFrame(:,2) >= selectedFrame);
+img = zeros(experiment.height, experiment.width);
+validBlocks = find(denoisedBlocksPerFrame(:,1) <= frame & denoisedBlocksPerFrame(:,2) >= frame);
+%valid = find(activeComponents);
+for it = 1:length(validBlocks)
+  currentBlock = validBlocks(it);
+  % Temporary hack to fix block size on previous denoised data
+  denoisedData(currentBlock).blockSize = denoisedData(currentBlock).blockCoordinatesLast-denoisedData(currentBlock).blockCoordinates+1; 
+  %validCoeff = experiment.denoisedData(currentBlock).coeff;
+  %validCoeff(:, ~activeComponents) = 0;
+  if(isfield(denoisedData(currentBlock), 'frameList'))
+    blockFrame = denoisedData(currentBlock).frameList(frame-denoisedData(currentBlock).frames(1)+1);
+  else
+    blockFrame = frame-denoisedData(currentBlock).frames(1)+1;
+  end
   
-  for it = 1:length(validBlocks)
-    currentBlock = validBlocks(it);
-    blockFrame = selectedFrame-experiment.denoisedData(currentBlock).frames(1)+1;
-    Xapprox = experiment.denoisedData(currentBlock).score(blockFrame, :) * experiment.denoisedData(currentBlock).coeff';
-    Xapprox = bsxfun(@plus,experiment.denoisedData(currentBlock).means, Xapprox); % add the mean back in
+  %Xapprox = experiment.denoisedData(currentBlock).score(blockFrame, :) * experiment.denoisedData(currentBlock).coeff';
+  %Xapprox = experiment.denoisedData(currentBlock).score(blockFrame, :)*validCoeff';
+  %if(length(valid) == size(experiment.denoisedData(currentBlock).score, 2))
+  
+  Xapprox = denoisedData(currentBlock).score(blockFrame, :)*denoisedData(currentBlock).coeff';
+  
+  %else
+  %  Xapprox = experiment.denoisedData(currentBlock).score(blockFrame, valid)*experiment.denoisedData(currentBlock).coeff(:, valid)';
+  %end
+  if(showMeans)
+    Xapprox = bsxfun(@plus,denoisedData(currentBlock).means, Xapprox); % add the mean back in
+  end
+  
+  %denoisedData(currentBlock)
+  Xapprox = reshape(Xapprox, [denoisedData(currentBlock).blockSize(1), denoisedData(currentBlock).blockSize(2)]);
+  % Heh, it's actually the opposite probably
+  %Xapprox = Xapprox';
+  
+  img(denoisedData(currentBlock).pixelList) = img(denoisedData(currentBlock).pixelList)+Xapprox(:);
+  
+end
 
-    Xapprox = reshape(Xapprox, [experiment.denoisedData(currentBlock).blockSize(1), experiment.denoisedData(currentBlock).blockSize(2)]);
-    % Heh, it's actually the opposite probably
-    Xapprox = Xapprox;
-    img(experiment.denoisedData(currentBlock).pixelList) = Xapprox;
-  end
-  if(experiment.denoisedData(currentBlock).needsTranspose)
-    img = img';
-  end
+if(isfield(denoisedData(1),'mask'))
+  img = img.*denoisedData(1).mask;
+end
+
+if(denoisedData(1).needsTranspose)
+  img = img';
 end

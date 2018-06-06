@@ -46,7 +46,9 @@ classdef plotFigureOptions < baseOptions
     % Figure output quality (1 to 100), only for bitmaps, 100 for lossless compression, when possible
     % onlySaveFigure:
     % If true, will only save the figure. Will not be displayed on the screen (but the MATLAB renderer has to be available)
-    saveOptions = struct('saveFigure', false, 'saveBaseFolder', {{'experiment', 'project'}}, 'saveFigureTag', '', 'saveFigureType', {{'pdf', 'tiff', 'png', 'jpg', 'eps'}}, 'saveFigureResolution', 300, 'saveFigureQuality', 100, 'onlySaveFigure', false);
+    % saveExperiment:
+    % If the experiment should be saved after this function is run. If disabled, options might not be memorized, but might speed up running a batch figure generation
+    saveOptions = struct('saveFigure', false, 'saveBaseFolder', {{'experiment', 'project'}}, 'saveFigureTag', '', 'saveFigureType', {{'pdf', 'tiff', 'png', 'jpg', 'eps'}}, 'saveFigureResolution', 300, 'saveFigureQuality', 100, 'onlySaveFigure', false, 'saveExperiment', true);
     
     % Script with additional figure options that will be run at the end of figure generation
     additionalFigureOptions = java.io.File('');

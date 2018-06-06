@@ -158,7 +158,18 @@ end
 if(isfield(experiment, 'traces'))
   hs.menu.traces.typeSmoothed = uimenu(hs.menu.traces.type, 'Label', 'Smoothed', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'smoothed'});
 end
-
+if(isfield(experiment, 'denoisedData'))
+  %if(isfield(experiment.denoisedData', 'coeffPCA'))
+    hs.menu.traces.pca = uimenu(hs.menu.traces.type, 'Label', 'PCA components', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'PCA'});
+    hs.menu.traces.ica = uimenu(hs.menu.traces.type, 'Label', 'ICA components', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'ICA'});
+  %else
+  %  hs.menu.traces.ica = uimenu(hs.menu.traces.type, 'Label', 'ICA components', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'ICA'});
+  %end
+end
+if(isfield(experiment, 'denoisedDataGlia'))
+  hs.menu.traces.pca = uimenu(hs.menu.traces.type, 'Label', 'Glia PCA components', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'glia PCA'});
+  hs.menu.traces.ica = uimenu(hs.menu.traces.type, 'Label', 'Glia ICA components', 'Tag', 'traceSelection', 'Callback', {@menuTracesType, 'glia ICA'});
+end
 
 % This order due to cross references
 hs.menu.sort.root = uimenu(hs.mainWindow, 'Label', 'Sort by', 'Tag', 'sort');
@@ -193,6 +204,15 @@ if(isfield(experiment, 'qCEC'))
   hs.menu.sort.qCEC.Callback = {@updateSortingMethod, 'qCEC', hFigW};
 end
 
+hs.menu.sort.ROIfeature.root = uimenu(hs.menu.sort.root, 'Label', 'ROI feature');
+hs.menu.sort.ROIfeature.size = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Size', 'Callback', {@sortROI, 'size'});
+hs.menu.sort.ROIfeature.spread = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Spread', 'Callback', {@sortROI, 'spread'});
+hs.menu.sort.ROIfeature.X = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'X coordinate', 'Callback', {@sortROI, 'X coordinate'});
+hs.menu.sort.ROIfeature.Y = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Y coordinate', 'Callback', {@sortROI, 'Y coordinate'});
+hs.menu.sort.ROIfeature.center = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Distance from center', 'Callback', {@sortROI, 'Distance from center'});
+hs.menu.sort.ROIfeature.tskew = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Temporal skewness', 'Callback', {@sortROI, 'Temporal skewness'});
+hs.menu.sort.ROIfeature.sskew = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Spatial skewness', 'Callback', {@sortROI, 'Spatial skewness'});
+hs.menu.sort.ROIfeature.stskew = uimenu(hs.menu.sort.ROIfeature.root, 'Label', 'Spatio-temporal skewness', 'Callback', {@sortROI, 'Spatio-temporal skewness'});
 
 %hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences', 'Callback', @menuPreferences);
 hs.menuPreferences = uimenu(hs.mainWindow, 'Label', 'Preferences');
@@ -499,7 +519,7 @@ function menuTracesType(hObject, ~, type)
     % Turn current selection on
     hObject.Checked = 'on';
   end
-  
+  ROIid = getROIid(experiment.ROI);
   switch type
     case 'raw'
       if(ischar(experiment.rawTraces))
@@ -525,10 +545,103 @@ function menuTracesType(hObject, ~, type)
       end
       selectedTraces = experiment.traces;
       selectedT = experiment.t;
+    case 'PCA'
+      if(ischar(experiment.denoisedData))
+        [experiment, success] = loadTraces(experiment, 'denoisedData');
+      end
+      selectedTraces = nan(length(experiment.rawT), 1);
+      ncbar('Loading PCA components');
+      for it = 1:length(experiment.denoisedData)
+        meanC = mean(experiment.denoisedData(it).coeffPCA,1);
+        subTraces = experiment.denoisedData(it).scorePCA.*repmat(meanC, size(experiment.denoisedData(it).scorePCA, 1), 1);
+        newMat = nan(size(selectedTraces,1), size(subTraces, 2));
+        newMat(experiment.denoisedData(it).frames(1):experiment.denoisedData(it).frames(2), :) = subTraces;
+        selectedTraces = [selectedTraces, newMat];
+        ncbar.update(it/length(experiment.denoisedData));
+      end
+      % Redo the nan
+      for it = 1:size(selectedTraces, 2)
+        selectedTraces(isnan(selectedTraces(:, it)), it) = nanmean(selectedTraces(:, it));
+      end
+      ncbar.close();
+      selectedT = experiment.rawT;
+      currentOrder = 1:size(selectedTraces, 2);
+      ROIid = 1:size(selectedTraces, 2);
+      ROIid = ROIid';
+    case 'ICA'
+      if(ischar(experiment.denoisedData))
+        [experiment, success] = loadTraces(experiment, 'denoisedDataGlia');
+      end
+      selectedTraces = nan(length(experiment.rawT), 1);
+      ncbar('Loading ICA components');
+      for it = 1:length(experiment.denoisedData)
+        meanC = mean(experiment.denoisedData(it).coeff,1);
+        subTraces = experiment.denoisedData(it).score.*repmat(meanC, size(experiment.denoisedData(it).score, 1), 1);
+        newMat = nan(size(selectedTraces,1), size(subTraces, 2));
+        newMat(experiment.denoisedData(it).frames(1):experiment.denoisedData(it).frames(2), :) = subTraces;
+        selectedTraces = [selectedTraces, newMat];
+        ncbar.update(it/length(experiment.denoisedData));
+      end
+      % Redo the nan
+      for it = 1:size(selectedTraces, 2)
+        selectedTraces(isnan(selectedTraces(:, it)), it) = nanmean(selectedTraces(:, it));
+      end
+      ncbar.close();
+      selectedT = experiment.rawT;
+      currentOrder = 1:size(selectedTraces, 2);
+      ROIid = 1:size(selectedTraces, 2);
+      ROIid = ROIid';
+    case 'glia PCA'
+      if(ischar(experiment.denoisedDataGlia))
+        [experiment, success] = loadTraces(experiment, 'denoisedDataGlia');
+      end
+      selectedTraces = nan(length(experiment.gliaAverageT), 1);
+      ncbar('Loading glia PCA components');
+      for it = 1:length(experiment.denoisedDataGlia)
+        meanC = mean(experiment.denoisedDataGlia(it).coeffPCA,1);
+        subTraces = experiment.denoisedDataGlia(it).scorePCA.*repmat(meanC, size(experiment.denoisedDataGlia(it).scorePCA, 1), 1);
+        newMat = nan(size(selectedTraces,1), size(subTraces, 2));
+        newMat(experiment.denoisedDataGlia(it).frames(1):experiment.denoisedDataGlia(it).frames(2), :) = subTraces;
+        selectedTraces = [selectedTraces, newMat];
+        ncbar.update(it/length(experiment.denoisedDataGlia));
+      end
+      % Redo the nan
+      for it = 1:size(selectedTraces, 2)
+        selectedTraces(isnan(selectedTraces(:, it)), it) = nanmean(selectedTraces(:, it));
+      end
+      ncbar.close();
+      selectedT = experiment.gliaAverageT;
+      currentOrder = 1:size(selectedTraces, 2);
+      ROIid = 1:size(selectedTraces, 2);
+      ROIid = ROIid';
+    case 'glia ICA'
+      if(ischar(experiment.denoisedData))
+        [experiment, success] = loadTraces(experiment, 'denoisedDataGlia');
+      end
+      selectedTraces = nan(length(experiment.gliaAverageT), 1);
+      ncbar('Loading glia ICA components');
+      for it = 1:length(experiment.denoisedDataGlia)
+        meanC = mean(experiment.denoisedDataGlia(it).coeff,1);
+        subTraces = experiment.denoisedDataGlia(it).score.*repmat(meanC, size(experiment.denoisedDataGlia(it).score, 1), 1);
+        newMat = nan(size(selectedTraces,1), size(subTraces, 2));
+        newMat(experiment.denoisedDataGlia(it).frames(1):experiment.denoisedDataGlia(it).frames(2), :) = subTraces;
+        selectedTraces = [selectedTraces, newMat];
+        ncbar.update(it/length(experiment.denoisedDataGlia));
+      end
+      % Redo the nan
+      for it = 1:size(selectedTraces, 2)
+        selectedTraces(isnan(selectedTraces(:, it)), it) = nanmean(selectedTraces(:, it));
+      end
+      ncbar.close();
+      selectedT = experiment.gliaAverageT;
+      currentOrder = 1:size(selectedTraces, 2);
+      ROIid = 1:size(selectedTraces, 2);
+      ROIid = ROIid';
   end
-  if(isempty(currentOrder) || length(currentOrder) ~= size(selectedTraces, 1))
-    currentOrder = 1:size(selectedTraces, 1);
+  if(isempty(currentOrder) || length(currentOrder) ~= size(selectedTraces, 2))
+    currentOrder = 1:size(selectedTraces, 2);
   end
+  setappdata(hFigW, 'currentOrder', currentOrder);
   totalPages = ceil(length(currentOrder)/numberTraces);
   updateImage(true);
 end
@@ -548,7 +661,7 @@ end
 %--------------------------------------------------------------------------
 function closeCallback(~, ~, varargin)
   % Since the bigFields might have been loaded (but shouldn't have changed), let's reassign them
-  bigFields = {'rawTraces', 'traces', 'baseLine', 'modelTraces', 'denoisedData', 'rawTracesDenoised', 'validPatterns'};
+  bigFields = {'rawTraces', 'traces', 'baseLine', 'modelTraces', 'denoisedData', 'denoisedDataGlia', 'rawTracesDenoised', 'validPatterns'};
   for i = 1:length(bigFields)
     if(isfield(experiment, bigFields{i}) && ~ischar(experiment.(bigFields{i})))
       originalExperiment.(bigFields{i}) = experiment.(bigFields{i});
@@ -769,6 +882,58 @@ function menuPreferencesCompareExperimentsReset(~, ~, ~)
      additionalAxesList = [];
      updateImage();
   end
+end
+
+%--------------------------------------------------------------------------
+function sortROI(~, ~, var)
+  %[groupType, groupIdx] = getCurrentGroup();
+  %groupType
+  %groupIdx
+  %if(isfield(experiment.traceGroupsOrder, 'ROIsize'))
+    
+  %end
+  currentOrder = getappdata(hFigW, 'currentOrder');
+
+  switch var
+    case 'size'
+      meas = cellfun(@(x)(length(x.pixels)), experiment.ROI(currentOrder));
+    case 'spread'
+      meas = cellfun(@(x)(x.maxDistance), experiment.ROI(currentOrder));
+    case 'X coordinate'
+      meas = -cellfun(@(x)(x.center(1)), experiment.ROI(currentOrder));
+    case 'Y coordinate'
+      meas = -cellfun(@(x)(x.center(2)), experiment.ROI(currentOrder));
+    case 'Distance from center'
+      cen =[experiment.width, experiment.height]/2;
+      meas = -cellfun(@(x)(sum((x.center-cen).^2)), experiment.ROI(currentOrder));
+    case 'Temporal skewness'
+      meas = skewness(selectedTraces(:, currentOrder));
+    case 'Spatial skewness'
+      if(~isfield(experiment.ROI{1}, 'weights'))
+        logMsg('Spatial skewness is only valid for weighted ROIs', 'e');
+        return;
+      end
+      meas = cellfun(@(x)skewness(x.weights), experiment.ROI(currentOrder));
+    case 'Spatio-temporal skewness'
+      if(~isfield(experiment.ROI{1}, 'weights'))
+        logMsg('Spatio-temporal skewness is only valid for weighted ROIs', 'e');
+        return;
+      end
+      meas1 = z1(skewness(selectedTraces(:, currentOrder)));
+      meas2 = z1(cellfun(@(x)skewness(x.weights), experiment.ROI(currentOrder)));
+      meas = meas1(:).^2+meas2(:).^2;
+  end
+  [~, newOrder] = sort(meas, 'descend');
+  currentOrder = currentOrder(newOrder);
+  setappdata(hFigW, 'currentOrder', currentOrder);
+  resizeHandle = getappdata(hFigW, 'ResizeHandle');
+  if(isa(resizeHandle,'function_handle'))
+    resizeHandle([], []);
+  end
+%   experiment.traceGroups.activity = cell(2, 1);
+%   experiment.traceGroupsNames.activity = cell(2, 1);
+%   experiment.traceGroupsOrder.ROI.activity = cell(2, 1);
+%   experiment.traceGroupsOrder.similarity.activity = cell(2, 1);
 end
 
 %--------------------------------------------------------------------------

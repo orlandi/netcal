@@ -81,7 +81,6 @@ for git = 1:length(groupList)
     logMsg(sprintf('Found empty group: %s', groupList{git}), 'w');
     continue;
   end
-  
   % We will get the members later
   switch params.tracesType
     case 'smoothed'
@@ -108,7 +107,7 @@ for git = 1:length(groupList)
     peaks = [];
   end
   if(~isempty(peaks))
-      subpeaks = peaks(members)
+      subpeaks = peaks(members);
   else
       subpeaks = [];
   end
@@ -119,6 +118,10 @@ for git = 1:length(groupList)
   else
     try
       experiment = loadTraces(experiment, 'validPatterns');
+      if(length(experiment.validPatterns) ~= length(experiment.ROI))
+        logMsg('Inconsistent pattern count detected. Resetting', 'w');
+        experiment.validPatterns = cell(size(traces, 2), 1);  
+      end
       experiment.validPatterns(members) = validPatterns;
     catch ME
       experiment.validPatterns = cell(size(traces, 2), 1);
@@ -126,7 +129,6 @@ for git = 1:length(groupList)
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     end
   end
-  %if(params.verbose)
   logMsg(sprintf('Found %d total patterns',  sum(cellfun(@length, validPatterns))));
   patternList = [];
   for it = 1:length(validPatterns)
