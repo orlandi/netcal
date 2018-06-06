@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.0.1] - 2018-06-06
+
+### Fixed
+- recent projects list not displyaing correctly when using samba shares. Now it should work seamlessly on win and nix systems
+
 ## [8.0.0] - 2018-06-06
 
 ### Added
@@ -1558,6 +1563,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.0.1]: https://github.com/orlandi/netcal/tree/v8.0.1
 [7.4.1]: https://github.com/orlandi/netcal/tree/v7.4.1
 [7.4.0]: https://github.com/orlandi/netcal/tree/v7.4.0
 [7.3.1]: https://github.com/orlandi/netcal/tree/v7.3.1

@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.0.0';
+currVersion = '8.0.1';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -643,7 +643,13 @@ function menuProjectExport(~, ~)
   end
   ncbar.close();
   saveProject(newProject);
-  
+  if(projectExportOptionsCurrent.createZip)
+    ncbar.automatic('Creating zip file');
+    warning('off','MATLAB:zip:archiveName');
+    zip([newProject.folder newProject.name '_export'], newProject.folder);
+    warning('on','MATLAB:zip:archiveName');
+    ncbar.close();
+  end
   project.projectExportOptionsCurrent = projectExportOptionsCurrent;
   setappdata(netcalMainWindow, 'project', project);
   setappdata(netcalMainWindow, 'projectExportOptionsCurrent', projectExportOptionsCurrent);
@@ -3378,22 +3384,6 @@ function saveOptions()
       netcalOptionsCurrent.recentProjectsList = cellfun(@char, netcalOptionsCurrent.recentProjectsList, 'UniformOutput', false);
       netcalOptionsCurrent.recentProjectsList = unique(netcalOptionsCurrent.recentProjectsList, 'stable');
     end
-    % Parsing repeated slashes - ugh
-    if(~isempty(netcalOptionsCurrent.recentProjectsList))
-      for it = 1:length(netcalOptionsCurrent.recentProjectsList)
-        newDir = netcalOptionsCurrent.recentProjectsList{it};
-        % Convert to char, just in case
-        %if(isstring(newDir))
-        %  newDir = char(newDir);
-        %end
-        % I hate regexp... so much - and jsonlab is reinterpretting the
-        % strings as it sees fit - still buggy on samba shares
-        newDir = strjoin(regexp(newDir, '(\\/+)','split'), filesep);
-        newDir = strjoin(regexp(newDir, '(\\\\+)','split'),'\');
-        newDir = strjoin(regexp(newDir, '(//+)','split'),'/');
-        netcalOptionsCurrent.recentProjectsList{it} = newDir;
-      end
-    end
     try
       optionsData = savejson([], netcalOptionsCurrent, 'ParseLogical', true);
     catch ME
@@ -3441,13 +3431,13 @@ function loadOptions()
     if(~isempty(optionsData.recentProjectsList))
       optionsData.recentProjectsList = unique(optionsData.recentProjectsList, 'stable');
       for it = 1:length(optionsData.recentProjectsList)
-          newDir = optionsData.recentProjectsList{it};
-          % I hate regexp... so much - and jsonlab is reinterpretting the
-          % strings as it sees fit
-          newDir = strjoin(regexp(newDir, '(\\/+)','split'), filesep);
-          newDir = strjoin(regexp(newDir, '(\\\\+)','split'),'\');
-          newDir = strjoin(regexp(newDir, '(//+)','split'),'/');
-          optionsData.recentProjectsList{it} = newDir;
+        newDir = optionsData.recentProjectsList{it};
+        newDir = regexprep(newDir, '\\\\','\\');
+        newDir = regexprep(newDir, '\\/','/');
+        % Now, does that start with a single bar, should star with a double bar
+        newDir = regexprep(newDir, '^(\\+)', '\\\\');
+        
+        optionsData.recentProjectsList{it} = newDir;
       end
     end
     recentProjectsList = optionsData.recentProjectsList;
