@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.0.1';
+currVersion = '8.0.2';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -540,6 +540,7 @@ function menuProjectExport(~, ~)
   validFieldsText = {};
   validFieldsSize = [];
   fileList = {};
+  fileListFolder = {}; % For compatibility before matlab 2016b
   ncbar.automatic('Checking for existing files');
   if(onlyChecked)
     validExperiments = find(project.checkedExperiments);
@@ -549,11 +550,11 @@ function menuProjectExport(~, ~)
   for it1 = 1:length(bigFields)
     curField = bigFields{it1};
     extension = '.DAT';
-    %fileList{it1} = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')']);
     fileList{it1} = [];
+    fileListFolder{it1} = {};
     for it2 = 1:length(validExperiments)
-      %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
       fileList{it1} = [fileList{it1}; dir([project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep, project.experiments{validExperiments(it2)}, '_', curField, lower(extension)])];
+      fileListFolder{it1}{end+1} = [project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep];
     end
     curSize = 0;
     if(numel(fileList{it1}) == 0)
@@ -572,12 +573,15 @@ function menuProjectExport(~, ~)
     validFieldsSize = [validFieldsSize; curSize];
   end
   fileList = fileList(validFields);
+  fileListFolder = fileListFolder(validFields);
   extension = '.EXP';
   fileListExp = [];
+  fileListExpFolder = {};
   sizeExp = 0;
   for it2 = 1:length(validExperiments)
     %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
     fileListExp = [fileListExp; dir([project.folderFiles, project.experiments{validExperiments(it2)}, lower(extension)])];
+    fileListExpFolder{end+1} = project.folderFiles;
     sizeExp = sizeExp +fileListExp(it2).bytes;
   end
   %fileListExp = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' extension '$'')']);
@@ -590,15 +594,19 @@ function menuProjectExport(~, ~)
       fieldsToExport = [];
     end
     fullFileList = fileListExp;
+    fullFileListFolder = fileListExpFolder;
     totalSize = sizeExp;
     for it1 = 1:numel(fieldsToExport)
       curList = fileList{fieldsToExport(it1)};
+      curListFolder = fileListFolder{fieldsToExport(it1)};
       fullFileList = [fullFileList; curList];
+      fullFileListFolder = [fullFileListFolder, curListFolder];
       totalSize = totalSize + validFieldsSize(fieldsToExport(it1));
     end
   else
     totalSize = sizeExp;
     fullFileList = fileListExp;
+    fullFileListFolder = fileListExpFolder;
   end
   logMsg(sprintf('We will be exporting %d files with a total size of %.3f GB\n', length(fullFileList), totalSize/1e9));
   
@@ -625,7 +633,8 @@ function menuProjectExport(~, ~)
   newFolder = newProject.folder;
   ncbar.automatic(sprintf('Copying files to the new folder (%d/%d)', 0, length(fullFileList)));
   for it1 = 1:length(fullFileList)
-    oldFile = [fullFileList(it1).folder filesep fullFileList(it1).name];
+    %oldFile = [fullFileList(it1).folder filesep fullFileList(it1).name];
+    oldFile = [fullFileListFolder{it1} filesep fullFileList(it1).name];
     newFile = strrep(oldFile, curFolder, newFolder);
     %fprintf('%s to %s\n', oldFile, newFile);
     % Create the new folder

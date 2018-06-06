@@ -20,7 +20,7 @@ function experiment = plotAverageImage(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: plot average image
-% parentGroups: fluorescence: basic: plots
+% parentGroups: fluorescence: basic: plots, ROI: plots
 % optionsClass: plotAverageImageOptions
 % requiredFields: avgImg, bpp, folder, name
 
@@ -120,8 +120,7 @@ ui = uimenu(hFig, 'Label', 'Export');
      uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, [experiment.folder experiment.name '_raster']});
 
 if(params.saveOptions.saveFigure)
-  %[figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
-  export_fig([figFolder, baseFigName, '_raster', params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], ...
+  export_fig([figFolder, 'avgImg_', baseFigName, params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], ...
               sprintf('-r%d', params.saveOptions.saveFigureResolution), ...
               sprintf('-q%d', params.saveOptions.saveFigureQuality), hFig);
 end

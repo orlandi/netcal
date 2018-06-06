@@ -114,8 +114,9 @@ switch lower(fpc)
           [status, msg, msgID] = copyfile([tfpa filesep '..' filesep experiment.name], [params.project.folder experiment.name filesep], 'f');
         end
       elseif(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]))
-        logMsg('Looks like the experiment folder has changed. Updating');
+        logMsg(sprintf('%s: Looks like the experiment folder has changed. Updating', experiment.name));
         experiment.folder = [params.project.folder experiment.name filesep];
+        experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp']; % JUST IN CASE
         saveExperiment(experiment, 'pbar', 0, 'verbose', false);
       end
     catch ME

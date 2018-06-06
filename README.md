@@ -27,6 +27,12 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.0.2] - 2018-06-06
+
+### Fixed
+- Issue when the experiments were not being correctly saved after importing a windows project on a nix system on pipeline mode
+
+
 ## [8.0.1] - 2018-06-06
 
 ### Fixed
@@ -1563,6 +1569,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.0.2]: https://github.com/orlandi/netcal/tree/v8.0.2
 [8.0.1]: https://github.com/orlandi/netcal/tree/v8.0.1
 [7.4.1]: https://github.com/orlandi/netcal/tree/v7.4.1
 [7.4.0]: https://github.com/orlandi/netcal/tree/v7.4.0

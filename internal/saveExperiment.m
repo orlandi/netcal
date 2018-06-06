@@ -112,7 +112,12 @@ end
 if(params.pbar > 0)
   ncbar.setBarTitle('Saving experiment');
 end
-save(fullSaveFile, '-struct', 'experiment', '-mat', '-v7.3');
+try
+  save(fullSaveFile, '-struct', 'experiment', '-mat', '-v7.3');
+catch ME
+  logMsg(sprintf('%s: Saving experiment failed', experiment.name), 'e');
+  logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+end
 
 %--------------------------------------------------------------------------
 barCleanup(params);
