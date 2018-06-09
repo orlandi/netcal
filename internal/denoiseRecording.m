@@ -303,7 +303,11 @@ for t = 1:(length(frameBlockList)-1)
 
       coeff = icasig';
       score = A;
-      
+      if(size(score, 2) < Ncom)
+        logMsg(sprintf('Warning. Number of ICA components lower than PCA components %d to %d. Updating', Ncom, size(score, 2)), 'w');
+        Ncom = size(score, 2);
+        largestComponent = Ncom;
+      end
       % Sort components based on spatial skewness
       skewS = zeros(Ncom, 1);
       for it = 1:Ncom

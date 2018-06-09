@@ -491,11 +491,19 @@ classdef plotStatistics < handle
           intraPlist = cell(length(obj.fullGroupList{1}), 1);
           intraGrList = cell(length(obj.fullGroupList{1}), 1);
           nTests = cell(length(obj.fullGroupList{1}), 1);
-
-          for git = 1:length(obj.fullStatisticsDataFull{1})
-            grList{git} = {};
-            intraGrList{git} = {};
-            nTests{git} = 0;
+          switch obj.params.pipelineProject.factor
+            case 'mixed'
+              for git = 1:length(obj.fullStatisticsDataFull{1})
+                grList{git} = {};
+                intraGrList{git} = {};
+                nTests{git} = 0;
+              end
+            otherwise
+              for git = 1:size(subData, 3)
+                grList{git} = {};
+                intraGrList{git} = {};
+                nTests{git} = 0;
+              end
           end
       end
       switch obj.params.pipelineProject.factor
@@ -519,7 +527,7 @@ classdef plotStatistics < handle
                     for k = 1:length(fullData{it}{git})
                       for kk = 1:length(fullData{itt}{git})
                         if(all(isnan(fullData{it}{git}{k})) || all(isnan(fullData{itt}{git}{kk})))
-                          pValueList= [pValueList; 1];
+                          pValueList = [pValueList; 1];
                           continue;
                         end
                         try
@@ -603,6 +611,8 @@ classdef plotStatistics < handle
                       else
                         nTests{git} = nTests{git} + 1;
                       end
+                    else
+                      nTests{git} = nTests{git} + 1;
                     end
                     try
                       p = ranksum(subData(:, it, git), subData(:, itt, git));
@@ -616,12 +626,12 @@ classdef plotStatistics < handle
                             grList{git}{end+1} = [it itt];
                           end
                         case 'Kolmogorov-Smirnov'
-                          if(p <= 0.05)
+                          if(p2 <= 0.05)
                             pList{git} = [pList{git}; p2];
                             grList{git}{end+1} = [it itt];
                           end
                         case 'Ttest2'
-                          if(p <= 0.05)
+                          if(p3 <= 0.05)
                             pList{git} = [pList{git}; p3];
                             grList{git}{end+1} = [it itt];
                           end
@@ -637,9 +647,9 @@ classdef plotStatistics < handle
                 for itt = 1:size(subData, 2)
                   for git = 1:size(subData, 3)
                     if(it > itt)
-                      p = ranksum(subData(:, it), subData(:, itt));
-                      [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                      [h, p3] = ttest2(subData(:, it), subData(:, itt));
+                      p = ranksum(subData(:, it, git), subData(:, itt, git));
+                      [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
+                      [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
                       logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
@@ -652,7 +662,7 @@ classdef plotStatistics < handle
                           pList{git} = [pList{git}; p3];
                           grList{git}{end+1} = [it itt];
                       end
-                      grList{git}{end+1} = [it itt];
+                      %grList{git}{end+1} = [it itt]; WHY WAS THIS HERE??
                     end
                   end
                 end
@@ -682,7 +692,7 @@ classdef plotStatistics < handle
               grList{git} = grList{git}(idx(1:validComparisons));
               logMsg('Valid comparisons after Holm-Bonferroni correction:');
               for it = 1:length(pList{git})
-                logMsg(sprintf('%s vs %s . Group: %s . P= %.3g', xList{grList{git}{it}(1)}, xList{grList{it}(2)}, obj.fullGroupList{1}{git}, pList{git}(it)));
+                logMsg(sprintf('%s vs %s . Group: %s . P= %.3g', xList{grList{git}{it}(1)}, xList{grList{git}{it}(2)}, obj.fullGroupList{1}{git}, pList{git}(it)));
               end
             end
         end
@@ -705,7 +715,7 @@ classdef plotStatistics < handle
                             'medianColor','k',...
                             'symbolMarker','+',...
                             'showLegend',false, ...
-                            'showOutliers', false, ...
+                            'showOutliers', true, ...
                             'groupLabels', legendList, ...
                             'showLegend', true, ...
                             'notch', obj.params.styleOptions.notch, ...
@@ -733,16 +743,18 @@ classdef plotStatistics < handle
             if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
               switch obj.params.pipelineProject.significanceTest
                 case {'Mann-Whitney', 'Kolmogorov-Smirnov', 'Ttest2'}
-                  for git = 1:size(subData, 3)
-                    if(isempty(intraPlist{git}))
-                      continue;
-                    end
-                    boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
-                    if(obj.params.pipelineProject.computeIntraGroupComparisons && strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                  % The intragroup comparisons
+                  if(obj.params.pipelineProject.computeIntraGroupComparisons && strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                    for git = 1:size(subData, 3)
+                      if(isempty(intraPlist{git}))
+                        continue;
+                      end
+                      boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
                       newPos = cellfun(@(x)boxesPositions(x)+[-0.01 0.01], intraGrList{git}, 'UniformOutput', false);
                       sigstar(newPos, intraPlist{git});
                     end
                   end
+                  % The normal comparisons
                   for git = 1:size(subData, 3)
                     if(isempty(pList{git}))
                       continue;
@@ -1221,7 +1233,7 @@ classdef plotStatistics < handle
 %         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
 %           break;
 %         end
-        % 2:end to avoid the first comma NOT ANYMORE
+        % 2:end to avoid the first comma NOT ANYMORE - WHAT?
         lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);
       end

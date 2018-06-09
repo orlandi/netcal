@@ -90,7 +90,7 @@ internal/integerLogBinning2.m 2682
 internal/isSubField.m 478
 internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
-internal/loadExperiment.m 25696
+internal/loadExperiment.m 25833
 internal/loadProject.m 4554
 internal/loadROI.m 4281
 internal/loadTraces.m 4318
@@ -128,7 +128,7 @@ internal/recalculateROIstats.m 1387
 internal/redoSelectionMenu.m 324
 internal/refineROI.m 4510
 internal/refineROIthreshold.m 3070
-internal/saveExperiment.m 3991
+internal/saveExperiment.m 4151
 internal/saveProject.m 4669
 internal/saveROI.m 1702
 internal/selectExperimentGroups.m 714
@@ -303,7 +303,7 @@ internal/options/tracePatternDetectionOptions.m 2121
 internal/options/traceUnsupervisedEventDetectionOptions.m 1985
 internal/options/viewTracesOptions.m 1788
 internal/options/help/README.md 148
-internal/plots/plotAverageImage.m 4795
+internal/plots/plotAverageImage.m 4718
 internal/plots/plotAverageTrace.m 3450
 internal/plots/plotFluorescenceBurstStatistics.m 1743
 internal/plots/plotFluorescenceBurstStatisticsTreatment.m 1864
@@ -1672,7 +1672,7 @@ gui/burstAnalysis.m 37874
 gui/guiSave.m 1301
 gui/traceFixer.m 28896
 gui/viewCompareExperiments.m 78901
-gui/viewDenoiser.m 36569
+gui/viewDenoiser.m 36699
 gui/viewGroups.m 51406
 gui/viewInferenceTraining.m 25561
 gui/viewPCA.m 42562
@@ -1691,5 +1691,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 45932
-netcal.m 225019
+README.md 46151
+netcal.m 225320

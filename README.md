@@ -27,11 +27,20 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.0.3] - 2018-06-07
+
+### Fixed
+- Issue when the project export would get the wrong file list if any experiment was missing some of the bigFields
+- Shortened project names in the recent projects list
+- Error on the denoiser when the number of ICA components was lower than the PCA ones (due to degeneracies)
+- Removed the 'no changes were made' after closing GUI windows
+- Fixed a bunch of issues on the plotStatistics function when the number of groups was bigger than 1
+- Fixed errors due to the Holm-Bonferroni correction on several fringe cases
+
 ## [8.0.2] - 2018-06-06
 
 ### Fixed
 - Issue when the experiments were not being correctly saved after importing a windows project on a nix system on pipeline mode
-
 
 ## [8.0.1] - 2018-06-06
 

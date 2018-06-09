@@ -721,7 +721,7 @@ function plotComponents()
   %experiment.denoisedDataTraining(1)
   coeff = experiment.denoisedDataTraining(1).coeff;
   score = experiment.denoisedDataTraining(1).score;
-  blockSize = experiment.denoiseRecordingOptionsCurrent.blockSize;
+  blockSize = experiment.denoisedDataTraining(1).blockSize;
   largestComponent = experiment.denoisedDataTraining(1).largestComponent;
   % Coeff1
   currFrame = zeros(blockSize(1)*sqrt(N), blockSize(2)*sqrt(N));
@@ -743,11 +743,12 @@ function plotComponents()
     for it2= 1:sqrt(N)
       % First entry is special, plot the SUM of the selected components
       if(it1 == 1 && it2 == 1 && currentPage == 1)
+        blockSize = experiment.denoisedDataTraining(1).blockSize;
         avgData = zeros(blockSize(1), blockSize(2));
         for k = 1:largestComponent
           zData = sum(coeff(:, k),2);
           %zData = zData + experiment.denoisedDataTraining(1).means';
-          zData = reshape(zData, [blockSize(1), blockSize(2)]);
+          zData = reshape(zData, [experiment.denoisedDataTraining(1).blockSize(1), experiment.denoisedDataTraining(1).blockSize(2)]);
           avgData = avgData + zData;
         end
         %zData = avgData/largestComponent;

@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.0.2';
+currVersion = '8.0.3';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -553,8 +553,11 @@ function menuProjectExport(~, ~)
     fileList{it1} = [];
     fileListFolder{it1} = {};
     for it2 = 1:length(validExperiments)
-      fileList{it1} = [fileList{it1}; dir([project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep, project.experiments{validExperiments(it2)}, '_', curField, lower(extension)])];
-      fileListFolder{it1}{end+1} = [project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep];
+      newFile = dir([project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep, project.experiments{validExperiments(it2)}, '_', curField, lower(extension)]);
+      if(~isempty(newFile))
+        fileList{it1} = [fileList{it1}; newFile];
+        fileListFolder{it1}{end+1} = [project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep];
+      end
     end
     curSize = 0;
     if(numel(fileList{it1}) == 0)
@@ -580,9 +583,12 @@ function menuProjectExport(~, ~)
   sizeExp = 0;
   for it2 = 1:length(validExperiments)
     %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
-    fileListExp = [fileListExp; dir([project.folderFiles, project.experiments{validExperiments(it2)}, lower(extension)])];
-    fileListExpFolder{end+1} = project.folderFiles;
-    sizeExp = sizeExp +fileListExp(it2).bytes;
+    newFile = dir([project.folderFiles, project.experiments{validExperiments(it2)}, lower(extension)]);
+    if(~isempty(newFile))
+      fileListExp = [fileListExp; newFile];
+      fileListExpFolder{end+1} = project.folderFiles;
+      sizeExp = sizeExp +fileListExp(it2).bytes;
+    end
   end
   %fileListExp = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' extension '$'')']);
  
@@ -609,8 +615,7 @@ function menuProjectExport(~, ~)
     fullFileListFolder = fileListExpFolder;
   end
   logMsg(sprintf('We will be exporting %d files with a total size of %.3f GB\n', length(fullFileList), totalSize/1e9));
-  
-  
+
   % Need to redo:
   % checkedExperiments
   % experiments
@@ -2609,7 +2614,13 @@ function updateMenu()
       %  recentProjectsList{it} = char(recentProjectsList{it});
       %end
       [fpa, fpb, fpc] = fileparts(recentProjectsList{it});
-      shortName = [fpa filesep fpb fpc];
+      %shortName = [fpa filesep fpb fpc];
+      if(~isempty(fpa))
+        shortName = [fpa filesep fpb];
+      else
+        shortName = fpb;
+      end
+      %shortName = recentProjectsList{it};
       if(length(shortName) > 47)
         shortName = ['...' shortName(end-46:end)];
       end
@@ -3443,7 +3454,7 @@ function loadOptions()
         newDir = optionsData.recentProjectsList{it};
         newDir = regexprep(newDir, '\\\\','\\');
         newDir = regexprep(newDir, '\\/','/');
-        % Now, does that start with a single bar, should star with a double bar
+        % Now, those that start with a single bar, should start with a double bar
         newDir = regexprep(newDir, '^(\\+)', '\\\\');
         
         optionsData.recentProjectsList{it} = newDir;

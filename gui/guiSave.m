@@ -40,8 +40,8 @@ if(save && experimentChanged)
   saveExperiment(experiment, 'verbose', false);
 else
   if(~experimentChanged)
-    logMsg('No changes were made to the experiment');
+    %logMsg('No changes were made to the experiment');
   else
-    logMsg('Discarding any changes');
+    logMsg(sprintf('%s: Discarding any changes', experiment.name));
   end
 end
