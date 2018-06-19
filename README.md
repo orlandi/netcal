@@ -29,6 +29,14 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 ## [8.0.6] - 2018-06-18
 
+### Added
+- Extra feature list on schmitt trigger based inference
+- Visualization of schmit events on the view traces menu
+
+### Fixed
+- Error when identifying similarities in traces if only 1 trace was present
+- Seval yypos
+
 ## [8.0.5] - 2018-06-18
 
 ### Added
