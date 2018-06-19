@@ -1,0 +1,22 @@
+{
+	"update": "ask",
+	"defaultFolder": "\/scratch\/SSD500A\/pcloud\/netcal",
+	"numberRecentProjects": 10,
+	"mainFontSize": 12,
+	"headerFontSize": 12,
+	"treeFontSize": 12,
+	"uiFontSize": 12,
+	"verbose": true,
+	"recentProjectsList": [
+		"D:\\aggregates\\120416_clusters\\str2.proj",
+		"\/scratch\/SSD500A\/nl3export2\/nl3round3_exported.proj",
+		"P:\\netcalProjects\\ttx\\june28.proj",
+		"\/scratch\/SSD500A\/nl3export2\/nl3export2.proj",
+		"\/home\/orlandi\/pCloudDrive\/shared\/calciumHD\/STR basales\/STR basal.proj",
+		"\/home\/orlandi\/pCloudDrive\/shared\/calciumHD\/STR BIC\/STR BIC.proj",
+		"P:\\shared\\calciumHD\\STR BIC\\STR BIC.proj",
+		"P:\\shared\\calciumHD\\CTX all\\CTX BIC all.proj",
+		"\/scratch\/SSD500A\/pcloud\/netcalProjects\/testLudl\/testludl.proj",
+		"\/scratch\/SSD500A\/pcloud\/nl3export2\/nl3export2.proj"
+	]
+}

@@ -7,7 +7,7 @@ classdef patternCountClassifierOptions < baseOptions
 %   See also viewTraces, baseOptions, optionsWindow
 
   properties
-    % Relative threshold to use for the classifier. You have to options
+    % Relative threshold to use for the classifier. You have two options
     % - Between 0 and 1: relative threshold, fraction of events.
     % A threshold of 0.5 with 2 populations means that population will be assigned based on the highest
     % event count. A higher threshold becomes more restrictive, e.g., a threshold of 0.75

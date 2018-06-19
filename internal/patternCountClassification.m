@@ -111,10 +111,10 @@ switch params.mode
     if(nGroups > 2)
       for it1 = 1:(nGroups-1)
         for it2 = (it1+1):(nGroups-1)
-          experiment.traceGroupsNames.patternCountClassifier
+          %experiment.traceGroupsNames.patternCountClassifier
           gr1 = experiment.traceGroups.patternCountClassifier{it1};
           gr2 = experiment.traceGroups.patternCountClassifier{it2};
-          experiment.traceGroups.patternCountClassifier
+          %experiment.traceGroups.patternCountClassifier
           valid = intersect(gr1, gr2);
           experiment.traceGroups.patternCountClassifier{end+1} = valid;
           experiment.traceGroupsOrder.ROI.patternCountClassifier{end+1} = valid;
@@ -130,7 +130,7 @@ for it = 1:length(experiment.traceGroupsNames.patternCountClassifier)
 end
 
 % Now the similarity stuff
-logMsg(sprintf('Obtaining similarities'));
+%logMsg(sprintf('Obtaining similarities'));
 experiment.traceGroupsOrder.similarity.classifier = cell(trainingGroups, 1);
 for i = 1:length(experiment.traceGroupsNames.patternCountClassifier)
   if(~isempty(experiment.traceGroups.patternCountClassifier{i}))

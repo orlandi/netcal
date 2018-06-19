@@ -140,6 +140,12 @@ barCleanup(params);
     burstDuration = zeros(length(validSplit), 1);
     burstAmplitude = zeros(length(validSplit), 1);
     burstArea = zeros(length(validSplit), 1);
+    burstMean = zeros(length(validSplit), 1);
+    burstStd = zeros(length(validSplit), 1);
+    burstSke = zeros(length(validSplit), 1);
+    burstMeanF = zeros(length(validSplit), 1);
+    burstStdF = zeros(length(validSplit), 1);
+    burstSkeF = zeros(length(validSplit), 1);
     burstStart = zeros(length(validSplit), 1);
     burstFrames = cell(length(validSplit), 1);
     for i = 1:length(validSplit)
@@ -153,6 +159,12 @@ barCleanup(params);
           burstArea(i) = 0;
         else
           burstArea(i) = trapz(burstT, abs(burstF));
+          burstMean(i) = trapz(burstT, burstT'.*abs(burstF))/burstArea(i);
+          burstStd(i) = sqrt(trapz(burstT, (burstT'-burstMean(i)).^2.*abs(burstF))/burstArea(i));
+          burstSke(i) = trapz(burstT, (burstT'-burstMean(i)).^3.*abs(burstF))/burstArea(i)/burstStd(i)^3;
+          burstMeanF(i) = mean(burstF);
+          burstStdF(i) = std(burstF);
+          burstSkeF(i) = skewness(burstF);
         end
     end
     IBI = diff(burstStart);
@@ -160,6 +172,12 @@ barCleanup(params);
     burstStructure.duration = burstDuration;
     burstStructure.amplitude = burstAmplitude;
     burstStructure.area = burstArea;
+    burstStructure.mean = burstMean;
+    burstStructure.std = burstStd;
+    burstStructure.ske = burstSke;
+    burstStructure.meanF = burstMeanF;
+    burstStructure.stdF = burstStdF;
+    burstStructure.skeF = burstSkeF;
     burstStructure.start = burstStart;
     burstStructure.IBI = IBI;
     burstStructure.frames = burstFrames;

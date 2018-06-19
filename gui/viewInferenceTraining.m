@@ -42,7 +42,11 @@ try
 catch
 end
 ROIid = getROIid(experiment.ROI);
-experiment = loadTraces(experiment, 'all', 'pbar', []);
+try
+  experiment = loadTraces(experiment, 'smoothed', 'pbar', []);
+catch
+  experiment = loadTraces(experiment, 'raw', 'pbar', []);
+end
 if(isfield(experiment, 'traces'))
   traces = experiment.traces;
   t = experiment.t;

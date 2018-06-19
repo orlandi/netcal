@@ -64,7 +64,7 @@ elseif(strcmpi(fpc, '.his'))
   stream = fopen(experiment.handle, 'r');
 elseif(strcmpi(fpc, '.dcimg'))
   stream = fopen(experiment.handle, 'r');
-elseif(strcmpi(fpc, '.btf'))
+elseif(strcmpi(fpc, '.btf') || strcmpi(fpc, '.tiff') || strcmpi(fpc, '.tif'))
   stream = 137;
 elseif(strcmpi(fpc, '.mat'))
   if(strcmp(experiment.metadata, 'RIKEN'))

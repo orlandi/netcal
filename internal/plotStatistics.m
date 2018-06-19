@@ -153,7 +153,11 @@ classdef plotStatistics < handle
       end
       
       %%% Get the labels we need
-      [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments));
+      labelsToUse = obj.params.pipelineProject.labelGroups;
+      try
+        [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments), labelsToUse);
+        %[labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments));
+      end
 
       labelsToUse = obj.params.pipelineProject.labelGroups;
       labelsToUseJoined = cell(length(labelsToUse), 1);
@@ -229,6 +233,20 @@ classdef plotStatistics < handle
           plotDataAveragedFull = cell(length(validCombinations), 1);
           switch obj.params.pipelineProject.factor
             case 'experiment'
+              % Label change
+              switch obj.params.pipelineProject.factorAverageFunction
+                case 'mean'
+                case 'median'
+                  obj.figName = [obj.figName ' median factor'];
+                case 'std'
+                  obj.figName = [obj.figName ' std factor'];
+                case 'var'
+                  obj.figName = [obj.figName ' var factor'];
+                case 'skewness'
+                  obj.figName = [obj.figName ' ske factor'];
+                case 'cv'
+                  obj.figName = [obj.figName ' cv factor'];
+              end
               for it = 1:length(validCombinations)
                 plotDataAveraged{it} = cell(obj.maxGroups, 1);
                 valid = [experimentsPerCombinedLabel{validCombinations(it)}{:}];
@@ -484,6 +502,7 @@ classdef plotStatistics < handle
       end
       switch obj.params.pipelineProject.showSignificance
         case 'none'
+          obj.fullGroupList = {obj.fullGroupList};
         otherwise
           obj.fullGroupList = {obj.fullGroupList};
           grList = cell(length(obj.fullGroupList{1}), 1);
@@ -577,7 +596,7 @@ classdef plotStatistics < handle
                           [~, p2] = kstest2(fullData{it}{git}{k}, fullData{it}{git}{kk});
                           %logMsg(sprintf('Intragroup: %s . Group: %s . Idx: %d vs %d Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, objfullGroupList{git}, k, kk, p, p2));
                           switch obj.params.pipelineProject.significanceTest
-                            case 'Mann-intraP'
+                            case 'Mann-Whitney'
                               intraP= [intraP; p];
                             case 'Kolmogorov-Smirnov'
                               intraP= [intraP; p2];
@@ -675,7 +694,8 @@ classdef plotStatistics < handle
           case {'partial', 'all'}
             for git = 1:length(nTests)
               Ncomparisons = nTests{git};
-              if(isempty(Ncomparisons))
+              if(isempty(Ncomparisons) || Ncomparisons == 0 || isempty(pList{git}))
+                logMsg(sprintf('No significant data found for Holm-Bonferroni correction on group: %s', obj.fullGroupList{1}{git}));
                 continue;
               end
               fullList = [pList{git}, cellfun(@(x)x(1), grList{git})', cellfun(@(x)x(2), grList{git})'];
@@ -723,7 +743,22 @@ classdef plotStatistics < handle
           catch
             obj.plotHandles = [];
           end
-
+          if(obj.params.pipelineProject.showMeanError)
+            try
+              obj.plotHandles.showMean = true;
+              obj.plotHandles.meanColor = [1 0 0];
+              boxes = obj.plotHandles.handles.box;
+              boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(:));
+              xcoords = boxesPositions;
+              avgy = nanmean(obj.plotHandles.y,1);
+              erry = nanstd(obj.plotHandles.y,1)./sqrt(sum(~isnan(obj.plotHandles.y)));
+              hold on;
+              h = errorbar(xcoords, avgy, erry,'o');
+              h.Color = [1 0 0];
+            catch ME
+              logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+            end
+          end
           try
             % Now let's fix the patches
             boxes = obj.plotHandles.handles.box;
@@ -800,37 +835,9 @@ classdef plotStatistics < handle
           uimenu(ui, 'Label', 'Data (statistics)',  'Callback', @(h,e)obj.exportDataAggregates(bpData, obj.exportFolder));
           uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, obj.exportFolder));
         case 'distribution'
-%           obj.plotHandles = boxPlot(xList, subData, ...
-%                             'symbolColor','k',...
-%                             'medianColor','k',...
-%                             'symbolMarker','+',...
-%                             'showLegend',false, ...
-%                             'showOutliers', false, ...
-%                             'groupLabels', legendList, ...
-%                             'showLegend', true, ...
-%                             'notch', obj.params.styleOptions.notch, ...
-%                             'boxcolor', cmap);
         % Since the groups are independent. One subplot per group
           nSquares = ceil(sqrt(size(subData, 3)));
-        
-        % Establish cmap entries - NOT this way
-%         switch obj.params.pipelineProject.factor
-%           case 'experiment'
-%             %subData: array sample - label - group
-%             numPlots = find(sum(sum(isnan(subData),3),2) == size(subData,2)*size(subData,3), 1, 'first')-1;
-%             if(isempty(numPlots) || numPlots <= 0 || numPlots > size(subData,1))
-%               numPlots = size(subData, 1);
-%             end
-%           case 'event'
-%             %subData: array sample - label - group
-%             numPlots = 1;
-%           case 'mixed'
-%             %fullData: cell label - group - experiment
-%             for it = 1:length(fullData)
-%               % Ouch
-%               numPlots = max(cellfun(@(x) max(cellfun(@length, x)), fullData));
-%             end
-%         end
+
         % Establish cmap entries - NOT this way
           switch obj.params.pipelineProject.factor
             case 'experiment'
@@ -1191,8 +1198,11 @@ classdef plotStatistics < handle
               lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
               %data.(names{it})
-              %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
-              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
+              if(ndims(data.(names{it})) == 3)
+                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, git, cit));
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
+              end
             end
           end
         end
@@ -1224,15 +1234,20 @@ classdef plotStatistics < handle
             elseif(it == 2)
               lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, cit, git));
+              if(isnan(bpData(mainIdx, cit, git)))
+                lineStr = sprintf('%s,%s', lineStr, '');
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, cit, git));
+              end
             end
           end
         end
 
         % Stop when everything is NaN
-%         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
-%           break;
-%         end
+        if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
+           lineStr = sprintf('%s\r\n', lineStr(2:end));
+           break;
+        end
         % 2:end to avoid the first comma NOT ANYMORE - WHAT?
         lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);

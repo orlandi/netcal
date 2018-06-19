@@ -42,7 +42,16 @@ params = parse_pv_pairs(params, varargin);
 params = barStartup(params, 'Identifying similarities', true);
 %--------------------------------------------------------------------------
 
+% In case there is only one trace
+if(size(traces, 2) == 1)
+  orderedTraces = traces;
+  perm = 1;
+  newmat = [];
+  return;
+end
+
 subTraces = traces';
+
 distmat = pdist(subTraces, 'correlation');
 
 Z = linkage(distmat);

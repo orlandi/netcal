@@ -13,7 +13,11 @@ function [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, 
   else
       selection = 1:length(project.experiments);
   end
-  
+  if(length(varargin) >= 2 && ~isempty(varargin{2}))
+    subLabels = varargin{2};
+  else
+    subLabels = [];
+  end
   labelList = {};
   labelsCombinations = {};
   labelsCombinationsNames = {};
@@ -29,11 +33,23 @@ function [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, 
     end
   end
   uniqueLabels = unique(cellfun(@(x)x{2}, labelList, 'UniformOutput', false));
-  for i = 1:length(uniqueLabels)
-    curList = pick(uniqueLabels, i, '');
-    for j = 1:size(curList, 1)
-      labelsCombinations{end+1} = curList(j, :);
-      labelsCombinationsNames{end+1} = strjoin(labelsCombinations{end}, ', ');
+  % Hack to be faster
+  if(~isempty(subLabels))
+    uniqueLabels = subLabels;
+    for i = 1:length(uniqueLabels)
+      curList = sort(strtrim(strsplit(uniqueLabels{i}, ',')));
+      for j = 1:size(curList, 1)
+        labelsCombinations{end+1} = curList(j, :);
+        labelsCombinationsNames{end+1} = strjoin(labelsCombinations{end}, ', ');
+      end
+    end
+  else
+    for i = 1:length(uniqueLabels)
+      curList = pick(uniqueLabels, i, '');
+      for j = 1:size(curList, 1)
+        labelsCombinations{end+1} = curList(j, :);
+        labelsCombinationsNames{end+1} = strjoin(labelsCombinations{end}, ', ');
+      end
     end
   end
   % For each new joint label, the present experiments
@@ -50,7 +66,6 @@ function [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, 
         if(isequal(curLabels, curCombo) || (length(intersect(curCombo, curLabels)) == length(curCombo)))
           experimentsPerCombinedLabel{j}{end+1} = selection(i);
         end
-      %end
     end
   end
   % Clear empty labels

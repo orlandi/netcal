@@ -8,6 +8,8 @@ classdef plotStatisticsTreatment < handle
     figureHandle;
     axisHandle;
     fullStatisticsData;
+    fullStatisticsDataPre;
+    fullStatisticsDataPost;
     statisticsName;
     labelList;
     mainGroup;
@@ -89,9 +91,12 @@ classdef plotStatisticsTreatment < handle
     function success = getDataProject(obj, funcHandle, project, varargin)
       success = true;
       obj.fullStatisticsData = {};
+      obj.fullStatisticsDataPre = {};
+      obj.fullStatisticsDataPost = {};
       checkedExperiments = find(project.checkedExperiments);
       
       plotData = cell(length(checkedExperiments), 1);
+      plotDataMembers = cell(length(checkedExperiments), 1);
       if(obj.params.pbar > 0)
         ncbar.setBarName('Gathering data');
       end
@@ -140,6 +145,7 @@ classdef plotStatisticsTreatment < handle
           obj.groupList = getExperimentGroupsNames(experiment, obj.mainGroup);
         end
         plotData{i} = cell(length(obj.fullGroupList), 1);
+        plotDataMembers{i} = cell(length(obj.fullGroupList), 1);
         for git = 1:length(obj.groupList)
           groupIdx = find(strcmp(obj.groupList{git}, obj.fullGroupList));
           if(isempty(groupIdx))
@@ -151,6 +157,7 @@ classdef plotStatisticsTreatment < handle
           end
           %plotData{i}{git} = getData(experiment, obj.groupList{git}, obj.params.statistic);
           plotData{i}{groupIdx} = feval(funcHandle, experiment, obj.groupList{git}, varargin{:});
+          plotDataMembers{i}{groupIdx} = getExperimentGroupMembers(experiment, obj.groupList{git});
           if(obj.params.zeroToNan)
             plotData{i}{groupIdx}(plotData{i}{groupIdx} == 0) = NaN;
           end
@@ -162,10 +169,10 @@ classdef plotStatisticsTreatment < handle
       end
       
       %%% Get the labels we need
-      [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments));
-      
-
+      %[labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments));
       labelsToUse = obj.params.pipelineProject.labelGroups;
+      partLabels = {labelsToUse{:}, obj.params.treatmentLabels{:}};
+      [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments), partLabels);
       labelsToUseJoined = cell(length(labelsToUse), 1);
       try
         if(isempty([obj.params.pipelineProject.labelGroups{:}]))
@@ -187,11 +194,12 @@ classdef plotStatisticsTreatment < handle
       end
       validCombinations = cell2mat(validCombinations(valid));
       labelsToUseJoined = labelsToUseJoined(valid);
-      
+
       validCombinationsTreatment = cellfun(@(x)find(strcmp(labelsCombinationsNames, x)), obj.params.treatmentLabels, 'UniformOutput', false);
       valid = find(cellfun(@(x)~isempty(x), validCombinationsTreatment));
+
       if(length(valid) ~= length(validCombinationsTreatment))
-        logMsg('Some label sets had no representative experiments', 'w');
+        logMsg('Some treatment label sets had no representative experiments', 'w');
       end
       validCombinationsTreatment = cell2mat(validCombinationsTreatment(valid));
       labelsToUseJoinedTreatment = obj.params.treatmentLabels(valid);
@@ -217,10 +225,14 @@ classdef plotStatisticsTreatment < handle
       %experimentsPerTreatmentLabelList
       %success = false;
       %return;
+      %valid = find(cellfun(@(x)~isempty(x),experimentsPerTreatmentLabelList));
+      %experimentsPerTreatmentLabelList = experimentsPerTreatmentLabelList(valid);
       
       logMsg('We will compare the following experiments:', 'w');
       
       plotDataTreatment = cell(length(experimentsPerTreatmentLabelList), 1);
+      plotDataTreatmentPre = cell(length(experimentsPerTreatmentLabelList), 1);
+      plotDataTreatmentPost = cell(length(experimentsPerTreatmentLabelList), 1);
       
       obj.treatmentNames = {};
       for it2 = 1:(obj.Ntreatments-1)
@@ -245,6 +257,10 @@ classdef plotStatisticsTreatment < handle
           end
         end
       end
+      plotDataTreatmentExperimentAveragePre = plotDataTreatmentExperimentAverage;
+      plotDataTreatmentExperimentAveragePost = plotDataTreatmentExperimentAverage;
+      plotDataTreatmentROIaveragePre = plotDataTreatmentROIaverage;
+      plotDataTreatmentROIaveragePost = plotDataTreatmentROIaverage;
 
       for it = 1:length(experimentsPerTreatment{1})
         for it2 = 1:(obj.Ntreatments-1)
@@ -261,6 +277,9 @@ classdef plotStatisticsTreatment < handle
           end
           % Ok, curCombination is where this experiment should go
 %          [checkedExperiments(preIdx) curCombination]
+          if(isempty(experimentsPerTreatmentLabelList{it}))
+            continue;
+          end
           logMsg(sprintf('%s and %s with main label %s', project.experiments{checkedExperiments(preIdx)}, project.experiments{checkedExperiments(postIdx)}, experimentsPerTreatmentLabelList{it}));
           for git = 1:length(plotData{preIdx})
             switch obj.params.comparisonType
@@ -269,12 +288,26 @@ classdef plotStatisticsTreatment < handle
                   switch obj.params.averageDataFirst.function
                     case 'mean'
                       plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))-nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
                     case 'median'
                       plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))-nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
+                    case 'std'
+                      plotDataTreatment{it}{git}{it2} = nanstd(plotData{postIdx}{git}(:))-nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanstd(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanstd(plotData{postIdx}{git}(:));
+                    case 'rmse'
+                      plotDataTreatment{it}{git}{it2} = (nanstd(plotData{postIdx}{git}(:))-nanmedian(plotData{preIdx}{git}(:)))/sqrt(mean([numel(plotData{preIdx}{git}(:)) numel(plotData{postIdx}{git}(:))]));
+                      plotDataTreatmentPre{it}{git}{it2} = nanstd(plotData{preIdx}{git}(:))/sqrt(numel(plotData{preIdx}{git}(:)));
+                      plotDataTreatmentPost{it}{git}{it2} = nanstd(plotData{postIdx}{git}(:))/sqrt(numel(plotData{postIdx}{git}(:)));
                   end
                 else
                   if(length(plotData{postIdx}{git}) == length(plotData{preIdx}{git}))
                     plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(:)-plotData{preIdx}{git}(:);
+                    plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(:);
+                    plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(:);
                   else
                     logMsg('Length of pre and post groups differ. You might have to average the data first to compare them', 'e');
                     success = false;
@@ -286,28 +319,77 @@ classdef plotStatisticsTreatment < handle
                   switch obj.params.averageDataFirst.function
                     case 'mean'
                       plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))./nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
                     case 'median'
                       plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))./nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
                   end
                 else
                   if(length(plotData{postIdx}{git}) == length(plotData{preIdx}{git}))
                     plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(:)./plotData{preIdx}{git}(:);
+                    plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(:);
+                    plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(:);
                   else
                     logMsg('Length of pre and post groups differ. You might have to average the data first to compare them', 'e');
                     success = false;
                     return;
                   end
                 end
+              case 'differenceIntersect'
+                if(obj.params.averageDataFirst.enable)
+                  switch obj.params.averageDataFirst.function
+                    case 'mean'
+                      plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))-nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
+                    case 'median'
+                      plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))-nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
+                  end
+                else
+                  [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                  plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)-plotData{preIdx}{git}(validMembersPre);
+                  plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                  plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
+                end
+              case 'ratioIntersect'
+                if(obj.params.averageDataFirst.enable)
+                  switch obj.params.averageDataFirst.function
+                    case 'mean'
+                      plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))./nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
+                    case 'median'
+                      plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))./nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
+                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
+                  end
+                else
+                  [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                  plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)./plotData{preIdx}{git}(validMembersPre);
+                  plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                  plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
+                end
             end
             switch obj.params.pipelineProject.factorAverageFunction
               case 'mean'
                 plotDataTreatmentExperimentAverage{curCombination}{git}{it2} = [plotDataTreatmentExperimentAverage{curCombination}{git}{it2}; nanmean(plotDataTreatment{it}{git}{it2})];
+                plotDataTreatmentExperimentAveragePre{curCombination}{git}{it2} = [plotDataTreatmentExperimentAveragePre{curCombination}{git}{it2}; nanmean(plotDataTreatmentPre{it}{git}{it2})];
+                plotDataTreatmentExperimentAveragePost{curCombination}{git}{it2} = [plotDataTreatmentExperimentAveragePost{curCombination}{git}{it2}; nanmean(plotDataTreatmentPost{it}{git}{it2})];
               case 'median'
                 plotDataTreatmentExperimentAverage{curCombination}{git}{it2} = [plotDataTreatmentExperimentAverage{curCombination}{git}{it2}; nanmedian(plotDataTreatment{it}{git}{it2})];
+                plotDataTreatmentExperimentAveragePre{curCombination}{git}{it2} = [plotDataTreatmentExperimentAveragePre{curCombination}{git}{it2}; nanmedian(plotDataTreatmentPre{it}{git}{it2})];
+                plotDataTreatmentExperimentAveragePost{curCombination}{git}{it2} = [plotDataTreatmentExperimentAveragePost{curCombination}{git}{it2}; nanmedian(plotDataTreatmentPost{it}{git}{it2})];
             end
             plotDataTreatmentROIaverage{curCombination}{git}{it2} = [plotDataTreatmentROIaverage{curCombination}{git}{it2}; plotDataTreatment{it}{git}{it2}];
+            plotDataTreatmentROIaveragePre{curCombination}{git}{it2} = [plotDataTreatmentROIaveragePre{curCombination}{git}{it2}; plotDataTreatmentPre{it}{git}{it2}];
+            plotDataTreatmentROIaveragePost{curCombination}{git}{it2} = [plotDataTreatmentROIaveragePost{curCombination}{git}{it2}; plotDataTreatmentPost{it}{git}{it2}];
           end
         end
+        %%% TODO
         if(obj.Ntreatments > 2 && obj.params.compareExtremes)
           preIdx = find(checkedExperiments == experimentsPerTreatment{1}(it));
           postIdx = find(checkedExperiments == experimentsPerTreatment{end}(it));
@@ -338,7 +420,6 @@ classdef plotStatisticsTreatment < handle
         end
       end
       
-      
       switch obj.params.pipelineProject.groupingOrder
         case 'none'
           % Do nothing
@@ -348,12 +429,18 @@ classdef plotStatisticsTreatment < handle
           switch obj.params.pipelineProject.factor
             case 'experiment'
               plotDataTreatment = plotDataTreatmentExperimentAverage;
+              plotDataTreatmentPre = plotDataTreatmentExperimentAveragePre;
+              plotDataTreatmentPost = plotDataTreatmentExperimentAveragePost;
             case 'ROI'
               plotDataTreatment = plotDataTreatmentROIaverage;
+              plotDataTreatmentPre = plotDataTreatmentROIaveragePre;
+              plotDataTreatmentPost = plotDataTreatmentROIaveragePost;
           end
           obj.groupLabels = labelsToUseJoined;
       end
       obj.fullStatisticsData = plotDataTreatment;
+      obj.fullStatisticsDataPre = plotDataTreatmentPre;
+      obj.fullStatisticsDataPost = plotDataTreatmentPost;
     end
     
     %----------------------------------------------------------------------
@@ -549,23 +636,20 @@ classdef plotStatisticsTreatment < handle
       else
         bpData = nan(maxReplicas, length(curData), obj.maxGroups, obj.Ntreatments-1);
       end
+      bpDataPre = bpData;
+      bpDataPost = bpData;
       
       for it1 = 1:length(curData)
         for it2 = 1:length(curData{it1})
           for it3 = 1:length(curData{it1}{it2})
             bpData(1:length(curData{it1}{it2}{it3}), it1, it2, it3) = curData{it1}{it2}{it3};
+            bpDataPre(1:length(curData{it1}{it2}{it3}), it1, it2, it3) = obj.fullStatisticsDataPre{it1}{it2}{it3};
+            bpDataPost(1:length(curData{it1}{it2}{it3}), it1, it2, it3) = obj.fullStatisticsDataPost{it1}{it2}{it3};
           end
         end
       end
 
       import iosr.statistics.*
-
-      %bpData = permute(bpData,[1 3 2 4]);
-      
-      %obj.fullGroupList = {obj.fullGroupList};
-      %if(~iscell(obj.fullGroupList) || (iscell(obj.fullGroupList) && length(obj.fullGroupList) == 1))
-      %  obj.fullGroupList = {obj.fullGroupList};
-      %end
       % Let's do 1 plot per treatment instead
       for fIdx = 1:size(bpData, 4)
         subData = bpData(:, :, :, fIdx);
@@ -578,20 +662,10 @@ classdef plotStatisticsTreatment < handle
             if(~iscell(legendList) || (iscell(legendList) && length(legendList) == 1))
               legendList = {legendList};
             end
-%             if(~iscell(legendList) || (iscell(legendList) && length(legendList{1}) == 1))
-%               legendList = {legendList};
-%             end
-%             legendList{1}
           case 'group'
-            subData = permute(subData,[1 3 2]);
+            subData = permute(subData,[1 2 3]);
             legendList = obj.groupLabels;
             xList = obj.fullGroupList;
-%             iscell(legendList)
-%             legendList
-%             if(~iscell(legendList) || (iscell(legendList) && length(legendList{1}) == 1))
-%               legendList = {legendList};
-%             end
-%             legendList
         end
         if(isfield(obj.params.styleOptions, 'colormap') && ~isempty(obj.params.styleOptions.colormap))
           cmap = eval(sprintf('%s (%d)', obj.params.styleOptions.colormap, length(legendList)));
@@ -617,97 +691,280 @@ classdef plotStatisticsTreatment < handle
         obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
         obj.axisHandle = axes;
         hold on;
-        grList = {};
-        pList = [];
-        %%% HACK
-        obj.params.pipelineProject.showSignificance = 'partial';
-        obj.params.pipelineProject.significanceTest = 'Kolmogorov-Smirnov';
+%         grList = {};
+%         pList = [];
+%         %%% HACK
+% 
+%         switch obj.params.pipelineProject.showSignificance
+%           case 'none'
+%           case 'partial'
+%             for it = 1:size(subData, 2)
+%               for itt = 1:size(subData, 2)
+%                 if(it > itt)
+%                   try
+%                     p = ranksum(subData(:, it), subData(:, itt));
+%                     [h, p2] = kstest2(subData(:, it), subData(:, itt));
+%                     logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+%                     switch obj.params.pipelineProject.significanceTest
+%                       case 'Mann-Whitney'
+%                         if(p <= 0.05)
+%                           pList = [pList; p];
+%                           grList{end+1} = [it itt];
+%                         end
+%                       case 'Kolmogorov-Smirnov'
+%                         if(p <= 0.05)
+%                           pList = [pList; p2];
+%                           grList{end+1} = [it itt];
+%                         end
+%                     end
+%                   catch ME
+%                     logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+%                   end
+%                 end
+%               end
+%             end
+%           case 'all'
+%             for it = 1:size(subData, 2)
+%               for itt = 1:size(subData, 2)
+%                 if(it > itt)
+%                   p = ranksum(subData(:, it), subData(:, itt));
+%                   [h, p2] = kstest2(subData(:, it), subData(:, itt));
+%                   logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
+%                   switch obj.params.pipelineProject.significanceTest
+%                     case 'Mann-Whitney'
+%                       pList = [pList; p];
+%                       grList{end+1} = [it itt];
+%                     case 'Kolmogorov-Smirnov'
+%                       pList = [pList; p2];
+%                       grList{end+1} = [it itt];
+%                   end
+%                   grList{end+1} = [it itt];
+%                 end
+%               end
+%             end
+%         end
+
         switch obj.params.pipelineProject.showSignificance
           case 'none'
-          case 'partial'
-            for it = 1:size(subData, 2)
-              for itt = 1:size(subData, 2)
-                if(it > itt)
-                  try
-                    p = ranksum(subData(:, it), subData(:, itt));
-                    [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                    logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
-                    switch obj.params.pipelineProject.significanceTest
-                      case 'Mann-Whitney'
-                        if(p <= 0.05)
-                          pList = [pList; p];
-                          grList{end+1} = [it itt];
+            obj.fullGroupList = {obj.fullGroupList};
+          otherwise
+            obj.fullGroupList = {obj.fullGroupList};
+            grList = cell(length(obj.fullGroupList{1}), 1);
+            pList = cell(length(obj.fullGroupList{1}), 1);
+            intraPlist = cell(length(obj.fullGroupList{1}), 1);
+            intraGrList = cell(length(obj.fullGroupList{1}), 1);
+            nTests = cell(length(obj.fullGroupList{1}), 1);
+            switch obj.params.pipelineProject.factor
+              case 'mixed'
+%                 for git = 1:length(obj.fullStatisticsDataFull{1})
+%                   grList{git} = {};
+%                   intraGrList{git} = {};
+%                   nTests{git} = 0;
+%                 end
+              otherwise
+                for git = 1:size(subData, 3)
+                  grList{git} = {};
+                  intraGrList{git} = {};
+                  nTests{git} = 0;
+                end
+            end
+        end
+        switch obj.params.pipelineProject.factor
+          case 'mixed'
+          otherwise
+            switch obj.params.pipelineProject.showSignificance
+              case 'none'
+              case 'partial'
+                for it = 1:size(subData, 2)
+                  for itt = (it+1):size(subData, 2)
+                    for git = 1:size(subData, 3)
+                      if(obj.params.pipelineProject.avoidCrossComparisons)
+                        if(~any(cellfun(@(x)any(strcmp(x, strtrim(strsplit(xList{itt}, ',')))), strtrim(strsplit(xList{it}, ',')))))
+                          continue;
+                        else
+                          nTests{git} = nTests{git} + 1;
                         end
-                      case 'Kolmogorov-Smirnov'
-                        if(p <= 0.05)
-                          pList = [pList; p2];
-                          grList{end+1} = [it itt];
+                      else
+                        nTests{git} = nTests{git} + 1;
+                      end
+                      try
+                        p = ranksum(subData(:, it, git), subData(:, itt, git));
+                        [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
+                        [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
+                        logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
+                        switch obj.params.pipelineProject.significanceTest
+                          case 'Mann-Whitney'
+                            if(p <= 0.05)
+                              pList{git} = [pList{git}; p];
+                              grList{git}{end+1} = [it itt];
+                            end
+                          case 'Kolmogorov-Smirnov'
+                            if(p2 <= 0.05)
+                              pList{git} = [pList{git}; p2];
+                              grList{git}{end+1} = [it itt];
+                            end
+                          case 'Ttest2'
+                            if(p3 <= 0.05)
+                              pList{git} = [pList{git}; p3];
+                              grList{git}{end+1} = [it itt];
+                            end
                         end
+                      catch ME
+                        logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+                      end
                     end
-                  catch ME
-                    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
                   end
                 end
-              end
-            end
-          case 'all'
-            for it = 1:size(subData, 2)
-              for itt = 1:size(subData, 2)
-                if(it > itt)
-                  p = ranksum(subData(:, it), subData(:, itt));
-                  [h, p2] = kstest2(subData(:, it), subData(:, itt));
-                  logMsg(sprintf('%s vs %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g', xList{it}, xList{itt}, p, p2));
-                  switch obj.params.pipelineProject.significanceTest
-                    case 'Mann-Whitney'
-                      pList = [pList; p];
-                      grList{end+1} = [it itt];
-                    case 'Kolmogorov-Smirnov'
-                      pList = [pList; p2];
-                      grList{end+1} = [it itt];
+              case 'all'
+                for it = 1:size(subData, 2)
+                  for itt = 1:size(subData, 2)
+                    for git = 1:size(subData, 3)
+                      if(it > itt)
+                        p = ranksum(subData(:, it, git), subData(:, itt, git));
+                        [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
+                        [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
+                        logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
+                        switch obj.params.pipelineProject.significanceTest
+                          case 'Mann-Whitney'
+                            pList{git} = [pList{git}; p];
+                            grList{git}{end+1} = [it itt];
+                          case 'Kolmogorov-Smirnov'
+                            pList{git} = [pList{git}; p2];
+                            grList{git}{end+1} = [it itt];
+                          case 'Ttest2'
+                            pList{git} = [pList{git}; p3];
+                            grList{git}{end+1} = [it itt];
+                        end
+                        %grList{git}{end+1} = [it itt]; WHY WAS THIS HERE??
+                      end
+                    end
                   end
-                  grList{end+1} = [it itt];
                 end
-              end
             end
         end
+        % Holm-Bonferroni
+        if(obj.params.pipelineProject.HolmBonferroniCorrection)
+          switch obj.params.pipelineProject.showSignificance
+            case {'partial', 'all'}
+              for git = 1:length(nTests)
+                Ncomparisons = nTests{git};
+                if(isempty(Ncomparisons) || Ncomparisons == 0 || isempty(pList{git}))
+                  logMsg(sprintf('No significant data found for Holm-Bonferroni correction on group: %s', obj.fullGroupList{1}{git}));
+                  continue;
+                end
+                fullList = [pList{git}, cellfun(@(x)x(1), grList{git})', cellfun(@(x)x(2), grList{git})'];
+                [fullList, idx] = sortrows(fullList, 1);
+                validComparisons = 0;
+                for it = 1:size(fullList, 1)
+                  if(fullList(it, 1) >= 0.05/(Ncomparisons-it+1))
+                    break;
+                  else
+                    validComparisons = validComparisons + 1;
+                  end
+                end
+                pList{git} = pList{git}(idx(1:validComparisons));
+                grList{git} = grList{git}(idx(1:validComparisons));
+                logMsg('Valid comparisons after Holm-Bonferroni correction:');
+                for it = 1:length(pList{git})
+                  logMsg(sprintf('%s vs %s . Group: %s . P= %.3g', xList{grList{git}{it}(1)}, xList{grList{git}{it}(2)}, obj.fullGroupList{1}{git}, pList{git}(it)));
+                end
+              end
+          end
+        end
+
         setappdata(gcf, 'subData', subData);
-        obj.plotHandles = boxPlot(xList, subData, ...
-                          'symbolColor','k',...
-                          'medianColor','k',...
-                          'symbolMarker','+',...
-                          'groupLabels', legendList, ...
-                          'showLegend',true, ...
-                          'showOutliers', false, ...
-                          'boxcolor', cmap, ...
-                          'notch', obj.params.styleOptions.notch);
-
+        try
+          obj.plotHandles = boxPlot(xList, subData, ...
+                            'symbolColor','k',...
+                            'medianColor','k',...
+                            'symbolMarker','+',...
+                            'groupLabels', legendList, ...
+                            'showLegend',true, ...
+                            'showOutliers', false, ...
+                            'boxcolor', cmap, ...
+                            'notch', obj.params.styleOptions.notch);
+        catch
+          obj.plotHandles = [];
+        end
+        if(obj.params.pipelineProject.showMeanError)
+          try
+            obj.plotHandles.showMean = true;
+            obj.plotHandles.meanColor = [1 0 0];
+            boxes = obj.plotHandles.handles.box;
+            boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(:));
+            xcoords = boxesPositions;
+            avgy = nanmean(obj.plotHandles.y,1);
+            erry = nanstd(obj.plotHandles.y,1)./sqrt(sum(~isnan(obj.plotHandles.y)));
+            hold on;
+            h = errorbar(xcoords, avgy, erry,'o');
+            h.Color = [1 0 0];
+          catch ME
+            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+          end
+        end
+        
         % Now let's fix the patches
-        boxes = obj.plotHandles.handles.box;
-        if(all(arrayfun(@(x)length(unique(x.Vertices(:, 2))) == 1, boxes,  'UniformOutput', true) | arrayfun(@(x)all(isnan(x.Vertices(:, 2))), boxes,  'UniformOutput', true)))
-          singleStatistic = true;
-        else
-          singleStatistic = false;
-        end
-        % Turn the patches into simple bars
-        if(singleStatistic)
-          for it = 1:numel(boxes)
-            boxes(it).Vertices(1,2) = 0;
-            boxes(it).Vertices(end,2) = 0;
+        try
+          boxes = obj.plotHandles.handles.box;
+          if(all(arrayfun(@(x)length(unique(x.Vertices(:, 2))) == 1, boxes,  'UniformOutput', true) | arrayfun(@(x)all(isnan(x.Vertices(:, 2))), boxes,  'UniformOutput', true)))
+            singleStatistic = true;
+          else
+            singleStatistic = false;
           end
-        end
-        
-        hold on;
-        if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
-          switch obj.params.pipelineProject.significanceTest
-            case 'Mann-Whitney'
-              sigstar(grList, pList);
-            case 'Kolmogorov-Smirnov'
-              sigstar(grList, pList);
+          % Turn the patches into simple bars
+          if(singleStatistic)
+            for it = 1:numel(boxes)
+              boxes(it).Vertices(1,2) = 0;
+              boxes(it).Vertices(end,2) = 0;
+            end
           end
-        end
-        
-        obj.plotHandles.handles.box =  boxes;
 
+          hold on;
+          if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
+            switch obj.params.pipelineProject.significanceTest
+              case {'Mann-Whitney', 'Kolmogorov-Smirnov', 'Ttest2'}
+                % The intragroup comparisons
+                if(obj.params.pipelineProject.computeIntraGroupComparisons && strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                  for git = 1:size(subData, 3)
+                    if(isempty(intraPlist{git}))
+                      continue;
+                    end
+                    boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
+                    newPos = cellfun(@(x)boxesPositions(x)+[-0.01 0.01], intraGrList{git}, 'UniformOutput', false);
+                    sigstar(newPos, intraPlist{git});
+                  end
+                end
+                % The normal comparisons
+                for git = 1:size(subData, 3)
+                  if(isempty(pList{git}))
+                    continue;
+                  end
+                  boxesPositions = arrayfun(@(x)mean(x.Vertices(:,1)), boxes(1, :, git));
+                  newPos = cellfun(@(x)boxesPositions(x), grList{git}, 'UniformOutput', false);
+                  if(numel(newPos) == 2 && numel(pList{git}) == 1)
+                    newPos = newPos{1};
+                  end
+                  sigstar(newPos, pList{git});
+                end
+            end
+          end
+
+          obj.plotHandles.handles.box =  boxes;
+
+        catch ME
+          logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+        end
+        setappdata(obj.figureHandle, 'boxData', obj.plotHandles);
+        if(isempty(obj.params.styleOptions.xLabel))
+          else
+            xlabel(obj.params.styleOptions.xLabel);
+          end
+          if(isempty(obj.params.styleOptions.yLabel))
+            ylabel(obj.statisticsName);
+          else
+            ylabel(obj.params.styleOptions.yLabel);
+          end
+        
         title(obj.axisHandle, sprintf('%s - %s', obj.figName, obj.treatmentNames{fIdx}));
         set(obj.figureHandle,'Color','w');
 
@@ -721,7 +978,7 @@ classdef plotStatisticsTreatment < handle
         uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
         uimenu(ui, 'Label', 'To workspace',  'Callback', @exportToWorkspace);
         uimenu(ui, 'Label', 'Data (statistics)',  'Callback', @(h,e)obj.exportDataAggregates(bpData, obj.exportFolder));
-        uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, obj.exportFolder));
+        uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, bpDataPre, bpDataPost, obj.exportFolder));
 
         if(obj.params.saveOptions.saveFigure)
           export_fig([obj.figFolder, obj.figName, '.', obj.params.saveOptions.saveFigureType], ...
@@ -839,16 +1096,19 @@ classdef plotStatisticsTreatment < handle
       data = obj.plotHandles.statistics;
       for it = 1:length(names)
         lineStr = sprintf('"%s"', names{it});
-        for cit = 1:size(bpData, 2)
-          for git = 1:size(bpData, 3)
+        for cit = 1:size(bpData, 3)
+          for git = 1:size(bpData, 2)
             if(it == 1)
               lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
             elseif(it == 2)
               lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              data.(names{it})
               %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
-              lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
+              if(ndims(data.(names{it})) == 3)
+                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, git, cit));
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
+              end
             end
           end
         end
@@ -859,7 +1119,7 @@ classdef plotStatisticsTreatment < handle
     end
 
     %--------------------------------------------------------------------
-    function exportDataFull(obj, bpData, baseFolder)
+    function exportDataFull(obj, bpData, bpDataPre, bpDataPost, baseFolder)
       [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_fullTreatment.csv']);
       if(fileName == 0)
         return;
@@ -869,27 +1129,48 @@ classdef plotStatisticsTreatment < handle
       for it = 1:(size(bpData, 1)+2) 
         mainIdx = it-2;
         lineStr = '';
-        for cit = 1:size(bpData, 2)
-          for git = 1:size(bpData, 3)
+        for cit = 1:size(bpData, 3)
+          for git = 1:size(bpData, 2)
             if(it == 1)
               if(git == 1)
-                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" DIFF', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" PRE', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" POST', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
               else
-                lineStr = sprintf('%s,"%s"', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" DIFF', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" PRE', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
+                lineStr = sprintf('%s,"%s" POST', lineStr, strrep(obj.groupLabels{git}, ',', ' -'));
               end
             elseif(it == 2)
               lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
+              lineStr = sprintf('%s,"%s"', lineStr, obj.fullGroupList{1}{cit});
             else
-              lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, cit, git));
+              if(isnan(bpData(mainIdx, git, cit)))
+                lineStr = sprintf('%s,%s', lineStr, '');
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, git, cit));
+              end
+              if(isnan(bpDataPre(mainIdx, git, cit)))
+                lineStr = sprintf('%s,%s', lineStr, '');
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, bpDataPre(mainIdx, git, cit));
+              end
+              if(isnan(bpDataPost(mainIdx, git, cit)))
+                lineStr = sprintf('%s,%s', lineStr, '');
+              else
+                lineStr = sprintf('%s,%.3f', lineStr, bpDataPost(mainIdx, git, cit));
+              end
             end
           end
         end
 
-        % Stop when everything is NaN
-%         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
-%           break;
-%         end
-        % 2:end to avoid the first comma NOT ANYMORE
+       % Stop when everything is NaN
+        if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))) && all(all(isnan(bpDataPre(mainIdx, :, :)))) && all(all(isnan(bpDataPost(mainIdx, :, :)))))
+           lineStr = sprintf('%s\r\n', lineStr(2:end));
+           break;
+        end
+        % 2:end to avoid the first comma NOT ANYMORE - WHAT?
         lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);
       end

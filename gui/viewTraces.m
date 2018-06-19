@@ -69,6 +69,7 @@ learningMode = 'none'; % none/trace/event
 traceHandles = [];
 traceGuideHandles = [];
 showSpikes = false;
+showSchmittSpikes = false;
 showPatterns = false;
 showPeaks = false;
 showDyingCells = false;
@@ -250,6 +251,7 @@ hs.menuViewPositionsOnScreen = uimenu(hs.menuViewPositions, 'Label', 'Current tr
 hs.menuViewPositionsOnScreenMovie = uimenu(hs.menuViewPositions, 'Label', 'Current traces (movie)', 'Callback', @viewPositionsOnScreenMovie);
 
 hs.menuPreferencesShowSpikes = uimenu(hs.menuView, 'Label', 'Show spikes', 'Callback', @menuPreferencesShowSpikes, 'Enable', 'off');
+hs.menuPreferencesShowSchmittSpikes = uimenu(hs.menuView, 'Label', 'Show Schmitt spikes', 'Callback', @menuPreferencesShowSchmittSpikes, 'Enable', 'off');
 hs.menuPreferencesShowPatterns = uimenu(hs.menuView, 'Label', 'Show patterns', 'Callback', @menuPreferencesShowPatterns, 'Enable', 'off');
 hs.menuPreferencesShowPeaks = uimenu(hs.menuView, 'Label', 'Show peaks', 'Callback', @menuPreferencesShowPeaks, 'Enable', 'off');
 hs.menuPreferencesShowDyingCells = uimenu(hs.menuView, 'Label', 'Show dying cells', 'Callback', @menuPreferencesShowDyingCells, 'Enable', 'off');
@@ -258,6 +260,9 @@ hs.menuPreferencesShowKCl = uimenu(hs.menuView, 'Label', 'Show KCl analysis', 'C
 
 if(isfield(experiment, 'spikes'))
   hs.menuPreferencesShowSpikes.Enable = 'on';
+end
+if(isfield(experiment, 'schmittSpikesData'))
+  hs.menuPreferencesShowSchmittSpikes.Enable = 'on';
 end
 if(isfield(experiment, 'validPatterns'))
   hs.menuPreferencesShowPatterns.Enable = 'on';
@@ -712,6 +717,21 @@ function menuPreferencesShowSpikes(~, ~, ~)
     hs.menuPreferencesShowSpikes.Checked = 'on';
     if(isfield(experiment,'spikes') && ~isempty(experiment.spikes))
       showSpikes = true;
+    end
+    updateImage(true);
+  end
+end
+
+%--------------------------------------------------------------------------
+function menuPreferencesShowSchmittSpikes(~, ~, ~)
+  if(strcmp(hs.menuPreferencesShowSchmittSpikes.Checked,'on'))
+    hs.menuPreferencesShowSchmittSpikes.Checked = 'off';
+    showSchmittSpikes = false;
+    updateImage(true);
+  else
+    hs.menuPreferencesShowSchmittSpikes.Checked = 'on';
+    if(isfield(experiment,'schmittSpikesData') && ~isempty(experiment.schmittSpikesData))
+      showSchmittSpikes = true;
     end
     updateImage(true);
   end
@@ -3540,6 +3560,22 @@ end
        end
      end
    end
+  end
+  if(showSchmittSpikes)
+    for i = 1:size(traces, 2)
+      curNeuron = currentOrder(firstTrace+i-1);
+      spikeTimes = experiment.spikes{curNeuron}(:)';
+      plot(hs.mainWindowFramesAxes, repmat(spikeTimes,2,1), ...
+           cat(1,ones(size(spikeTimes))*0.9,ones(size(spikeTimes)))+i-0.5, ...,
+          'LineWidth', 1, 'Color', 'k');
+      if(~isempty(experiment.schmittSpikesData{curNeuron}))
+        spikeFrames = experiment.schmittSpikesData{curNeuron}.frames;
+        for j = 1:length(spikeFrames)
+          plot(hs.mainWindowFramesAxes, t(spikeFrames{j}), traces(spikeFrames{j}, i), 'k', 'HitTest', 'off');
+        %'Color', cmapPatterns(find(strcmp(cpatterns{j}.basePattern, basePatternList)), :));
+        end
+      end
+    end
   end
   if(showPeaks)
     for i = 1:size(traces, 2)

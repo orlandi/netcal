@@ -69,6 +69,8 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % - std: use the standard deviation
     % - skewness: use the skewness
     % - cv: coefficient of variation
+    % showMeanError:
+    % If true, will plot the standard error of the mean on top (mean +- std/sqrt(N)
     % showSignificance:
     % If any significance (***) should be ploted:
     % - none: no significance is shown
@@ -85,7 +87,9 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % (Only for mixed factor) If true, will also compute significance across samples from the same group
     % HolmBonferroniCorrection:
     % If true, will apply Holm-Bonferroni connection to any significance checks
-    pipelineProject = struct('plotType', {{'boxplot', 'distribution'}}, 'groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event', 'mixed'}}, 'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'}}, 'avoidCrossComparisons', true, 'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
+    pipelineProject = struct('plotType', {{'boxplot', 'distribution'}}, 'groupingOrder', {{'none', 'label average'}}, ...
+                             'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event', 'mixed'}}, ...
+                             'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, 'showMeanError', false, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'}}, 'avoidCrossComparisons', true, 'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
     
     % If true will turn any zero values into NaNs (so they are not used for the statistics. Useful when working with rates and things like that
     zeroToNan = true;

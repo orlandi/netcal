@@ -192,8 +192,9 @@ switch lower(fpc)
       experiment.saveFile = [experiment.name '.exp'];
     else
       %logMsg('Invalid filename format. It should be: name_d.tif (where d is a number starting at 1)', 'e');
-      logMsg('Could not find any sequence. Assuming it''s a multitif file', 'w');
+      logMsg('Could not find any sequence. Assuming it''s a multitiff file', 'w');
       experiment.handle = fileName;
+      experiment.multitiff = true;
       experiment.folder = [fpa filesep];
       experiment.name = fpb;
       finfo = imfinfo(fileName);
@@ -417,6 +418,7 @@ switch lower(fpc)
     experiment.handle = fileName;
     experiment.folder = [fpa filesep];
     experiment.name = fpb;
+    experiment.multitiff = true;
     finfo = imfinfo(fileName);
     metadata_str = finfo(1).ImageDescription;
     metadata_separated = strsplit(metadata_str,';');

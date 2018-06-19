@@ -77,13 +77,20 @@ switch experiment.extension
     end
     img = reshape(img, [experiment.height, experiment.width]);
   case {'.tif', '.tiff'}
-    [fpa, fpb, fpc] = fileparts(experiment.handle);
-    img = imread([fpa filesep fpb(1:regexp(fpb, '_\d*$')) num2str(frame) fpc]);
+    if(isfield(experiment, 'multitiff') && experiment.multitiff)
+      img = imread(experiment.handle, frame);
+    else
+      [fpa, fpb, fpc] = fileparts(experiment.handle);
+      img = imread([fpa filesep fpb(1:regexp(fpb, '_\d*$')) num2str(frame) fpc]);
+    end
     if(partial)
       img = img(pixelList);
     end
   case '.btf'
     img = imread(experiment.handle, frame);
+    if(partial)
+      img = img(pixelList);
+    end
   case '.dcimg'
     fseek(fid, 232 + experiment.frameSize*(frame-1), 'bof');
     img = fread(fid, experiment.frameSize/(experiment.bpp/8), experiment.pixelType);

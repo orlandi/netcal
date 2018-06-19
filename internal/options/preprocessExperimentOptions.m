@@ -95,7 +95,7 @@ classdef preprocessExperimentOptions < baseOptions
     function obj = setExperimentDefaults(obj, experiment)
       if(~isempty(experiment) && isstruct(experiment))
         try
-          obj.subset = [0 round(experiment.totalTime)];
+          obj.subset = [0 ceil(experiment.totalTime)];
           obj.backgroundImageCorrection.file = java.io.File([experiment.folder 'background.tif']);
         catch ME
             logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');

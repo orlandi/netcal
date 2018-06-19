@@ -34,7 +34,7 @@ internal/convertTracesToSinglePrecision.m 1763
 internal/createTiffStack.m 2732
 internal/customTreeDnD.m 15995
 internal/decodeFloat.m 229
-internal/denoiseRecording.m 14148
+internal/denoiseRecording.m 14385
 internal/detectDyingCells.m 4705
 internal/detectGlobalBursts.m 1540
 internal/detectPeaks.m 4192
@@ -74,7 +74,7 @@ internal/getFrame.m 4434
 internal/getFrameBlock.m 1508
 internal/getHtmlColormapNames.m 1897
 internal/getKClFeatures.m 4044
-internal/getLabelList.m 2090
+internal/getLabelList.m 2286
 internal/getPipelineParameters.m 3188
 internal/getROIid.m 264
 internal/getSigmoidConnection.m 203
@@ -116,7 +116,7 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 53296
+internal/plotStatistics.m 54675
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12928
 internal/preprocessExperimentPercentile.m 7068
@@ -278,7 +278,7 @@ internal/options/plotRasterOptions.m 2390
 internal/options/plotSpikeStatisticsOptions.m 1258
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
-internal/options/plotStatisticsOptions.m 6610
+internal/options/plotStatisticsOptions.m 6739
 internal/options/plotStatisticsTreatmentOptions.m 5682
 internal/options/predefinedPatternsOptions.m 4142
 internal/options/preloadMultipleOptions.m 2442
@@ -1669,7 +1669,7 @@ external/xml2struct/struct2xmllicense.txt 1314
 external/xml2struct/xml2struct.m 6351
 external/xml2struct/xml2structlicense.txt 1064
 gui/burstAnalysis.m 37874
-gui/guiSave.m 1301
+gui/guiSave.m 1332
 gui/traceFixer.m 28896
 gui/viewCompareExperiments.m 78901
 gui/viewDenoiser.m 36699
@@ -1691,5 +1691,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 46151
-netcal.m 225320
+README.md 46890
+netcal.m 225611

@@ -27,6 +27,24 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.0.6] - 2018-06-18
+
+## [8.0.5] - 2018-06-18
+
+### Added
+- Transfered many of the new plot statistics options to the treatment version. Exports, significance, etc.
+
+### Fixed
+- Improved support of big tiff files
+- Speed up on statistics plots when a large number of labels exist
+
+
+## [8.0.4] - 2018-06-11
+
+### Added
+- Option to show the standard error of the mean on all plot Statistics functions
+- Speed-up of plot Statistics functions when many labels are present
+
 ## [8.0.3] - 2018-06-07
 
 ### Fixed
@@ -1578,6 +1596,8 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.0.6]: https://github.com/orlandi/netcal/tree/v8.0.6
+[8.0.4]: https://github.com/orlandi/netcal/tree/v8.0.4
 [8.0.2]: https://github.com/orlandi/netcal/tree/v8.0.2
 [8.0.1]: https://github.com/orlandi/netcal/tree/v8.0.1
 [7.4.1]: https://github.com/orlandi/netcal/tree/v7.4.1
