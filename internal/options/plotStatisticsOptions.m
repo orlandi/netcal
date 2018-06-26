@@ -47,6 +47,7 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % How to plot the data:
     % - boxplot: using a boxplot (duh)
     % - distribution: will plot all the distributions (see distributionEstimation)
+    % - univarscatter: like boxplot but with all the points in a beeswam structure
     % groupingOrder:
     % How to group multiple experiments:
     % - none: does not group them
@@ -87,7 +88,7 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
     % (Only for mixed factor) If true, will also compute significance across samples from the same group
     % HolmBonferroniCorrection:
     % If true, will apply Holm-Bonferroni connection to any significance checks
-    pipelineProject = struct('plotType', {{'boxplot', 'distribution'}}, 'groupingOrder', {{'none', 'label average'}}, ...
+    pipelineProject = struct('plotType', {{'boxplot', 'distribution', 'univarscatter'}}, 'groupingOrder', {{'none', 'label average'}}, ...
                              'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, 'factor', {{'experiment', 'event', 'mixed'}}, ...
                              'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, 'showMeanError', false, 'showSignificance', {{'none', 'partial', 'all'}}, 'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'}}, 'avoidCrossComparisons', true, 'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
     

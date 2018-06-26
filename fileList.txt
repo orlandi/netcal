@@ -3,6 +3,7 @@ internal/CheckboxTreeExperiment.m 1240
 internal/CheckboxTreePipeline.m 1247
 internal/KClAnalysis.m 21545
 internal/TreeFunctionList.m 1078
+internal/UnivarScatterV2.m 26700
 internal/applyCorrection.m 8745
 internal/applySmoothing.m 1172
 internal/autoDetectROI.m 12724
@@ -90,7 +91,7 @@ internal/integerLogBinning2.m 2682
 internal/isSubField.m 478
 internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
-internal/loadExperiment.m 26290
+internal/loadExperiment.m 26331
 internal/loadProject.m 4554
 internal/loadROI.m 4281
 internal/loadTraces.m 4318
@@ -116,7 +117,8 @@ internal/permutationIndex.m 404
 internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
-internal/plotStatistics.m 54541
+internal/plotSchmittSpikesStatistics.m 3054
+internal/plotStatistics.m 59417
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12928
 internal/preprocessExperimentPercentile.m 7068
@@ -147,7 +149,7 @@ internal/spikeRemoveConflicts.m 2923
 internal/tracePatternDetection.m 13691
 internal/traceUnsupervisedEventDetection.m 9566
 internal/treeGroupsSelection.m 6925
-internal/updateNames.m 1068
+internal/updateNames.m 1471
 internal/updatePath.txt 31
 internal/updateSortingMethod.m 3760
 internal/visualizeROI.m 4496
@@ -275,10 +277,11 @@ internal/options/plotPermutationEntropyComplexityOptions.m 838
 internal/options/plotPopulationsStatisticsOptions.m 880
 internal/options/plotQCECOptions.m 2723
 internal/options/plotRasterOptions.m 2390
+internal/options/plotSchmittSpikesStatisticsOptions.m 797
 internal/options/plotSpikeStatisticsOptions.m 1258
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
-internal/options/plotStatisticsOptions.m 6805
+internal/options/plotStatisticsOptions.m 6905
 internal/options/plotStatisticsTreatmentOptions.m 7970
 internal/options/predefinedPatternsOptions.m 4142
 internal/options/preloadMultipleOptions.m 2442
@@ -310,16 +313,16 @@ internal/plots/plotFluorescenceBurstStatisticsTreatment.m 1864
 internal/plots/plotFluorescenceRasterPipeline.m 6478
 internal/plots/plotKClStatistics.m 3828
 internal/plots/plotPermutationEntropyComplexity.m 1928
-internal/plots/plotPopulationsStatistics.m 1568
+internal/plots/plotPopulationsStatistics.m 1591
 internal/plots/plotPopulationsStatisticsTreatment.m 1757
 internal/plots/plotPopulationsStatisticsTreatmentOptions.m 825
 internal/plots/plotQCEC.m 15339
 internal/plots/plotRaster.m 7680
 internal/plots/plotSpectrogram.m 4026
-internal/plots/plotSpikeStatistics.m 2624
+internal/plots/plotSpikeStatistics.m 2734
 internal/plots/plotSpikeStatisticsTreatment.m 1597
 internal/plots/plotSpikeTreatmentStatistics.m 13193
-internal/plots/plotSpikesBurstStatistics.m 2933
+internal/plots/plotSpikesBurstStatistics.m 3154
 internal/plots/plotSpikesBurstStatisticsOptions.m 910
 internal/plots/plotSpikesBurstStatisticsTreatment.m 2459
 internal/plots/plotSpikesBurstStatisticsTreatmentOptions.m 963
@@ -336,6 +339,7 @@ external/findjobj.m 169591
 external/findpeaks2.m 38133
 external/loadpickle.m 1047
 external/mtit.m 3955
+external/nchoosecrit.m 4157
 external/parse_pv_pairs.m 2820
 external/pick.m 3919
 external/plotSpikeRaster.m 22571
@@ -611,6 +615,7 @@ external/CellSort/doc/images/solaris.png 286
 external/CellSort/doc/images/up.png 162
 external/CellSort/doc/images/windows.png 286
 external/IoSR/.Rhistory 0
+external/IoSR/LICENSE 1095
 external/IoSR/README.md 1306
 external/IoSR/release-notes.md 3486
 external/IoSR/+iosr/Contents.m 6732
@@ -748,6 +753,9 @@ external/NCCToolboxV1/rebin.m 3233
 external/NCCToolboxV1/rldecode.m 897
 external/NCCToolboxV1/sample_data.mat 144450
 external/NCCToolboxV1/sizegivdurwls.m 6202
+external/UnivarScatter/CatTable2Array.m 2130
+external/UnivarScatter/ColorCoder.m 635
+external/UnivarScatter/UnivarScatter.m 25184
 external/brick/Contents.m 16260
 external/brick/README.md 17168
 external/brick/_montage.m 45423
@@ -1373,6 +1381,7 @@ external/mlspike/help/thumbnail300x200.png 25247
 external/mlspike/help/helpsource/index.m 2397
 external/nhist/license.txt 1318
 external/nhist/nhist.m 83707
+external/oasis/LICENSE 35141
 external/oasis/README.md 2295
 external/oasis/deconvolveCa.m 12757
 external/oasis/setup.m 1254
@@ -1687,5 +1696,5 @@ installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
 LICENSE.md 1089
-README.md 48060
-netcal.m 225597
+README.md 48818
+netcal.m 226054

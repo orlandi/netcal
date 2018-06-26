@@ -734,6 +734,110 @@ classdef plotStatistics < handle
       setappdata(gcf, 'subData', subData);
 
       switch obj.params.pipelineProject.plotType
+        case 'univarscatter'
+          % Could use reshape, but better be safe
+          newData = zeros(size(subData, 1), size(subData, 2)*size(subData, 3));
+          fullCmap = zeros(size(newData, 2), 3);
+          newXPos = zeros(1, size(newData, 2));
+          newXTickPos = zeros(1, size(subData, 2));
+          newXPosSubdata = zeros(size(subData,2), size(subData, 3));
+          curIt = 0;
+          curPos = 0;
+          for it1 = 1:size(subData, 2)
+            newXTickPos(it1) = curPos + 1 + (size(subData, 3)-1)/2;
+            for it2 = 1:size(subData, 3)
+              curPos = curPos + 1;
+              curIt = curIt + 1;
+              newData(:, curIt) = subData(:, it1, it2);
+              fullCmap(curIt, :) = cmap(it2, :);
+              newXPos(curIt) = curPos;
+              newXPosSubdata(it1, it2) = curPos;
+            end
+            % Gap of 1 between groups
+            if(size(subData, 3) > 1)
+              curPos = curPos+1;
+            end
+          end
+          [xPositions, yPositions, Label, RangeCut, hList] = ...
+            UnivarScatterV2(newData, 'XPositions', newXPos, ...
+            'MarkerFaceColor', fullCmap, 'MarkerEdgeColor', fullCmap*0.5 ...
+            );
+            %,'RangeCut', [10 10]);
+          
+          %grList = cell(length(obj.fullGroupList{1}), 1);
+          %intraGrList = cell(length(obj.fullGroupList{1}), 1);
+          %%% The significance
+          try
+            if(~strcmpi(obj.params.pipelineProject.showSignificance, 'none'))
+              switch obj.params.pipelineProject.significanceTest
+                case {'Mann-Whitney', 'Kolmogorov-Smirnov', 'Ttest2'}
+                  % The intragroup comparisons
+                  if(obj.params.pipelineProject.computeIntraGroupComparisons && strcmpi(obj.params.pipelineProject.factor, 'mixed'))
+                    for git = 1:size(subData, 3)
+                      if(isempty(intraPlist{git}))
+                        continue;
+                      end
+                      for kit = 1:length(pList{git})
+                        tmpPos = intraGrList{git}{kit};
+                        newPos = newXPosSubdata(tmpPos, git)+[-0.05 0.05];
+                        sigstar(newPos, intraPlist{git}(kit));
+                      end
+                    end
+                  end
+                  % The normal comparisons
+                  for git = 1:size(subData, 3)
+                    if(isempty(pList{git}))
+                      continue;
+                    end
+                    %newPos = newXPos([git, git+size(subData,3)]);
+                    for kit = 1:length(pList{git})
+                      tmpPos = grList{git}{kit};
+                      newPos = newXPosSubdata(tmpPos, git);
+                      sigstar(newPos, pList{git}(kit));
+                    end
+                  end
+              end
+            end
+          catch ME
+            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+          end
+          
+          %%% Figure properties
+          if(length(legendList) == 1)
+            legend(hList(1:size(subData, 3)), legendList{1});
+          else
+            legend(hList(1:size(subData, 3)), legendList);
+          end
+          set(obj.axisHandle, 'XTick', newXTickPos);
+          set(obj.axisHandle, 'XTickLabel', xList);
+          set(hList, 'SizeData', 16);
+          title(obj.axisHandle, obj.figName);
+
+          if(isempty(obj.params.styleOptions.xLabel))
+          else
+            xlabel(obj.params.styleOptions.xLabel);
+          end
+          if(isempty(obj.params.styleOptions.yLabel))
+            ylabel(obj.statisticsName);
+          else
+            ylabel(obj.params.styleOptions.yLabel);
+          end
+
+          set(obj.figureHandle,'Color','w');
+
+          set(obj.axisHandle, 'XTickLabelRotation', obj.params.styleOptions.XTickLabelRotation);
+          set(obj.axisHandle, 'YTickLabelRotation', obj.params.styleOptions.YTickLabelRotation);
+
+          title(obj.axisHandle, obj.figName);
+          set(obj.axisHandle,'Color','w');
+          set(obj.figureHandle,'Color','w');
+            
+          %%% The menu
+          ui = uimenu(obj.figureHandle, 'Label', 'Export');
+          uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
+          uimenu(ui, 'Label', 'Data (statistics)',  'Callback', @(h,e)obj.exportDataAggregates(bpData, obj.exportFolder));
+          uimenu(ui, 'Label', 'Data (full)',  'Callback', @(h,e)obj.exportDataFull(bpData, obj.exportFolder));
+          
         case 'boxplot'
           try
             obj.plotHandles = boxPlot(xList, subData, ...

@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.1.1] - 2018-06-26
+
+### Added
+- Univarscatter module to plot statistics functions
+
 ## [8.1.0] - 2018-06-26
 
 ### Added
