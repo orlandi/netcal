@@ -27,7 +27,7 @@ function projexp = plotPopulationsStatistics(projexp, varargin)
 % requiredFields: spikes
 
 obj = plotStatistics;
-obj.init(projexp, plotPopulationsStatisticsOptions, 'Plotting population statistics', varargin{:}, 'gui', gcbf);
+obj.init(projexp, plotPopulationsStatisticsOptions, 'Plotting population statistics', varargin{:}, 'gui', gcbf, 'loadFields', {'ROI'});
 if(obj.getData(@getData, projexp, obj.params.statistic))
   obj.createFigure();
 end

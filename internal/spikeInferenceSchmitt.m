@@ -56,6 +56,13 @@ if(iscell(params.group))
 else
   mainGroup = params.group;
 end
+% Fix chars
+if(ischar(params.minimumEventAmplitude))
+  params.minimumEventAmplitude = str2double(params.minimumEventAmplitude);
+end
+if(ischar(params.minimumEventDuration))
+  params.minimumEventDuration = str2double(params.minimumEventDuration);
+end
 
 members = getAllMembers(experiment, mainGroup);
 
@@ -147,41 +154,63 @@ barCleanup(params);
     burstStdF = zeros(length(validSplit), 1);
     burstSkeF = zeros(length(validSplit), 1);
     burstStart = zeros(length(validSplit), 1);
+    burstTimeToMax = zeros(length(validSplit), 1);
+    burstSlopeUp = zeros(length(validSplit), 1);
+    burstSlopeDown = zeros(length(validSplit), 1);
     burstFrames = cell(length(validSplit), 1);
+    validBursts = zeros(length(validSplit), 1);
     for i = 1:length(validSplit)
-        burstFrames{i} = split(validSplit(i)):(split(validSplit(i))+length(splitVals{validSplit(i)})-1);
-        burstT = t(burstFrames{i});
-        burstF = avgTraceAbove(burstFrames{i});
-        burstDuration(i) = burstT(end)-burstT(1);
-        burstStart(i) = burstT(1);
-        burstAmplitude(i) = max(burstF);
-        if(length(burstT) < 2)
-          burstArea(i) = 0;
-        else
-          burstArea(i) = trapz(burstT, abs(burstF));
-          burstMean(i) = trapz(burstT, burstT'.*abs(burstF))/burstArea(i);
-          burstStd(i) = sqrt(trapz(burstT, (burstT'-burstMean(i)).^2.*abs(burstF))/burstArea(i));
-          burstSke(i) = trapz(burstT, (burstT'-burstMean(i)).^3.*abs(burstF))/burstArea(i)/burstStd(i)^3;
-          burstMeanF(i) = mean(burstF);
-          burstStdF(i) = std(burstF);
-          burstSkeF(i) = skewness(burstF);
-        end
+      burstFrames{i} = split(validSplit(i)):(split(validSplit(i))+length(splitVals{validSplit(i)})-1);
+      burstT = t(burstFrames{i});
+      burstF = avgTraceAbove(burstFrames{i});
+      burstDuration(i) = burstT(end)-burstT(1);
+      burstStart(i) = burstT(1);
+      [burstAmplitude(i), maxFrame] = max(burstF);
+      if(length(burstT) < 2)
+        burstArea(i) = 0;
+      else
+        burstArea(i) = trapz(burstT, abs(burstF));
+        burstMean(i) = trapz(burstT, burstT'.*abs(burstF))/burstArea(i);
+        burstStd(i) = sqrt(trapz(burstT, (burstT'-burstMean(i)).^2.*abs(burstF))/burstArea(i));
+        burstSke(i) = trapz(burstT, (burstT'-burstMean(i)).^3.*abs(burstF))/burstArea(i)/burstStd(i)^3;
+        burstMeanF(i) = mean(burstF);
+        burstStdF(i) = std(burstF);
+        burstSkeF(i) = skewness(burstF);
+        burstTimeToMax(i) = t(burstFrames{i}(maxFrame))-t(burstFrames{i}(1));
+        burstSlopeUp(i) = (burstAmplitude(i)-burstF(1))/burstTimeToMax(i);
+        burstSlopeDown(i) = (burstF(end)-burstAmplitude(i))/(t(burstFrames{i}(end))-t(burstFrames{i}(maxFrame)));
+      end
+      invalid = false;
+      if(~isempty(params.minimumEventAmplitude) && max(burstF) < params.minimumEventAmplitude)
+        invalid = true;
+      elseif(~isempty(params.minimumEventDuration) && burstDuration(i) < params.minimumEventDuration)
+        invalid = true;
+      end
+      if(~invalid)
+        validBursts(i) = 1;
+      end
     end
-    IBI = diff(burstStart);
+    validBurstsList = find(validBursts);
+    IBI = diff(burstStart(validBurstsList));
     burstStructure = struct;
-    burstStructure.duration = burstDuration;
-    burstStructure.amplitude = burstAmplitude;
-    burstStructure.area = burstArea;
-    burstStructure.mean = burstMean;
-    burstStructure.std = burstStd;
-    burstStructure.ske = burstSke;
-    burstStructure.meanF = burstMeanF;
-    burstStructure.stdF = burstStdF;
-    burstStructure.skeF = burstSkeF;
-    burstStructure.start = burstStart;
+    burstStructure.duration = burstDuration(validBurstsList);
+    burstStructure.amplitude = burstAmplitude(validBurstsList);
+    burstStructure.area = burstArea(validBurstsList);
+    burstStructure.mean = burstMean(validBurstsList);
+    burstStructure.std = burstStd(validBurstsList);
+    burstStructure.ske = burstSke(validBurstsList);
+    burstStructure.meanF = burstMeanF(validBurstsList);
+    burstStructure.stdF = burstStdF(validBurstsList);
+    burstStructure.skeF = burstSkeF(validBurstsList);
+    burstStructure.start = burstStart(validBurstsList);
+    burstStructure.timeToMax = burstTimeToMax(validBurstsList);
+    burstStructure.slopeUp = burstSlopeUp(validBurstsList);
+    burstStructure.slopeDown = burstSlopeDown(validBurstsList);
     burstStructure.IBI = IBI;
-    burstStructure.frames = burstFrames;
+    burstStructure.frames = burstFrames(validBurstsList);
     burstStructure.thresholds = [lowerThreshold upperThreshold];
+    burstStructure.minimumEventDuration = params.minimumEventDuration;
+    burstStructure.minimumEventAmplitude = params.minimumEventAmplitude;
   end
 
 end

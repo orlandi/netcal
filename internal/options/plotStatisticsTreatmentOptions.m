@@ -28,7 +28,10 @@ classdef plotStatisticsTreatmentOptions < plotFigureOptions & baseOptions
     % - ratio: will do the ratio between the statistic of interest, i.e., post/pre (this is the X fold change from the pre)
     % - difference: will substract the statistic of intetest, i.e., post-pre. Using only the group members that belong to both preprations
     % - ratio: will do the ratio between the statistic of interest, i.e., post/pre (this is the X fold change from the pre). Using only the group members that belong to both preprations
-    comparisonType = {'difference', 'ratio', 'differenceIntersect', 'ratioIntersect'};
+    % - 'Mann-Whitney: will perform a Mann-Whitney (Wilcoxon rank) between the two statistics of interest and return the p-value
+    % - Kolmogorov-Smirnov: will perform a two-sample Kolmogorov-Smirnov test between the two statistics of interest and return the p-value
+    % - Ttest2: will perform a two-tailed t-test between the 2 statistics of interest and return the p-value
+    comparisonType = {'difference', 'ratio', 'differenceIntersect', 'ratioIntersect', 'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'};
     
     % If it should also compare differences between the first and last treatments (only valid when more than 2 treatments are present)
     compareExtremes = false;

@@ -36,15 +36,16 @@ if(strcmpi(tmpStat, 'all'))
     logMsg(sprintf('Plotting burst statistics for: %s', statList{it}));
     varargin{1}.statistic = statList{it};
     obj = plotStatistics;
-    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikeBursts','t','totalTIme'});
     if(obj.getData(@getData, projexp, obj.params.statistic))
       obj.createFigure();
     end
     obj.cleanup();
   end
+  
 else
   obj = plotStatistics;
-  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikeBursts','t','totalTIme'});
   if(obj.getData(@getData, projexp, obj.params.statistic))
     obj.createFigure();
   end
@@ -56,7 +57,11 @@ end
     if(~isempty(bursts))
       % Only a single burstRate
       if(strcmpi(stat, 'bursting rate'))
-        data = length(bursts.amplitude)/experiment.totalTime;
+        try
+          data = length(bursts.amplitude)/(experiment.t(end)-experiment.t(1));
+        catch
+          data = length(bursts.amplitude)/experiment.totalTime;
+        end
       elseif(strcmpi(stat, 'num spikes'))
         data = bursts.amplitude;
       elseif(strcmpi(stat, 'num participating cells'))

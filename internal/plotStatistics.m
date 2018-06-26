@@ -24,6 +24,7 @@ classdef plotStatistics < handle
     fullGroupList;
     exportFolder;
     figFolder;
+    loadFields;
   end
   
   methods
@@ -123,7 +124,12 @@ classdef plotStatistics < handle
       for i = 1:length(checkedExperiments)
         experimentName = project.experiments{checkedExperiments(i)};
         experimentFile = [project.folderFiles experimentName '.exp'];
-        experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+        if(~isempty(obj.params.loadFields))
+          experiment = load(experimentFile, '-mat', 'traceGroups', 'traceGroupsNames', 'name', 'folder', 'ROI', obj.params.loadFields{:});
+        else
+          experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+        end
+        
         % Get ALL subgroups in case of parents
         if(strcmpi(obj.mainGroup, 'all')  || strcmpi(obj.mainGroup, 'ask'))
           obj.groupList = getExperimentGroupsNames(experiment);
@@ -1096,6 +1102,7 @@ classdef plotStatistics < handle
       % Define additional optional argument pairs
       obj.params.pbar = [];
       obj.params.gui = [];
+      obj.params.loadFields = {};
       % Parse them
       obj.params = parse_pv_pairs(obj.params, var);
       obj.params = barStartup(obj.params, msg);

@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.0.6';
+currVersion = '8.1.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -1661,9 +1661,7 @@ function success = menuExperimentRename(experiment)
         [fpa, fpb, fpc ] = fileparts(fileList(it).name);
         nfpb = strrep(fpb, oldName, experiment.name);
         if(~strcmp(fpb, nfpb))
-          fileList(it).name
           newName = [fpa filesep nfpb fpc];
-          %newName
           movefile(fileList(it).name, newName, 'f');
         end
       end
@@ -1898,63 +1896,82 @@ function success = importExperiment(fileName, varargin)
     % Varargin 1: save oldExperiment true/false true by default
     % Varargin 2: text to append to the experiment name (before any checks)
     % Success returns the index in the project of the new experiment
-    
+    renamedExperiment = false;
     if(length(varargin) >= 2)
-        appendText = varargin{2};
+      appendText = varargin{2};
+      renamedExperiment = true;
     else
-        appendText = '';
+      appendText = '';
     end
     project = getappdata(netcalMainWindow, 'project');
     success = 0;
-    [newExperiment, project] = loadExperiment(fileName, 'verbose', false, 'project', project);
+    [newExperiment, project] = loadExperiment(fileName, 'verbose', false, 'project', project, 'import', true);
     newExperimentOriginalName = newExperiment.name;
     newExperiment.name = [newExperiment.name appendText];
+    
     if(~isempty(newExperiment))
-        % First pass to check if the experiment name has already been used
-        for it = 1:size(project.experiments,2)
-            if(strcmpi(project.experiments{it}, newExperiment.name))
-                answer = inputdlg('New experiment name',...
-                                  'Duplicate experiment name', [1 60], {newExperiment.name});
-                answer{1} = strtrim(answer{1});
-                newExperiment.name = answer{:};
-                logMsg(sprintf('Experiment name changed to: %s', newExperiment.name));
+      % First pass to check if the experiment name has already been used
+      for it = 1:size(project.experiments,2)
+        if(strcmpi(project.experiments{it}, newExperiment.name))
+          answer = inputdlg('New experiment name',...
+                            'Duplicate experiment name', [1 60], {newExperiment.name});
+          answer{1} = strtrim(answer{1});
+          newExperiment.name = answer{:};
+          logMsg(sprintf('Experiment name changed to: %s', newExperiment.name));
+          renamedExperiment = true;
+        end
+      end
+      % Second pass to check that now it is ok. If not, abort
+      for it = 1:size(project.experiments,2)
+        if(strcmpi(project.experiments{it}, newExperiment.name) || isempty(newExperiment.name))
+          logMsg('Invalid experiment name', 'e');
+          return;
+        end
+      end
+
+      % Now we do the change
+      experiment = newExperiment;
+
+      % Change the folder to match the project structure
+      %oldFolder = experiment.folder; % This only work if the experiment is in the right folder
+      [oldFolder, ~, ~] = fileparts(fileName);
+      oldFolder = [oldFolder filesep '..' filesep newExperimentOriginalName filesep];
+      experiment.folder = [project.folder experiment.name filesep];
+      experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
+      % Copy all project files
+      try
+        copyfile(oldFolder, experiment.folder, 'f');
+      catch ME
+        logMsg('Error copying the file...', 'w');
+        logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
+      end
+      
+      project = addNewExperimentNode(experiment, project);
+      
+      % If renamed (from a duplicate) we need to update file names
+      if(renamedExperiment)
+        oldName = newExperimentOriginalName;
+        fileList = rdir([experiment.folder , '**', filesep, '**']);
+        for it = 1:length(fileList)
+          if(exist(fileList(it).name, 'file') & ~exist(fileList(it).name, 'dir') & strfind(fileList(it).name, oldName))
+            [fpa, fpb, fpc ] = fileparts(fileList(it).name);
+            nfpb = strrep(fpb, oldName, experiment.name);
+            if(~strcmp(fpb, nfpb))
+              newName = [fpa filesep nfpb fpc];
+              movefile(fileList(it).name, newName, 'f');
             end
+          end
         end
-        % Second pass to check that now it is ok. If not, abort
-        for it = 1:size(project.experiments,2)
-            if(strcmpi(project.experiments{it}, newExperiment.name) || isempty(newExperiment.name))
-                logMsg('Invalid experiment name', 'e');
-                return;
-            end
-        end
-        
-        % Now we do the change
-        experiment = newExperiment;
-        
-        % Change the folder to match the project structure
-        %oldFolder = experiment.folder; % This only work if the experiment is in the right folder
-        [oldFolder, ~, ~] = fileparts(fileName);
-        oldFolder = [oldFolder filesep '..' filesep newExperimentOriginalName filesep];
-        experiment.folder = [project.folder experiment.name filesep];
-        experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp'];
-        % Copy all project files
-        try
-            copyfile(oldFolder, experiment.folder, 'f');
-        catch ME
-            logMsg('Error copying the file...', 'w');
-            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
-        end
-        % Now change the name of all possible strings that we do not have
-        % changed already
-        skipFields = {'name', 'folder', 'saveFile', 'handle'};
-        experiment = updateNames(experiment, newExperimentOriginalName, experiment.name, skipFields);
-        project = addNewExperimentNode(experiment, project);
-        saveExperiment(experiment, 'verbose', false, 'pbar', 0);
-        setappdata(netcalMainWindow, 'project', project);
-        updateMenu();
-        updateProjectTree();
+        experiment = updateNames(experiment, oldName, experiment.name);
+      end
+      
+      saveExperiment(experiment, 'verbose', false, 'pbar', 0);
+      
+      setappdata(netcalMainWindow, 'project', project);
+      updateMenu();
+      updateProjectTree();
     else
-        logMsg('Invalid experiment file', 'e');
+      logMsg('Invalid experiment file', 'e');
     end
     success = length(project.experiments);
 end

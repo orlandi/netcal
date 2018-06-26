@@ -2029,6 +2029,8 @@ function rightClick(hObject, eventData, ~)
       stdF = std(eventTraceF(range));
       threshold = meanF+stdF*experiment.learningEventOptionsCurrent.eventLearningThreshold;
       aboveThreshold = eventTraceF >= threshold;
+      aboveThreshold(1:(range(1)-1)) = 0;
+      aboveThreshold((range(end)+1):end) = 0;
       for i = closestT-1:-1:1
         if(~aboveThreshold(i))
             i = i+1;
@@ -2767,7 +2769,7 @@ function viewPositionsOnScreenMovie(~, ~)
   ROI = experiment.ROI(currentOrder(firstTrace:lastTrace));
   hs.onScreenSelectionMovieWindowData = imagesc(ones(size(currFrame)), 'HitTest', 'on');
   
-  ROIimg = visualizeROI(zeros(size(experiment.avgImg)), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
+  ROIimg = visualizeROI(zeros(experiment.height, experiment.width), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
 
   invalid = (ROIimg(:,:,1) == 0 & ROIimg(:,:,2) == 0 & ROIimg(:,:,3) == 0);
 
@@ -2791,7 +2793,7 @@ function viewPositionsOnScreenMovie(~, ~)
   %------------------------------------------------------------------------
   function updateMovieImage()
     ROI = getappdata(hs.onScreenSelectionMovieWindow, 'ROI');
-    ROIimg = visualizeROI(zeros(size(experiment.avgImg)), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
+    ROIimg = visualizeROI(zeros(experiment.height, experiment.width), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
 
     set(imData, 'CData', currFrame);
     invalid = (ROIimg(:,:,1) == 0 & ROIimg(:,:,2) == 0 & ROIimg(:,:,3) == 0);
@@ -3139,7 +3141,7 @@ function viewPositionsOnScreenUpdate()
    if(~isempty(hs.onScreenSelectionMovieWindow) && ishandle(hs.onScreenSelectionMovieWindow))
       currentOrder = getappdata(hFigW, 'currentOrder');
       ROI = experiment.ROI(currentOrder(firstTrace:lastTrace));
-      ROIimg = visualizeROI(zeros(size(experiment.avgImg)), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
+      ROIimg = visualizeROI(zeros(experiment.height, experiment.width), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
 
 
       invalid = (ROIimg(:,:,1) == 0 & ROIimg(:,:,2) == 0 & ROIimg(:,:,3) == 0);
@@ -3571,7 +3573,14 @@ end
       if(~isempty(experiment.schmittSpikesData{curNeuron}))
         spikeFrames = experiment.schmittSpikesData{curNeuron}.frames;
         for j = 1:length(spikeFrames)
-          plot(hs.mainWindowFramesAxes, t(spikeFrames{j}), traces(spikeFrames{j}, i), 'k', 'HitTest', 'off');
+          h = plot(hs.mainWindowFramesAxes, t(spikeFrames{j}), traces(spikeFrames{j}, i), 'k', 'HitTest', 'off');
+          if(isfield(experiment.schmittSpikesData{curNeuron}, 'type'))
+            if(experiment.schmittSpikesData{curNeuron}.type(j) == 1)
+              h.Color = 'r';
+            else
+              h.Color = 'g';
+            end
+          end
         %'Color', cmapPatterns(find(strcmp(cpatterns{j}.basePattern, basePatternList)), :));
         end
       end

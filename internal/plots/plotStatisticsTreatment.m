@@ -283,6 +283,18 @@ classdef plotStatisticsTreatment < handle
           logMsg(sprintf('%s and %s with main label %s', project.experiments{checkedExperiments(preIdx)}, project.experiments{checkedExperiments(postIdx)}, experimentsPerTreatmentLabelList{it}));
           for git = 1:length(plotData{preIdx})
             switch obj.params.comparisonType
+              case 'Ttest2'
+                [~, plotDataTreatment{it}{git}{it2}] = ttest2(plotData{postIdx}{git}(:), plotData{preIdx}{git}(:));
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(:);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(:);
+              case 'Mann-Whitney'
+                plotDataTreatment{it}{git}{it2} = ranksum(plotData{postIdx}{git}(:), plotData{preIdx}{git}(:));
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(:);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(:);
+              case 'Kolmogorov-Smirnov'
+                [~, plotDataTreatment{it}{git}{it2}] = kstest2(plotData{postIdx}{git}(:), plotData{preIdx}{git}(:));
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(:);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(:);
               case 'difference'
                 if(obj.params.averageDataFirst.enable)
                   switch obj.params.averageDataFirst.function
@@ -1105,9 +1117,9 @@ classdef plotStatisticsTreatment < handle
             else
               %lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, cit, git));
               if(ndims(data.(names{it})) == 3)
-                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(1, git, cit));
+                lineStr = sprintf('%s,%.6f', lineStr, data.(names{it})(1, git, cit));
               else
-                lineStr = sprintf('%s,%.3f', lineStr, data.(names{it})(cit, git));
+                lineStr = sprintf('%s,%.6f', lineStr, data.(names{it})(cit, git));
               end
             end
           end
@@ -1149,17 +1161,17 @@ classdef plotStatisticsTreatment < handle
               if(isnan(bpData(mainIdx, git, cit)))
                 lineStr = sprintf('%s,%s', lineStr, '');
               else
-                lineStr = sprintf('%s,%.3f', lineStr, bpData(mainIdx, git, cit));
+                lineStr = sprintf('%s,%.6f', lineStr, bpData(mainIdx, git, cit));
               end
               if(isnan(bpDataPre(mainIdx, git, cit)))
                 lineStr = sprintf('%s,%s', lineStr, '');
               else
-                lineStr = sprintf('%s,%.3f', lineStr, bpDataPre(mainIdx, git, cit));
+                lineStr = sprintf('%s,%.6f', lineStr, bpDataPre(mainIdx, git, cit));
               end
               if(isnan(bpDataPost(mainIdx, git, cit)))
                 lineStr = sprintf('%s,%s', lineStr, '');
               else
-                lineStr = sprintf('%s,%.3f', lineStr, bpDataPost(mainIdx, git, cit));
+                lineStr = sprintf('%s,%.6f', lineStr, bpDataPost(mainIdx, git, cit));
               end
             end
           end

@@ -38,6 +38,12 @@ classdef schmittOptions < baseOptions
     % Absolute will look for values directly above whatever the threshold
     % is.
     thresholdType = {'relative', 'absolute'};
+    
+    % If not empty, will discard all events whoe amplitude does not reach this value
+    minimumEventAmplitude = [];
+    
+    % If not empty, will discard all events whose duration is less than this (in seconds)
+    minimumEventDuration = [];
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)

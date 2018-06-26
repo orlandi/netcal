@@ -28,15 +28,26 @@ if(nargin < 4)
 end
 
 % Rmemove skipFields
-validFields = fieldnames(experiment);
-for i = 1:length(skipFields)
-  [valid, idx] = ismember(skipFields{i}, validFields);
-  if(valid)
-    validFields(idx) = [];
+% validFields = fieldnames(experiment);
+% for i = 1:length(skipFields)
+%   [valid, idx] = ismember(skipFields{i}, validFields);
+%   if(valid)
+%     validFields(idx) = [];
+%   end
+% end
+% for i = 1:length(validFields)
+%   if(ischar(experiment.(validFields{i})))
+%     experiment.(validFields{i}) = strrep(experiment.(validFields{i}), oldName, newName);
+%   end
+% end
+% Let's use bigFields list instead
+bigFields = getBigFields();
+for it = 1:length(bigFields)
+  % Skip some fields
+  if(~isempty(skipFields) && any(ismember(skipFields{it}, bigFields)))
+    continue;
   end
-end
-for i = 1:length(validFields)
-  if(ischar(experiment.(validFields{i})))
-    experiment.(validFields{i}) = strrep(experiment.(validFields{i}), oldName, newName);
+  if(isfield(experiment, bigFields{it}) && ischar(experiment.(bigFields{it})))
+    experiment.(bigFields{it}) = strrep(experiment.(bigFields{it}), oldName, newName);
   end
 end

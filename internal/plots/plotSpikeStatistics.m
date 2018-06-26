@@ -48,7 +48,7 @@ if(strcmpi(tmpStat, 'ask'))
     logMsg(sprintf('%s for: %s', defTitle, statList{selection(it)}));
     varargin{1}.statistic = statList{selection(it)};
     obj = plotStatistics;
-    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+    obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikeFeaturesNames', 'spikeFeatures'});
     if(obj.getData(@getData, projexp, obj.params.statistic))
       obj.createFigure();
     end
@@ -57,7 +57,7 @@ if(strcmpi(tmpStat, 'ask'))
   end
 else
   obj = plotStatistics;
-  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf);
+  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikeFeaturesNames', 'spikeFeatures'});
   if(obj.getData(@getData, projexp, obj.params.statistic))
     obj.createFigure();
   end

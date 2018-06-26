@@ -27,6 +27,7 @@ params.loadTraces = [];
 params.pbar = [];
 params.filterIndex = [];
 params.defaultFolder = [];
+params.import = false;
 experiment = [];
 project = [];
 % Try to get the app handle to manage log msgs (since drag and drop does not define gcbf)
@@ -113,7 +114,7 @@ switch lower(fpc)
           [tfpa tfpb tfpc] = fileparts(fileName);
           [status, msg, msgID] = copyfile([tfpa filesep '..' filesep experiment.name], [params.project.folder experiment.name filesep], 'f');
         end
-      elseif(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]))
+      elseif(isfield(params, 'project') && isfield(params.project, 'folder') && ~strcmpi(oldFolder, [params.project.folder experiment.name filesep]) && ~params.import)
         logMsg(sprintf('%s: Looks like the experiment folder has changed. Updating', experiment.name));
         experiment.folder = [params.project.folder experiment.name filesep];
         experiment.saveFile = ['..' filesep 'projectFiles' filesep experiment.name '.exp']; % JUST IN CASE
@@ -155,6 +156,7 @@ switch lower(fpc)
   case {'.tif', '.tiff'}
     % Allowed syntax for multiple TIFs should be '*_?.tif'
     %regstr = '_\d*.tif(f?)$';
+    warning('off', 'MATLAB:imagesci:tifftagsread:expectedTagDataFormatMultiple');
     regstr = '_\d*$';
     if(regexp(fpb, regstr))
       lastPosition = regexp(fpb, regstr);
@@ -164,7 +166,7 @@ switch lower(fpc)
       experiment.handle = [fpa filesep baseName '1' fpc];
       experiment.folder = [fpa filesep];
       experiment.name = baseName(1:end-1);
-
+      warning('on', 'MATLAB:imagesci:tifftagsread:expectedTagDataFormatMultiple');
       experiment.metadata = '';
       experiment.numFrames = numFiles;
       % Check/set the FPS
@@ -415,6 +417,8 @@ switch lower(fpc)
 
     %fid = fopen(fileName, 'r');
   case '.btf'
+    %'MATLAB:imagesci:tifftagsread:expectedTagDataFormatMultiple'
+    warning('off', 'MATLAB:imagesci:tifftagsread:expectedTagDataFormatMultiple');
     experiment.handle = fileName;
     experiment.folder = [fpa filesep];
     experiment.name = fpb;
@@ -445,7 +449,7 @@ switch lower(fpc)
       pixelType = '*uint32';
       bitsPerPixel = 32;
     end
-    
+    warning('on', 'MATLAB:imagesci:tifftagsread:expectedTagDataFormatMultiple');
     experiment.pixelType = pixelType;
     experiment.bpp = bitsPerPixel;
     if(~isempty(metadata) && isfield(metadata, 'vExpTim1'))

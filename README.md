@@ -27,6 +27,32 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.1.0] - 2018-06-26
+
+### Added
+- New features for visualizing defining and sorting schmitt-based inference
+- Statistics plots from schmitt inference features
+- Ability to define more threshold on schmitt inference (minum sizes and durations)
+- More options to measure differences across treatments
+
+### Fixed
+- Bug when importing experiments from existing projects with duplicate names would result in the existing experiments being overriden by the new one
+- Improved renaming of existing files when renaming or importing experiments
+- Substantial speed-up when processing statistics across many experiments
+
+## [8.0.7] - 2018-06-20
+
+### Added
+- Option to directly compute p-values on the treatment statistics for each experiment pair (ttest2, Mann-Whitney, Kolmogorov-Smirnov)
+- minimum event size and duration for schmitt-based inference
+- Several new observables for schmitt-based inference
+
+### Modified
+- Length of patterns during selection in the pattern-based classification is now limited to the sampling range
+
+### Fixed
+- Warning while loading experiments with bigtiff and TIFF_LONG8 datatypes
+
 ## [8.0.6] - 2018-06-18
 
 ### Added
@@ -35,7 +61,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 ### Fixed
 - Error when identifying similarities in traces if only 1 trace was present
-- Seval yypos
+- Several typos
 
 ## [8.0.5] - 2018-06-18
 
@@ -1604,6 +1630,8 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.1.0]: https://github.com/orlandi/netcal/tree/v8.1.0
+[8.0.7]: https://github.com/orlandi/netcal/tree/v8.0.7
 [8.0.6]: https://github.com/orlandi/netcal/tree/v8.0.6
 [8.0.4]: https://github.com/orlandi/netcal/tree/v8.0.4
 [8.0.2]: https://github.com/orlandi/netcal/tree/v8.0.2
