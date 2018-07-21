@@ -91,6 +91,8 @@ end
 %         idx = idx + 1;
 %     end
 % end
-ax = reshape(ha, [R, C]);
+%ax = reshape(ha, [R, C]);
+ax = reshape(ha, [C R])';
+%ax = permute(ax, [2 1]);
 
 

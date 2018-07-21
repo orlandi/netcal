@@ -2677,7 +2677,7 @@ function viewPositionsOnScreen(~, ~, ~)
   hold on;
 
   ROI = experiment.ROI(currentOrder(firstTrace:lastTrace));
-  hs.onScreenSelectionWindowData = imagesc(ones(size(currFrame)));
+  hs.onScreenSelectionWindowData = imagesc(ones(size(currFrame)), 'HitTest', 'on');
   ROIimg = visualizeROI(zeros(size(experiment.avgImg)), ROI, 'plot', false, 'color', true, 'mode','full', 'cmap', cmap);
 
   invalid = (ROIimg(:,:,1) == 0 & ROIimg(:,:,2) == 0 & ROIimg(:,:,3) == 0);
@@ -2691,6 +2691,10 @@ function viewPositionsOnScreen(~, ~, ~)
   dcm_obj = datacursormode(hs.onScreenSelectionWindow);
   set(dcm_obj,'UpdateFcn', @cursorText)
   setappdata(hs.onScreenSelectionWindow, 'ROI', ROI);
+  
+  hs.onScreenSelectionMenu.root = uicontextmenu;
+  hs.onScreenSelectionMenu.sortROI = uimenu(hs.onScreenSelectionMenu.root, 'Label','Sort ROI by distance', 'Callback', @rightClickMovie);
+  hs.onScreenSelectionWindowData.UIContextMenu = hs.onScreenSelectionMenu.root;
   
   hold off;
   function sliderChange(~, ~)
@@ -2706,6 +2710,25 @@ function viewPositionsOnScreen(~, ~, ~)
       % Touch min at fixed max
     end
   end
+  
+  %------------------------------------------------------------------------
+  function rightClickMovie(hObject, ~)
+    ax = findall(hObject, 'Type', 'Axes');
+    currentOrder = getappdata(hFigW, 'currentOrder');
+    clickedPoint = get(h,'currentpoint');
+    xy = clickedPoint([1,3]);
+    dist = cellfun(@(x)(sum((x.center-xy).^2)), experiment.ROI(currentOrder));
+    [~, newOrder] = sort(dist);
+    currentOrder = currentOrder(newOrder);
+    setappdata(hFigW, 'currentOrder', currentOrder);
+    pageChange(1);
+      
+    resizeHandle = getappdata(hFigW, 'ResizeHandle');
+    if(isa(resizeHandle,'function_handle'))
+      resizeHandle([], []);
+    end
+  end
+  
 end
 
 %--------------------------------------------------------------------------
@@ -2906,6 +2929,7 @@ function viewPositionsOnScreenMovie(~, ~)
     end
   end
 end
+
 %--------------------------------------------------------------------------
 function txt = cursorText(~, event_obj)
   

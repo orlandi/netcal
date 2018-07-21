@@ -189,7 +189,7 @@ classdef (CaseInsensitiveProperties) dndcontrol < handle
             % Initialize Java class
             dndcontrol.initJava();
         
-            % Create figure
+            % Create figure 
             hFig = figure();
             
             % Create Java Swing JTextArea

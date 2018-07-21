@@ -4,13 +4,13 @@ function msg = logMsg(msg, varargin)
     for i = 1:length(logHandles)
       logMessage(logHandles(i), msg, varargin{2:end});
     end
-  elseif(isempty(gcbf))
-    logMessage([], msg, varargin);
   elseif(~isempty(gcf) && ~isempty(getappdata(gcf, 'logHandle')))
     logHandles = getappdata(gcf, 'logHandle');
     for i = 1:length(logHandles)
       logMessage(logHandles(i), msg, varargin);
     end
+  elseif(isempty(gcbf))
+    logMessage([], msg, varargin);
   else
     logHandles = getappdata(gcbf, 'logHandle');
     for i = 1:length(logHandles)

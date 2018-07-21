@@ -4,9 +4,9 @@ function hh = merge_multigap_subplot(ax, rowRange, colRange)
 % Get the axis in matrix form
 
 idxs = [];
-for i = rowRange
-    for j = colRange
-        idxs = [idxs; sub2ind(size(ax), i, j)];
+for i = colRange
+    for j = rowRange
+        idxs = [idxs; sub2ind(size(ax), j, i)];
     end
 end
 

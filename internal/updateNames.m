@@ -44,7 +44,7 @@ end
 bigFields = getBigFields();
 for it = 1:length(bigFields)
   % Skip some fields
-  if(~isempty(skipFields) && any(ismember(skipFields{it}, bigFields)))
+  if(~isempty(skipFields) && any(ismember(skipFields, bigFields{it})))
     continue;
   end
   if(isfield(experiment, bigFields{it}) && ischar(experiment.(bigFields{it})))

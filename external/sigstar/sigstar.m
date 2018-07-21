@@ -67,7 +67,7 @@ function varargout=sigstar(groups,stats,nosort)
     %    PaperPosition property of the current figure should fix things.
     %
     % Rob Campbell - CSHL 2013
-
+    % Modified by Javier Orlandi for NETCAL. 2018
 
 
     %Input argument error checking
@@ -241,7 +241,7 @@ function H=makeSignificanceBar(x,y,p)
     elseif isnan(p)
         stars='n.s.';
     else
-        stars='';
+        stars='n.s.';
     end
             
     x=repmat(x,2,1);
@@ -251,7 +251,8 @@ function H=makeSignificanceBar(x,y,p)
 
     %Increase offset between line and text if we will print "n.s."
     %instead of a star. 
-    if ~isnan(p)
+    %if ~isnan(p)
+    if(~strcmp(stars, 'n.s.'))
         offset=0.005;
     else
         offset=0.02;

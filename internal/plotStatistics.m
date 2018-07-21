@@ -11,7 +11,7 @@ classdef plotStatistics < handle
     statisticsName;
     labelList;
     mainGroup;
-    mode;
+    mode;d
     params; % Set at init
     guiHandle; % Set at init
     figName;
@@ -643,6 +643,8 @@ classdef plotStatistics < handle
                       p = ranksum(subData(:, it, git), subData(:, itt, git));
                       [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
                       [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
+                      %subData(:, it, git)
+                      %subData(:, itt, git)
                       logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
@@ -1074,7 +1076,14 @@ classdef plotStatistics < handle
                     sprintf('-r%d', obj.params.saveOptions.saveFigureResolution), ...
                     sprintf('-q%d', obj.params.saveOptions.saveFigureQuality), obj.figureHandle);
       end
-      
+      if(obj.params.pipelineProject.automaticallyExportData)
+        try
+          obj.exportDataFull(bpData, obj.exportFolder, true)
+        catch ME
+          logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+          logMsg('Could not export the file', 'e');
+        end
+      end
       %--------------------------------------------------------------------
       function exportToWorkspace(~, ~)
         assignin('base', 'boxPlotData', obj.plotHandles);
@@ -1291,7 +1300,7 @@ classdef plotStatistics < handle
     
     %--------------------------------------------------------------------
     function exportDataAggregates(obj, bpData, baseFolder)
-      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_aggregates.csv']);
+      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic obj.params.saveOptions.saveFigureTag '_aggregates.csv']);
       if(fileName == 0)
         return;
       end
@@ -1324,10 +1333,20 @@ classdef plotStatistics < handle
     end
 
     %--------------------------------------------------------------------
-    function exportDataFull(obj, bpData, baseFolder)
-      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_full.csv']);
-      if(fileName == 0)
-        return;
+    function exportDataFull(obj, bpData, baseFolder, varargin)
+      if(nargin > 3)
+        automatic = varargin{1};
+      else
+        automatic = false;
+      end
+      if(~automatic)
+        [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic obj.params.saveOptions.saveFigureTag '_full.csv']);
+        if(fileName == 0)
+          return;
+        end
+      else
+        pathName = baseFolder;
+        fileName = [obj.params.statistic obj.params.saveOptions.saveFigureTag '_autoExport.csv'];
       end
       fID = fopen([pathName fileName], 'w');
       % +2 for the headers
@@ -1354,11 +1373,11 @@ classdef plotStatistics < handle
           end
         end
 
-        % Stop when everything is NaN
-        if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
-           lineStr = sprintf('%s\r\n', lineStr(2:end));
-           break;
-        end
+        % Stop when everything is NaN - DONT
+%         if(mainIdx >= 1 && all(all(isnan(bpData(mainIdx, :, :)))))
+%            lineStr = sprintf('%s\r\n', lineStr(2:end));
+%            break;
+%         end
         % 2:end to avoid the first comma NOT ANYMORE - WHAT?
         lineStr = sprintf('%s\r\n', lineStr(2:end));
         fprintf(fID, lineStr);

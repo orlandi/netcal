@@ -9,7 +9,7 @@ classdef plotSpikesBurstStatisticsOptions < plotStatisticsOptions & baseOptions
 
   methods 
     function obj = setExperimentDefaults(obj, experiment)
-      obj.statistic = {'IBI', 'bursting rate', 'duration', 'num spikes', 'num spikes per group member', 'ratio participating cells', 'num participating cells', 'all'};
+      obj.statistic = {'IBI', 'IBI CV', 'bursting rate', 'duration', 'num spikes', 'num spikes per group member', 'ratio participating cells', 'num participating cells', 'burstiness', 'ask', ''};
       obj = setExperimentDefaults@plotStatisticsOptions(obj, experiment);
     end
   end

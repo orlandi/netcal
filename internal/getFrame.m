@@ -35,11 +35,16 @@ end
 if(nargin == 2)
   fid = openVideoStream(experiment);
 end
+if(isnumeric(fid) && fid == -1)
+  img = zeros(experiment.height, experiment.width, strrep(experiment.pixelType,'*',''));
+  return;
+end
 
 if(~isfield(experiment, 'extension'))
   [~, ~, fpc] = fileparts(experiment.handle);
   experiment.extension = fpc;
 end
+
 
 switch experiment.extension
   case '.his'

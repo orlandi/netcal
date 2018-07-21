@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.1.1';
+currVersion = '8.1.3';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -119,6 +119,7 @@ try
 catch
   errMsg = {'GUI Layout Toolbox missing. Please install it from the installDependencies folder'};
   uiwait(msgbox(errMsg,'Error','warn'));
+  close(hs.mainWindow);
   return;
 end
 hs.expButtonsBox = uix.HButtonBox('Parent', hs.mainWindowVbox);
@@ -4844,6 +4845,25 @@ function pipelineRun(~, ~, parallelMode)
       % Check if there are options to pass
       if(~isempty(optionsList{f}))
         optionsClassCurrent = optionsList{f};
+        origOpClass = class(optionsClassCurrent);
+        tmpObj = eval(origOpClass);
+        tmpObj = tmpObj.setDefaults();
+        allProps = properties(tmpObj);
+        for it = 1:length(allProps)
+          if(~isprop(optionsClassCurrent, allProps{it}))
+            logMsg(sprintf('Mismatch in option set (%s) for function %s. Try removing and adding it again from the function list', allProps{it}, analysisFunction), 'e');
+            ncbar.close();
+            return;
+          elseif(isstruct(tmpObj.(allProps{it})))
+            allFields = fieldnames(tmpObj.(allProps{it}));
+            for it2 = 1:length(allFields)
+              if(~isfield(optionsClassCurrent.(allProps{it}), allFields{it2}))
+                logMsg(sprintf('Mismatch in option set (%s.%s) for function %s. I''ll try to add it with the default value, but try removing and adding it again from the function list', allProps{it}, allFields{it2}, analysisFunction), 'e');
+                optionsClassCurrent.(allProps{it}).(allFields{it2}) = tmpObj.(allProps{it}).(allFields{it2});
+              end
+            end
+          end
+        end
         optarg = {optionsClassCurrent, 'pbar', 3, 'verbose', false};
       else
         optarg = {'pbar', 3, 'verbose', false};
@@ -5440,7 +5460,8 @@ function modules = loadModules()
       {'Glia analysis', 'gliaAnalysis', 'analysis', [], 'handle', []}, ...
         {'Average movie', 'gliaAverageMovie', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @gliaAverageMovie, gliaAverageMovieOptions} , 'handle', 'gliaAverageFrame'}, ...
         {'Optic flow', 'gliaOpticFlow', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @gliaOpticFlow, gliaOpticFlowOptions}, 'gliaAverageFrame', 'gliaOpticFlowAverage'}, ...
-        {'Identify events', 'gliaIdentifyEvents', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @identifyGlialEvents, glialEventDetectionOptions}, 'gliaOpticFlowAverage', 'glialEvents'}};
+        {'Identify events', 'gliaIdentifyEvents', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @identifyGlialEvents, glialEventDetectionOptions}, 'gliaOpticFlowAverage', 'glialEvents'}, ...
+        {'Calculate Events Statistics', 'gliaCalculateEventsStatistics', 'gliaAnalysis', {@menuExperimentGlobalAnalysis, @calculateGlialEventsStatistics, []}, 'glialEvents', 'glialEventsStatistics'}};
     else
       modules = {modules{:}, ...
       {'Glia analysis', 'gliaAnalysis', 'analysis', [], 'handle', []}, ...

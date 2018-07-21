@@ -1,4 +1,4 @@
-function [hits, histEdges, histCenters] = integerLogBinning2(data, varargin)
+function [hits, histEdges, histCenters, norm] = integerLogBinning2(data, varargin)
 
 % Default parameters
 params.normalize = 'full';
@@ -6,7 +6,7 @@ params.removeEmptyBins = true;
 params.bins = 100;
 params.limits = [];
 params = parse_pv_pairs(params,varargin); 
-
+norm = [];
 Nbins = params.bins;
 limits = params.limits;
 
@@ -43,18 +43,34 @@ hits = hits(1:end-1);
 % Divide by the number of ints inside the bin
 switch params.normalize
     case 'full'
+        hits = hits/sum(hits);
         norm = diff(floor(histEdges));
         hits = hits(:)./norm(:);
         hits(~norm) = NaN;
-        hits = hits/nansum(hits);
+        %hits = hits/nansum(hits);
         valid = find(~isnan(hits));
         hits = hits(valid);
+        norm = norm(valid);
         histCenters = histCenters(valid);
+        %hits = hits/sum(hits);
         nvalid = [valid(:); valid(end)+1];
         if(nvalid(end) > length(histEdges))
             nValid(end) = [];
         end
         histEdges = histEdges(nvalid);
+      case 'full2'
+        norm = diff(floor(histEdges));
+        hits = hits(:)./norm(:);
+        hits(~norm) = NaN;
+        hits = hits/nansum(hits);
+        %valid = find(~isnan(hits));
+        %hits = hits(valid);
+        %histCenters = histCenters(valid);
+        %nvalid = [valid(:); valid(end)+1];
+        %if(nvalid(end) > length(histEdges))
+        %    nValid(end) = [];
+        %end
+        %histEdges = histEdges(nvalid);
     case 'hits'
         norm = diff(floor(histEdges));
         hits = hits(:)./norm(:);
@@ -80,6 +96,20 @@ switch params.normalize
             nValid(end) = [];
         end
         histEdges = histEdges(nvalid);
-    otherwise
+  otherwise
+    norm = diff(floor(histEdges));
+        hits(~norm) = NaN;
+        %hits = hits/nansum(hits);
+        valid = find(~isnan(hits));
+        hits = hits(valid);
+        norm = norm(valid);
+        histCenters = histCenters(valid);
+        %hits = hits/sum(hits);
+        nvalid = [valid(:); valid(end)+1];
+        if(nvalid(end) > length(histEdges))
+            nValid(end) = [];
+        end
+        histEdges = histEdges(nvalid);
+      
 end
     

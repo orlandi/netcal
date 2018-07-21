@@ -9,7 +9,7 @@ function projexp = plotSpikeStatistics(projexp, varargin)
 %    (project/experiment) - project or experiment structure
 %
 % INPUT optional arguments ('key' followed by its value):
-%    see plotQCECOptions
+%    see plotSpikeStatisticsOptions
 %
 % OUTPUT arguments:
 %    (project/experiment) - project or experiment structure
@@ -67,12 +67,19 @@ end
   %------------------------------------------------------------------------
   function data = getData(experiment, groupName, stat)
     members = getExperimentGroupMembers(experiment, groupName);
-    if(~isempty(members))
-      selectedStatistic = strcmp(experiment.spikeFeaturesNames, stat);
-      data = experiment.spikeFeatures(members, selectedStatistic);
-      data = data(:); % Always as a column, just to be sure
-    else
-      data = [];
+    switch stat
+      case 'Global Firing Rate (Hz)'
+        selectedStatistic = strcmp(experiment.spikeFeaturesNames, 'Firing rate (Hz)');
+        data = experiment.spikeFeatures(members, selectedStatistic);
+        data = nansum(data(:)); % The sum of all firing rates
+      otherwise
+      if(~isempty(members))
+        selectedStatistic = strcmp(experiment.spikeFeaturesNames, stat);
+        data = experiment.spikeFeatures(members, selectedStatistic);
+        data = data(:); % Always as a column, just to be sure
+      else
+        data = [];
+      end
     end
   end
 

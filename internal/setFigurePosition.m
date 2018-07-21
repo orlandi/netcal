@@ -76,9 +76,8 @@ else
     monMinX = min(monPos(:,1));
     monMaxX = max(monPos(:,1)+monPos(:,3)-1);
     monMinY = min(monPos(:,2));
-    monMaxY = max(monPos(:,2)+monPos(:,4)-1);  
+    monMaxY = max(monPos(:,2)+monPos(:,4)-1);
   end
-
 end
 
 if(~isempty(parent) && ~params.centered)

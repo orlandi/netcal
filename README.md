@@ -27,6 +27,33 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.1.3] - 2018-07-20
+
+### Added
+- Global Firing Rate to spike statistics plots
+- Option to automatically export data to csv when generating statistics figures
+- Option to plot several burst spike statistics within the same pipeline call
+- Hardcoded transparency effects on UnivarScatter bars (to fix exporting issues)
+- Option to not use weights when displaying ROIs with weights
+- Option to circumvent pipeline errors when using updated functions.
+
+### Modified
+- Right click ROI sorting is now accessible when viewing the average of current ROI within the view Traces window (not only when viewing the movie anymore).
+
+### Fixed
+- Multigap subplot had transposed output
+- Issue when cloning experiments with missing fields
+- Small bug fixes
+
+## [8.1.2] - 2018-07-08
+
+### Added
+- New view recording plugin (2) for fast viewing of recordings (specially for HIS files). Allows drag and drop of the movies and switching between different movies within the same window
+
+### Fixed
+- Several files were not being uploaded to the repository due to a faulty .gitignore
+- Several small bug fixes
+
 ## [8.1.1] - 2018-06-26
 
 ### Added
@@ -1635,6 +1662,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.1.3]: https://github.com/orlandi/netcal/tree/v8.1.3
 [8.1.0]: https://github.com/orlandi/netcal/tree/v8.1.0
 [8.0.7]: https://github.com/orlandi/netcal/tree/v8.0.7
 [8.0.6]: https://github.com/orlandi/netcal/tree/v8.0.6

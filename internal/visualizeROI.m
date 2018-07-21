@@ -37,6 +37,7 @@ params.plot = true;
 params.color = true;
 params.ROIcolorIntensity = [];
 params.cmap = [];
+params.skipWeights = false;
 params = parse_pv_pairs(params, varargin);
 
 % Create a randstream always with the same seed (to replicate colors)
@@ -76,7 +77,7 @@ if(params.color)
         newPerimeter = logical(tmpImg);
       elseif(strcmp(params.mode, 'fast'))
         newPerimeter = ROI{i}.pixels;
-        if(isfield(ROI{i}, 'weights'))
+        if(isfield(ROI{i}, 'weights') && ~params.skipWeights)
           newPerimeterWeights = ROI{i}.weights/max(ROI{i}.weights);
         end
       else % Should return error
@@ -96,7 +97,7 @@ if(params.color)
       out_red(newPerimeter)   = color_uint8(1);
       out_green(newPerimeter) = color_uint8(2);
       out_blue(newPerimeter)  = color_uint8(3);
-      if(isfield(ROI{i}, 'weights') && strcmp(params.mode, 'fast'))
+      if(isfield(ROI{i}, 'weights') && strcmp(params.mode, 'fast') && ~params.skipWeights)
         out_red(newPerimeter)   = uint8(double(out_red(newPerimeter)).*newPerimeterWeights);
         out_green(newPerimeter) = uint8(double(out_green(newPerimeter)).*newPerimeterWeights);
         out_blue(newPerimeter)  = uint8(double(out_blue(newPerimeter)).*newPerimeterWeights);
