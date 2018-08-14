@@ -96,6 +96,22 @@ end
           catch
             data = length(bursts.amplitude)/experiment.totalTime;
           end
+        case 'bursting rate high'
+          [members, ~, ~] = getExperimentGroupMembers(experiment, groupName);
+          data = cellfun(@length, bursts.participators)/length(members);
+          valid = find(data >= 0.2);
+          data = length(valid)/(experiment.t(end)-experiment.t(1));
+          if(isempty(data))
+            data = 0;
+          end
+        case 'bursting rate low'
+          [members, ~, ~] = getExperimentGroupMembers(experiment, groupName);
+          data = cellfun(@length, bursts.participators)/length(members);
+          valid = find(data < 0.2);
+          data = length(valid)/(experiment.t(end)-experiment.t(1));
+          if(isempty(data))
+            data = 0;
+          end
         case 'IBI CV'
           data = nanstd(bursts.IBI)/nanmean(bursts.IBI);
         case 'num spikes'

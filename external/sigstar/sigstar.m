@@ -232,18 +232,20 @@ function H=makeSignificanceBar(x,y,p)
     %given p-value
 
 
-    if p<=1E-3
+    if abs(p)<=1E-3
         stars='***'; 
-    elseif p<=1E-2
+    elseif abs(p)<=1E-2
         stars='**';
-    elseif p<=0.05
+    elseif abs(p)<=0.05
         stars='*';
     elseif isnan(p)
         stars='n.s.';
     else
         stars='n.s.';
     end
-            
+    if(p < 0)
+      stars = strrep(stars, '*', '#');
+    end
     x=repmat(x,2,1);
     y=repmat(y,4,1);
 
@@ -257,7 +259,9 @@ function H=makeSignificanceBar(x,y,p)
     else
         offset=0.02;
     end
-
+    if(p < 0)
+      offset=0.02;
+    end
     starY=mean(y)+myRange(ylim)*offset;
     H(2)=text(mean(x(:)),starY,stars,...
         'HorizontalAlignment','Center',...

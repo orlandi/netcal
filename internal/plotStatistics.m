@@ -125,7 +125,9 @@ classdef plotStatistics < handle
         experimentName = project.experiments{checkedExperiments(i)};
         experimentFile = [project.folderFiles experimentName '.exp'];
         if(~isempty(obj.params.loadFields))
+          warning('off', 'MATLAB:load:variableNotFound');
           experiment = load(experimentFile, '-mat', 'traceGroups', 'traceGroupsNames', 'name', 'folder', 'ROI', obj.params.loadFields{:});
+          warning('on', 'MATLAB:load:variableNotFound');
         else
           experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
         end
@@ -147,7 +149,12 @@ classdef plotStatistics < handle
             obj.groupList{groupIdx} = 'everything';
           end
           %plotData{i}{git} = getData(experiment, obj.groupList{git}, obj.params.statistic);
-          plotData{i}{git} = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
+          try
+            plotData{i}{git} = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
+          catch ME
+            logMsg(sprintf('Error getting data from experiment %s. Setting it to NaN', experiment.name), 'w');
+            plotData{i}{git} = NaN;
+          end
           if(obj.params.zeroToNan)
             plotData{i}{git}(plotData{i}{git} == 0) = NaN;
           end

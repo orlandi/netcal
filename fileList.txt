@@ -3,7 +3,8 @@ internal/CheckboxTreeExperiment.m 1240
 internal/CheckboxTreePipeline.m 1247
 internal/KClAnalysis.m 21545
 internal/TreeFunctionList.m 1078
-internal/UnivarScatterV2.m 26700
+internal/UnivarScatterV2.m 27304
+internal/UnivarScatterV2old.m 26703
 internal/applyCorrection.m 8745
 internal/applySmoothing.m 1172
 internal/autoDetectROI.m 12724
@@ -19,7 +20,7 @@ internal/burstDetectionISINautomatic.m 21008
 internal/burstDetectionISINexplorer.m 5212
 internal/burstDetectionSpikes.m 6445
 internal/burstDetectionSurprise.m 15193
-internal/burstDetectionX.m 13608
+internal/burstDetectionX.m 13626
 internal/checkExperimentName.m 1501
 internal/checkGroups.m 5318
 internal/checkUserModifiedFile.m 1373
@@ -71,7 +72,7 @@ internal/getExperimentGroupMembers.m 1553
 internal/getExperimentGroupsNames.m 2159
 internal/getExperimentGroupsNamesFull.m 1241
 internal/getExperimentID.m 235
-internal/getFrame.m 4618
+internal/getFrame.m 4754
 internal/getFrameBlock.m 1508
 internal/getHtmlColormapNames.m 1897
 internal/getKClFeatures.m 4044
@@ -87,7 +88,7 @@ internal/identifySimilaritiesInTraces.m 3372
 internal/importExperimentFromWorkspace.m 531
 internal/importFilePatterns.m 4877
 internal/integerLogBinning.m 1650
-internal/integerLogBinning2.m 2682
+internal/integerLogBinning2.m 3660
 internal/isSubField.m 478
 internal/loadBigFields.m 2795
 internal/loadCurrentExperiment.m 962
@@ -103,7 +104,7 @@ internal/measureQcomplexityEntropyCurve.m 830
 internal/measureTononiComplexity.m 1945
 internal/measureTracesQCEC.m 4399
 internal/merge_multigap_subplot.m 761
-internal/multigap_subplot.m 2378
+internal/multigap_subplot.m 2431
 internal/namesWithLabels.m 937
 internal/ncbar.m 19971
 internal/networkToGEXF.m 3029
@@ -118,7 +119,7 @@ internal/plotCircularTransitions.m 10956
 internal/plotFluoresenceRaster.m 2383
 internal/plotLinearTransitions.m 10470
 internal/plotSchmittSpikesStatistics.m 3054
-internal/plotStatistics.m 59417
+internal/plotStatistics.m 60174
 internal/precacheHISframes.m 6447
 internal/preprocessExperiment.m 12928
 internal/preprocessExperimentPercentile.m 7068
@@ -135,7 +136,7 @@ internal/saveProject.m 4669
 internal/saveROI.m 1702
 internal/selectExperimentGroups.m 714
 internal/selectGroup.m 1421
-internal/setFigurePosition.m 5051
+internal/setFigurePosition.m 5048
 internal/smoothTraces.m 4687
 internal/smoothTracesV2.m 8858
 internal/spikeDetectConflicts.m 5490
@@ -152,7 +153,7 @@ internal/treeGroupsSelection.m 6925
 internal/updateNames.m 1471
 internal/updatePath.txt 31
 internal/updateSortingMethod.m 3760
-internal/visualizeROI.m 4496
+internal/visualizeROI.m 4570
 internal/avalanches/avalancheAnalysisBranchingRatio.m 1848
 internal/avalanches/avalancheAnalysisDistributions.m 2135
 internal/avalanches/avalancheAnalysisExponents.m 1687
@@ -278,10 +279,10 @@ internal/options/plotPopulationsStatisticsOptions.m 880
 internal/options/plotQCECOptions.m 2723
 internal/options/plotRasterOptions.m 2390
 internal/options/plotSchmittSpikesStatisticsOptions.m 797
-internal/options/plotSpikeStatisticsOptions.m 1258
+internal/options/plotSpikeStatisticsOptions.m 1318
 internal/options/plotSpikeStatisticsTreatmentOptions.m 1278
 internal/options/plotSpikeTreatmentStatisticsOptions.m 3642
-internal/options/plotStatisticsOptions.m 6905
+internal/options/plotStatisticsOptions.m 7155
 internal/options/plotStatisticsTreatmentOptions.m 7970
 internal/options/predefinedPatternsOptions.m 4142
 internal/options/preloadMultipleOptions.m 2442
@@ -319,11 +320,11 @@ internal/plots/plotPopulationsStatisticsTreatmentOptions.m 825
 internal/plots/plotQCEC.m 15339
 internal/plots/plotRaster.m 7680
 internal/plots/plotSpectrogram.m 4026
-internal/plots/plotSpikeStatistics.m 2734
+internal/plots/plotSpikeStatistics.m 3054
 internal/plots/plotSpikeStatisticsTreatment.m 1597
 internal/plots/plotSpikeTreatmentStatistics.m 13193
-internal/plots/plotSpikesBurstStatistics.m 3154
-internal/plots/plotSpikesBurstStatisticsOptions.m 910
+internal/plots/plotSpikesBurstStatistics.m 4875
+internal/plots/plotSpikesBurstStatisticsOptions.m 938
 internal/plots/plotSpikesBurstStatisticsTreatment.m 2459
 internal/plots/plotSpikesBurstStatisticsTreatmentOptions.m 963
 internal/plots/plotStatisticsTreatment.m 58064
@@ -337,6 +338,7 @@ external/calcCircle.m 2740
 external/ciplot.m 1050
 external/findjobj.m 169591
 external/findpeaks2.m 38133
+external/fix_xticklabels.m 3857
 external/loadpickle.m 1047
 external/mtit.m 3955
 external/nchoosecrit.m 4157
@@ -1293,11 +1295,15 @@ external/createTable/TableSorter.jar 17005
 external/createTable/createTable.m 35495
 external/dndcontrol/MLDropTarget.class 2239
 external/dndcontrol/MLDropTarget.java 2266
-external/dndcontrol/dndcontrol.m 9450
+external/dndcontrol/dndcontrol.m 9451
 external/dndcontrol/license.txt 1321
+external/exportfig/ImageSelection.class 1092
+external/exportfig/ImageSelection.java 1053
+external/exportfig/LICENSE 1510
 external/exportfig/README.md 22434
 external/exportfig/append_pdfs.m 2061
 external/exportfig/copyfig.m 846
+external/exportfig/crop_borders.m 5133
 external/exportfig/eps2pdf.m 5149
 external/exportfig/export_fig.m 31139
 external/exportfig/fix_lines.m 5956
@@ -1308,6 +1314,7 @@ external/exportfig/pdf2eps.m 1525
 external/exportfig/pdftops.m 3188
 external/exportfig/print2array.m 6474
 external/exportfig/print2eps.m 9490
+external/exportfig/read_write_entire_textfile.m 961
 external/exportfig/user_string.m 2462
 external/exportfig/using_hg2.m 419
 external/fastPCA/license.txt 1313
@@ -1496,7 +1503,7 @@ external/peeling/spkTimes2Calcium.m 604
 external/peeling/spkTimes2FreeCalcium.m 1983
 external/sigstar/README.md 2450
 external/sigstar/demo_sigstar.m 1979
-external/sigstar/sigstar.m 8627
+external/sigstar/sigstar.m 8712
 external/toolbox_image/apply_colormap.m 322
 external/toolbox_image/barb.png 232752
 external/toolbox_image/callback_ti_wavelets.m 879
@@ -1685,7 +1692,7 @@ gui/viewPatterns.m 40896
 gui/viewROI.m 56038
 gui/viewRecording.m 74283
 gui/viewSpikes.m 26154
-gui/viewTraces.m 170470
+gui/viewTraces.m 171421
 gui/viewTracesMultiExperiment.m 147175
 gui/images/funding_logos.jpg 68202
 gui/images/logo_netcal.png 146184
@@ -1695,6 +1702,7 @@ installDependencies/GUI Layout Toolbox 2.2.mltbx 727408
 installDependencies/jsonlab-1.2.mltbx 52646
 plugins/camControl.m 114661
 plugins/viewRecordingPlugin.m 53457
+plugins/viewRecordingPlugin2.m 27693
 LICENSE.md 1089
-README.md 48818
-netcal.m 226054
+README.md 49965
+netcal.m 227418

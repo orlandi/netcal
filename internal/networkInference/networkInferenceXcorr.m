@@ -20,7 +20,7 @@ function experiment = networkInferenceXcorr(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: cross-correlation
-% parentGroups: network inference
+% parentGroups: network: inference
 % optionsClass: networkInferenceXcorrOptions
 % requiredFields: spikes
 

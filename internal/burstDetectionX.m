@@ -130,6 +130,7 @@ for git = 1:length(groupList)
   %%% The X model
   
   firingRateAvgChannels = zeros(size(experiment.t));
+  %%% Needs optimization
   for it = 1:length(experiment.t)
     valid = firings.T <= experiment.t(it) & firings.T > experiment.t(it)-params.windowSize;
     firingRateAvgChannels(it) = length(unique(firings.N(valid)));

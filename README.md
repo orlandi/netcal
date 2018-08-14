@@ -27,6 +27,15 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.2.0] - 2018-08-14
+
+### Added
+- Network inference: fast estimator of Generalized Transfer Entropy with significance estimators (fully working)
+- Many network measures (from the brain connectivity toolbox)
+- Full Brain Connectivity Toolbox
+- sigstar allows negative p values (will display # instead of \*)
+- Burst statistics. Added high and low bursting rate measures (those that recruit above and below 20% of the population respectively)
+
 ## [8.1.3] - 2018-07-20
 
 ### Added
@@ -1662,6 +1671,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 ## [1.99] - 2016-10-29
 Undocumented. Check commits
 
+[8.2.0]: https://github.com/orlandi/netcal/tree/v8.2.0
 [8.1.3]: https://github.com/orlandi/netcal/tree/v8.1.3
 [8.1.0]: https://github.com/orlandi/netcal/tree/v8.1.0
 [8.0.7]: https://github.com/orlandi/netcal/tree/v8.0.7
