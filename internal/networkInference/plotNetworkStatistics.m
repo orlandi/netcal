@@ -46,8 +46,14 @@ if(strcmpi(tmpStat, 'ask'))
     varargin{1}.statistic = statList{selection(it)};
     obj = plotStatistics;
     obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'GTE', 'GTEunconditioned', 'name'});
-    if(obj.getData(@getData, projexp, obj.params.inferenceMeasure, obj.params.statistic, obj.params.confidenceLevelThreshold))
+    if(obj.getData(@getData, projexp, obj.params.inferenceMeasure, obj.params.statistic, obj.params.confidenceLevelThreshold, obj.params.normalizeGlobalStatistic))
       obj.createFigure();
+    end
+    if(obj.params.normalizeGlobalStatistic)
+      ax = obj.axisHandle;
+      ax.Title.String = ['normalized ' ax.Title.String];
+      hFig = obj.figureHandle;
+      hFig.Name = ['normalized ' hFig.Name];
     end
     obj.cleanup();
     autoArrangeFigures();
@@ -55,14 +61,20 @@ if(strcmpi(tmpStat, 'ask'))
 else
   obj = plotStatistics;
   obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'GTE', 'GTEunconditioned', 'name'});
-  if(obj.getData(@getData, projexp, obj.params.inferenceMeasure, obj.params.statistic, obj.params.confidenceLevelThreshold))
+  if(obj.getData(@getData, projexp, obj.params.inferenceMeasure, obj.params.statistic, obj.params.confidenceLevelThreshold, obj.params.normalizeGlobalStatistic))
     obj.createFigure();
+  end
+  if(obj.params.normalizeGlobalStatistic)
+    ax = obj.axisHandle;
+    ax.Title.String = ['normalized ' ax.Title.String];
+    hFig = obj.figureHandle;
+    hFig.Name = ['normalized ' hFig.Name];
   end
   obj.cleanup();
 end
 
   %------------------------------------------------------------------------
-  function data = getData(experiment, groupName, meas, stat, sigLevel)
+  function data = getData(experiment, groupName, meas, stat, sigLevel, norm)
     %bursts = getExperimentGroupBursts(experiment, groupName, 'spikes');
     [field, idx] = getExperimentGroupCoordinates(experiment, groupName);
     switch meas
@@ -169,5 +181,12 @@ end
         data = [];
     end
     data = data(:); % Always as a column, just to be sure
+    % If we should normalize the statistic
+    if(norm)
+      switch stat
+        case {'avg comp size', 'largest connected comp', 'louvain avg community size', 'louvain largest community', 'modularity avg community size', 'modularity largest community'}
+          data = data/size(RS, 1);
+      end
+    end
   end
 end

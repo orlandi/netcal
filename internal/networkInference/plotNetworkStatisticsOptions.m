@@ -14,6 +14,10 @@ classdef plotNetworkStatisticsOptions < plotStatisticsOptions & baseOptions
     
     % Confidence level measure to establish significance
     confidenceLevelThreshold = 2;
+    
+    % If true will divide the measured statistic from the number of cells in the current group. Only applies to measures
+    % that deal with average or largest sizes, i.e., X avg community size, X largest community, etc
+    normalizeGlobalStatistic = false;
   end
   methods 
     function obj = setExperimentDefaults(obj, experiment)
