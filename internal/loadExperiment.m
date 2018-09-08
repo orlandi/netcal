@@ -40,12 +40,12 @@ if(~isempty(gcbf)) % First try from the callback list (will work for menus)
   end
 end
       
-formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF;*.MJ2', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN, *.BTF, *.MJ2)';...
+formatsList = {'*.HIS;*.DCIMG;*.AVI;*.BIN;*.BTF;*.MJ2;*.TIF;*.TIFF', 'All Movie files (*.HIS, *.DCIMG, *.AVI, *.BIN, *.BTF, *.MJ2, *.TIF, *.TIFF)';...
                '*.HIS', 'Hamamatsu HIS files (*.HIS)';...
                '*.DCIMG', 'Hamamatsu DCIMG files (*.DCIMG)'; ...
                '*.AVI', 'AVI files (*.AVI)';...
                '*.BTF', 'Big TIFF files (*.BTF)';...
-               '*.TIF,*.TIFF', 'TIF sequence/multitif (*.TIF,*.TIFF)';...
+               '*.TIF;*.TIFF', 'TIF sequence/multitif (*.TIF,*.TIFF)';...
                '*.EXP', 'NETCAL experiment (*.EXP)'; ...
                '*.BIN', 'NETCAL binary experiment (*.BIN)'; ...
                '*.MAT', 'quick_dev (*.MAT)'; ...
@@ -200,18 +200,23 @@ switch lower(fpc)
       experiment.folder = [fpa filesep];
       experiment.name = fpb;
       finfo = imfinfo(fileName);
-      metadata_str = finfo(1).ImageDescription;
-      metadata_separated = strsplit(metadata_str,';');
-      metadata = [];
-      for i = 1:length(metadata_separated)
-          tmpStr = strsplit(metadata_separated{i},'=');
-          if(length(tmpStr) == 2)
-              if(isempty(strfind(tmpStr{1},'@')))
-                  metadata.(tmpStr{1}) = tmpStr{2};
-              end
-          end
+      try
+        metadata_str = finfo(1).ImageDescription;
+        metadata_separated = strsplit(metadata_str,';');
+        metadata = [];
+        for i = 1:length(metadata_separated)
+            tmpStr = strsplit(metadata_separated{i},'=');
+            if(length(tmpStr) == 2)
+                if(isempty(strfind(tmpStr{1},'@')))
+                    metadata.(tmpStr{1}) = tmpStr{2};
+                end
+            end
+        end
+        experiment.metadata = metadata;
+      catch
+        metadata = [];
+        experiment.metadata = 'Could not load any metadata from the file';
       end
-      experiment.metadata = metadata;
       experiment.numFrames = length(finfo);
       experiment.width = finfo(1).Width;
       experiment.height = finfo(1).Height;

@@ -60,7 +60,7 @@ function [xPositions, yPositions, Label, RangeCut, hList] = UnivarScatterV2(data
 %                       +'Width' - A number that determines the spread of
 %                       each subset of points in x axis. Default is 0.4
 %
-%                       +'Compression' - A number that determines how
+%                       +'compression' - A number that determines how
 %                       separated from each other the points are in x
 %                       dimension. Default is 5
 %
@@ -541,7 +541,9 @@ for steps=[-1,1]
     cutUp=mean(yValues)+cuts/2;
     subsetind= yValues<=cutUp & yValues>cutUp-cuts; 
     keep_going=true;
+    curIt = 0;
 while keep_going
+  curIt = curIt + 1;
     % subsetind is a logical variable that represents how many points are
     % in that group
     if all(sum(subsetind)~=[1 0]) %If there's only one point, we represent it in the middle, and xValues remains equal to i
@@ -606,6 +608,9 @@ while keep_going
     keep_going=~(cutUp>max(yValues) || cutUp<min(yValues));
     cutUp=cutUp+steps*cuts;
     subsetind= yValues<cutUp & yValues>cutUp-cuts;
+    if(curIt > 1000)
+      keep_going = false;
+    end
 end
 end
 

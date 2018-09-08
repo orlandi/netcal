@@ -11,7 +11,7 @@ classdef plotStatistics < handle
     statisticsName;
     labelList;
     mainGroup;
-    mode;d
+    mode;
     params; % Set at init
     guiHandle; % Set at init
     figName;
@@ -25,6 +25,8 @@ classdef plotStatistics < handle
     exportFolder;
     figFolder;
     loadFields;
+    plotDataFull;
+    multiStatistic;
   end
   
   methods
@@ -92,8 +94,17 @@ classdef plotStatistics < handle
       checkedExperiments = find(project.checkedExperiments);
       
       plotData = cell(length(checkedExperiments), 1);
+      if(isempty(obj.plotDataFull))
+        obj.plotDataFull = cell(length(varargin{1}), 1);
+        for it = 1:length(obj.plotDataFull)
+          obj.plotDataFull{it} = cell(length(checkedExperiments), 1);
+          for it2 = 1:length(obj.plotDataFull{it})
+            obj.plotDataFull{it}{it2} = cell(length(obj.fullGroupList), 1);
+          end
+        end
+      end
       if(obj.params.pbar > 0)
-        ncbar.setBarName('Gathering data');
+        ncbar.setCurrentBarName(sprintf('Gathering data (%d/%d)', 0, length(checkedExperiments))');
         ncbar.update(0);
       end
       
@@ -123,21 +134,24 @@ classdef plotStatistics < handle
       %%% Gather the data
       for i = 1:length(checkedExperiments)
         experimentName = project.experiments{checkedExperiments(i)};
-        experimentFile = [project.folderFiles experimentName '.exp'];
-        if(~isempty(obj.params.loadFields))
-          warning('off', 'MATLAB:load:variableNotFound');
-          experiment = load(experimentFile, '-mat', 'traceGroups', 'traceGroupsNames', 'name', 'folder', 'ROI', obj.params.loadFields{:});
-          warning('on', 'MATLAB:load:variableNotFound');
-        else
-          experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
-        end
-        
-        % Get ALL subgroups in case of parents
-        if(strcmpi(obj.mainGroup, 'all')  || strcmpi(obj.mainGroup, 'ask'))
-          obj.groupList = getExperimentGroupsNames(experiment);
-        else
-          obj.groupList = getExperimentGroupsNames(experiment, obj.mainGroup);
-        end
+        switch obj.multiStatistic
+          case {'none', 'init'}
+            experimentFile = [project.folderFiles experimentName '.exp'];
+            if(~isempty(obj.params.loadFields))
+              warning('off', 'MATLAB:load:variableNotFound');
+              experiment = load(experimentFile, '-mat', 'traceGroups', 'traceGroupsNames', 'name', 'folder', 'ROI', obj.params.loadFields{:});
+              warning('on', 'MATLAB:load:variableNotFound');
+            else
+              experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+            end
+
+            % Get ALL subgroups in case of parents
+            if(strcmpi(obj.mainGroup, 'all')  || strcmpi(obj.mainGroup, 'ask'))
+              obj.groupList = getExperimentGroupsNames(experiment);
+            else
+              obj.groupList = getExperimentGroupsNames(experiment, obj.mainGroup);
+            end
+        end        
         plotData{i} = cell(length(obj.fullGroupList), 1);
         for git = 1:length(obj.fullGroupList)
           groupIdx = find(strcmp(obj.fullGroupList{git}, obj.groupList));
@@ -150,9 +164,21 @@ classdef plotStatistics < handle
           end
           %plotData{i}{git} = getData(experiment, obj.groupList{git}, obj.params.statistic);
           try
-            plotData{i}{git} = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
+            switch obj.multiStatistic
+               case 'none'
+                 plotData{i}{git} = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
+              case 'init'
+                tmpFull = feval(funcHandle, experiment, obj.groupList{groupIdx}, varargin{:});
+                for it = 1:length(obj.plotDataFull)
+                  obj.plotDataFull{it}{i}{git} = tmpFull{it};
+                end
+                plotData{i}{git} = obj.plotDataFull{1}{i}{git};
+              case 'present'
+                plotData{i}{git} = obj.plotDataFull{i}{git};
+            end
           catch ME
-            logMsg(sprintf('Error getting data from experiment %s. Setting it to NaN', experiment.name), 'w');
+            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+            logMsg(sprintf('Error getting data from experiment %s. Setting it to NaN', experimentName), 'w');
             plotData{i}{git} = NaN;
           end
           if(obj.params.zeroToNan)
@@ -161,10 +187,11 @@ classdef plotStatistics < handle
         end
         obj.maxGroups = max(obj.maxGroups, length(plotData{i}));
         if(obj.params.pbar > 0)
+          ncbar.setCurrentBarName(sprintf('Gathering data (%d/%d)', i, length(checkedExperiments))');
           ncbar.update(i/length(checkedExperiments));
         end
       end
-      
+
       %%% Get the labels we need
       labelsToUse = obj.params.pipelineProject.labelGroups;
       try
@@ -538,6 +565,23 @@ classdef plotStatistics < handle
               end
           end
       end
+      % Normality testing
+      %logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test %s - Kolmogorov-Smirnov test %s - Ttest2 %s', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, MWtext, KStext, TTtext));
+      warning('off', 'stats:lillietest:OutOfRangePHigh');
+      for it = 1:size(subData, 2)
+        for git = 1:size(subData, 3)
+          try
+            [h, p] = lillietest(subData(:, it, git));
+            Ltext = sprintf('P=%.3g', p);
+            if(p <= 0.05)
+              Ltext = ['<b>' Ltext '</b>'];
+            end
+            logMsg(sprintf('%s. Group: %s . Lillieford test %s ', xList{it}, obj.fullGroupList{1}{git}, Ltext));
+          catch
+          end
+        end
+      end
+      warning('on', 'stats:lillietest:OutOfRangePHigh');
       switch obj.params.pipelineProject.factor
         case 'mixed'
           fullData = obj.fullStatisticsDataFull;
@@ -652,7 +696,20 @@ classdef plotStatistics < handle
                       [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
                       %subData(:, it, git)
                       %subData(:, itt, git)
-                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
+                      %<b> </b>
+                      MWtext = sprintf('P=%.3g', p);
+                      KStext = sprintf('P=%.3g', p2);
+                      TTtext = sprintf('P=%.3g', p3);
+                      if(p <= 0.05)
+                        MWtext = ['<b>' MWtext '</b>'];
+                      end
+                      if(p2 <= 0.05)
+                        KStext = ['<b>' KStext '</b>'];
+                      end
+                      if(p3 <= 0.05)
+                        TTtext = ['<b>' TTtext '</b>'];
+                      end
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test %s - Kolmogorov-Smirnov test %s - Ttest2 %s', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, MWtext, KStext, TTtext));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
                           if(p <= 0.05)
@@ -684,7 +741,19 @@ classdef plotStatistics < handle
                       p = ranksum(subData(:, it, git), subData(:, itt, git));
                       [h, p2] = kstest2(subData(:, it, git), subData(:, itt, git));
                       [h, p3] = ttest2(subData(:, it, git), subData(:, itt, git));
-                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test P= %.3g - Kolmogorov-Smirnov test P= %.3g - Ttest2 P=%.3g', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, p, p2, p3));
+                      MWtext = sprintf('P=%.3g', p);
+                      KStext = sprintf('P=%.3g', p2);
+                      TTtext = sprintf('P=%.3g', p3);
+                      if(p <= 0.05)
+                        MWtext = ['<b>' MWtext '</b>'];
+                      end
+                      if(p2 <= 0.05)
+                        KStext = ['<b>' KStext '</b>'];
+                      end
+                      if(p3 <= 0.05)
+                        TTtext = ['<b>' TTtext '</b>'];
+                      end
+                      logMsg(sprintf('%s vs %s . Group: %s . Mann-Whitney U test %s - Kolmogorov-Smirnov test %s - Ttest2 %s', xList{it}, xList{itt}, obj.fullGroupList{1}{git}, MWtext, KStext, TTtext));
                       switch obj.params.pipelineProject.significanceTest
                         case 'Mann-Whitney'
                           pList{git} = [pList{git}; p];
@@ -1079,6 +1148,7 @@ classdef plotStatistics < handle
           uimenu(ui, 'Label', 'Figure',  'Callback', {@exportFigCallback, {'*.pdf';'*.eps'; '*.tiff'; '*.png'}, strrep([obj.figFolder, obj.figName], ' - ', '_'), obj.params.saveOptions.saveFigureResolution});
       end
       if(obj.params.saveOptions.saveFigure)
+        %[obj.figFolder, obj.figName, '.', obj.params.saveOptions.saveFigureType]
         export_fig([obj.figFolder, obj.figName, '.', obj.params.saveOptions.saveFigureType], ...
                     sprintf('-r%d', obj.params.saveOptions.saveFigureResolution), ...
                     sprintf('-q%d', obj.params.saveOptions.saveFigureQuality), obj.figureHandle);
@@ -1223,10 +1293,12 @@ classdef plotStatistics < handle
       obj.params.pbar = [];
       obj.params.gui = [];
       obj.params.loadFields = {};
+      obj.params.multiStatistic = 'none'; % none / init / present
+      obj.params.plotDataFull = [];
       % Parse them
       obj.params = parse_pv_pairs(obj.params, var);
       obj.params = barStartup(obj.params, msg);
-      obj.params = obj.params;
+      %obj.params = obj.params;
       obj.guiHandle = obj.params.gui;
       %--------------------------------------------------------------------
       
@@ -1254,6 +1326,10 @@ classdef plotStatistics < handle
         project = projexp;
         baseFolder = project.folder;
       end
+      
+      % For the multi statistic
+      obj.multiStatistic = obj.params.multiStatistic;
+      obj.plotDataFull = obj.params.plotDataFull;
       
       % Consistency checks
       if(obj.params.saveOptions.onlySaveFigure)

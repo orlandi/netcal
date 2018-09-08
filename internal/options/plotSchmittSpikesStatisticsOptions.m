@@ -6,7 +6,11 @@ classdef plotSchmittSpikesStatisticsOptions < plotStatisticsOptions & baseOption
 %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 %   See also plotSchmittSpikesStatistics, plotStatisticsOptions, baseOptions, optionsWindow
-  
+   
+  properties
+    % Type of events to use (leave empty if you don't know what this is)
+    type = [];
+  end
   methods 
     function obj = setExperimentDefaults(obj, experiment)
       obj.statistic = {'duration', 'amplitude', 'area', ...

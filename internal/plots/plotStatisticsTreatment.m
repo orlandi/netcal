@@ -28,6 +28,7 @@ classdef plotStatisticsTreatment < handle
     figFolder;
     Ntreatments;
     treatmentNames;
+    loadFields;
   end
   
   methods
@@ -137,7 +138,14 @@ classdef plotStatisticsTreatment < handle
       for i = 1:length(checkedExperiments)
         experimentName = project.experiments{checkedExperiments(i)};
         experimentFile = [project.folderFiles experimentName '.exp'];
-        experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+        %experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+        if(~isempty(obj.params.loadFields))
+          warning('off', 'MATLAB:load:variableNotFound');
+          experiment = load(experimentFile, '-mat', 'traceGroups', 'traceGroupsNames', 'name', 'folder', 'ROI', obj.params.loadFields{:});
+          warning('on', 'MATLAB:load:variableNotFound');
+        else
+          experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+        end
         % Get ALL subgroups in case of parents
         if(strcmpi(obj.mainGroup, 'all')  || strcmpi(obj.mainGroup, 'ask'))
           obj.groupList = getExperimentGroupsNames(experiment);
@@ -350,41 +358,32 @@ classdef plotStatisticsTreatment < handle
                   end
                 end
               case 'differenceIntersect'
-                if(obj.params.averageDataFirst.enable)
-                  switch obj.params.averageDataFirst.function
-                    case 'mean'
-                      plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))-nanmean(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
-                    case 'median'
-                      plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))-nanmedian(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
-                  end
-                else
-                  [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
-                  plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)-plotData{preIdx}{git}(validMembersPre);
-                  plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
-                  plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
-                end
+                [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)-plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
+              case 'differencePreZero'
+                [~, preZero] = setdiff(plotDataMembers{postIdx}{git}, plotDataMembers{preIdx}{git});
+                [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)-plotData{preIdx}{git}(validMembersPre);
+                [plotDataTreatment{it}{git}{it2}; plotData{postIdx}{git}(preZero)];
+                plotDataTreatmentPre{it}{git}{it2} = [plotData{preIdx}{git}(validMembersPre); zeros(size(preZero))];
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git};
+              case 'decreaseIntersect'
+                [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)<plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
+              case 'increaseIntersect'
+                [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)>plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
               case 'ratioIntersect'
-                if(obj.params.averageDataFirst.enable)
-                  switch obj.params.averageDataFirst.function
-                    case 'mean'
-                      plotDataTreatment{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:))./nanmean(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPre{it}{git}{it2} = nanmean(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPost{it}{git}{it2} = nanmean(plotData{postIdx}{git}(:));
-                    case 'median'
-                      plotDataTreatment{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:))./nanmedian(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPre{it}{git}{it2} = nanmedian(plotData{preIdx}{git}(:));
-                      plotDataTreatmentPost{it}{git}{it2} = nanmedian(plotData{postIdx}{git}(:));
-                  end
-                else
-                  [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
-                  plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)./plotData{preIdx}{git}(validMembersPre);
-                  plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
-                  plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
-                end
+                [~, validMembersPre, validMembersPost] = intersect(plotDataMembers{preIdx}{git}, plotDataMembers{postIdx}{git});
+                plotDataTreatment{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost)./plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPre{it}{git}{it2} = plotData{preIdx}{git}(validMembersPre);
+                plotDataTreatmentPost{it}{git}{it2} = plotData{postIdx}{git}(validMembersPost);
             end
             switch obj.params.pipelineProject.factorAverageFunction
               case 'mean'
@@ -474,7 +473,7 @@ classdef plotStatisticsTreatment < handle
       else
         obj.figVisible = 'on';
       end
-      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible);
+      obj.figureHandle = figure('Name', obj.figName, 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
       obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
       obj.axisHandle = axes;
       hold on;
@@ -699,7 +698,7 @@ classdef plotStatisticsTreatment < handle
           end
         end
         
-        obj.figureHandle = figure('Name', sprintf('%s - %d', obj.figName, fIdx), 'NumberTitle', 'off', 'Visible', obj.figVisible);
+        obj.figureHandle = figure('Name', sprintf('%s - %d', obj.figName, fIdx), 'NumberTitle', 'off', 'Visible', obj.figVisible, 'Tag', 'netcalPlot');
         obj.figureHandle.Position = setFigurePosition(obj.guiHandle, 'width', obj.params.styleOptions.figureSize(1), 'height', obj.params.styleOptions.figureSize(2));
         obj.axisHandle = axes;
         hold on;
@@ -997,6 +996,14 @@ classdef plotStatisticsTreatment < handle
                       sprintf('-r%d', obj.params.saveOptions.saveFigureResolution), ...
                       sprintf('-q%d', obj.params.saveOptions.saveFigureQuality), obj.figureHandle);
         end
+        if(obj.params.pipelineProject.automaticallyExportData)
+          try
+            obj.exportDataFull(bpData, bpDataPre, bpDataPost, obj.exportFolder, true)
+          catch ME
+            logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'w');
+            logMsg('Could not export the file', 'e');
+          end
+        end
       end
       
       %--------------------------------------------------------------------
@@ -1022,6 +1029,7 @@ classdef plotStatisticsTreatment < handle
       % Define additional optional argument pairs
       obj.params.pbar = [];
       obj.params.gui = [];
+      obj.params.loadFields = {};
       % Parse them
       obj.params = parse_pv_pairs(obj.params, var);
       obj.params = barStartup(obj.params, msg);
@@ -1131,10 +1139,20 @@ classdef plotStatisticsTreatment < handle
     end
 
     %--------------------------------------------------------------------
-    function exportDataFull(obj, bpData, bpDataPre, bpDataPost, baseFolder)
-      [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic '_fullTreatment.csv']);
-      if(fileName == 0)
-        return;
+    function exportDataFull(obj, bpData, bpDataPre, bpDataPost, baseFolder, varargin)
+      if(nargin > 5)
+        automatic = varargin{1};
+      else
+        automatic = false;
+      end
+      if(~automatic)
+        [fileName, pathName] = uiputfile('.csv', 'Save data', [baseFolder obj.params.statistic obj.params.saveOptions.saveFigureTag '_fullTreatment.csv']);
+        if(fileName == 0)
+          return;
+        end
+      else
+        pathName = baseFolder;
+        fileName = [obj.params.statistic obj.params.saveOptions.saveFigureTag '_treatmentAutoExport.csv'];
       end
       fID = fopen([pathName fileName], 'w');
       % +2 for the headers

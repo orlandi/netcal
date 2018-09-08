@@ -37,7 +37,7 @@ if(strcmpi(tmpStat, 'all'))
     varargin{1}.statistic = statList{it};
     obj = plotStatistics;
     obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'schmittSpikesData'});
-    if(obj.getData(@getData, projexp, obj.params.statistic))
+    if(obj.getData(@getData, projexp, obj.params.statistic, obj.params.type))
       obj.createFigure();
     end
     obj.cleanup();
@@ -45,29 +45,43 @@ if(strcmpi(tmpStat, 'all'))
 else
   obj = plotStatistics;
   obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'schmittSpikesData'});
-  if(obj.getData(@getData, projexp, obj.params.statistic))
+  if(obj.getData(@getData, projexp, obj.params.statistic, obj.params.type))
     obj.createFigure();
   end
   obj.cleanup();
 end
   %------------------------------------------------------------------------
-  function data = getData(experiment, groupName, stat)
+  function data = getData(experiment, groupName, stat, type)
     % For now it's independent on the group
     %members = getExperimentGroupMembers(experiment, groupName);
-
+    if(~isempty(type) && ischar(type))
+      type = str2double(type);
+    end
     members = getExperimentGroupMembers(experiment, groupName);
     
     if(~isempty(members))
       switch stat
         case 'duration'
-          valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
-          data = cell2mat(cellfun(@(x)x.duration(x.type == 1), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          if(~isempty(type))
+            valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
+            data = cell2mat(cellfun(@(x)x.duration(x.type == type), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          else
+            data = cell2mat(cellfun(@(x)x.duration, experiment.schmittSpikesData(members),'UniformOutput',false));
+          end
         case 'amplitude'
-          valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
-          data = cell2mat(cellfun(@(x)x.amplitude(x.type == 1), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          if(~isempty(type))
+            valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
+            data = cell2mat(cellfun(@(x)x.amplitude(x.type == type), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          else
+            data = cell2mat(cellfun(@(x)x.amplitude, experiment.schmittSpikesData(members),'UniformOutput',false));
+          end
         case 'area'
-          valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
-          data = cell2mat(cellfun(@(x)x.area(x.type == 1), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          if(~isempty(type))
+            valid = find(cellfun(@(x)isfield(x,'type'),experiment.schmittSpikesData(members)));
+            data = cell2mat(cellfun(@(x)x.area(x.type == type), experiment.schmittSpikesData(members(valid)),'UniformOutput',false));
+          else
+            data = cell2mat(cellfun(@(x)x.area, experiment.schmittSpikesData(members),'UniformOutput',false));
+          end
         otherwise
           data = [];
       end

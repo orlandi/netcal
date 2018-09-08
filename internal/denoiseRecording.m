@@ -20,7 +20,7 @@ function experiment = denoiseRecording(experiment, varargin)
 % EXAMPLE:
 %    experiment = denoiseRecording(experiment, varargin)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
 %
 % See also preprocessExperiment
 
@@ -59,7 +59,9 @@ switch params.movie
     width = experiment.width;
     height = experiment.height;
 end
-
+if(isempty(params.frameBlockSize))
+  frameBlockSize = numFrames;
+end
 frameBlockList = 1:frameBlockSize:numFrames;
 if(frameBlockList(end) < numFrames-frameBlockSize/2)
   frameBlockList = [frameBlockList, numFrames+1];
@@ -134,8 +136,10 @@ for t = 1:(length(frameBlockList)-1)
       [fID, experiment] = openVideoStream(experiment);
     end
     if(params.training)
+      ncbar.unsetAutomaticBar();
       ncbar.setBarTitle('Getting frames');
     elseif(params.pbar > 0)
+      ncbar.unsetAutomaticBar();
       ncbar.setBarTitle('Running denoiser. Getting frames');
     end
     if(params.frameBlockAverageSize > 1)
@@ -155,6 +159,9 @@ for t = 1:(length(frameBlockList)-1)
           otherwise
             frameData(:, :, it1) = getFrame(experiment, firstFrame+it1-1, fID);
         end
+        if(params.pbar > 0)
+          ncbar.update(it1/Nframes);
+        end
       end
     end
     switch params.movie
@@ -163,8 +170,10 @@ for t = 1:(length(frameBlockList)-1)
       otherwise
         closeVideoStream(fID);
     end
-    % For some reason getting the data like this needs another tranpose
-    frameData = permute(frameData, [2 1 3]);
+    % For some reason getting the data like this needs another tranpose maybe only in HIS?
+    if(strcmpi(experiment.extension, '.his'))
+      frameData = permute(frameData, [2 1 3]);
+    end
   end
   for blockIt2 = 1:length(blockColCoordinates)
     for blockIt1 = 1:length(blockRowCoordinates)
@@ -211,6 +220,9 @@ for t = 1:(length(frameBlockList)-1)
           for it1 = 1:Nframes
             %[blockIt2 blockIt1 it1]
             fullData(:, it1) = mean(getFrameBlock(experiment, frameList(it1), fID, params.frameBlockAverageSize, valid),2);
+            if(params.pbar > 0)
+              ncbar.update(it1/Nframes);
+            end
           end
         else
           Nframes = length(firstFrame:lastFrame);
@@ -237,10 +249,13 @@ for t = 1:(length(frameBlockList)-1)
                   tmpData = fread(fID, [height width], 'double'); % Sequential read
                   fullData(:, it1) = tmpData(valid);
                 otherwise
-                  fullData(:, it1) = getFrame(experiment, firstFrame+it1-1, fID, valid);
+                  t = getFrame(experiment, firstFrame+it1-1, fID, valid);
+                  fullData(:, it1) = t(:);
               end
             end
             if(params.training)
+              ncbar.update(it1/Nframes);
+            elseif(params.pbar > 0)
               ncbar.update(it1/Nframes);
             end
           end
@@ -262,7 +277,17 @@ for t = 1:(length(frameBlockList)-1)
         ncbar.setAutomaticBar();
       elseif(params.pbar > 0)
         ncbar.setBarTitle('Running denoiser. Computing PCA');
+        ncbar.setAutomaticBar();
       end
+      % Turn Nans into 0s
+      fullData(isnan(fullData)) = 0;
+%       for it1 = 1:size(fullData, 1)
+%         parfor it2 = 1:size(fullData, 2)
+%           fullData(it1, it2, :) = smooth(fullData(it1, it2, :));
+%         end
+%         it1
+%       end
+      %fullData = filter((1/5)*ones(1,5),1,fullData,[],3);
       %[coeff, score, latent, tsquared, explained, mu] = pca(fullData); % Here we go
       [U, S, V] = svdecon(fullData); % Using fast SVD instead
       mu = mean(fullData, 1);
@@ -274,7 +299,7 @@ for t = 1:(length(frameBlockList)-1)
       largestComponent = find(latent <= mean(latent)*ct, 1, 'first');
       % Apply the multiplier
       if(~isempty(params.maximumPCsMultiplier) && params.maximumPCsMultiplier > 0)
-        largestComponent = round(largestComponent*params.maximumPCsMultiplier);
+        largestComponent = round(double(largestComponent)*params.maximumPCsMultiplier);
       else
         largestComponent = length(latent);
       end
@@ -284,9 +309,12 @@ for t = 1:(length(frameBlockList)-1)
       elseif(largestComponent < 1)
         largestComponent = 1;
       end
-       
-      Ncom = largestComponent;
       
+      Ncom = largestComponent;
+      if(params.verbose)
+        logMsg(sprintf('Selected first %d principal components', Ncom));
+      end
+
       coeff = coeff(:, 1:Ncom);
       score = score(:, 1:Ncom);
       fullLatent = latent;
@@ -294,12 +322,13 @@ for t = 1:(length(frameBlockList)-1)
       % Let's store the PCA scores also
       coeffPCA = coeff;
       scorePCA = score;
+
       if(params.training)
         ncbar.setCurrentBarName('Computing ICA');
       elseif(params.pbar > 0)
         ncbar.setBarTitle('Running denoiser. Computing ICA');
       end
-      [icasig, A, W] = fastica(score*coeff', 'verbose', 'off');
+      [icasig, A, W] = fastica(score*coeff', 'numofic', Ncom, 'verbose', 'on', 'pbar', params.pbar);
 
       coeff = icasig';
       score = A;
@@ -307,6 +336,7 @@ for t = 1:(length(frameBlockList)-1)
         logMsg(sprintf('Warning. Number of ICA components lower than PCA components %d to %d. Updating', Ncom, size(score, 2)), 'w');
         Ncom = size(score, 2);
         largestComponent = Ncom;
+        latent = latent(1:Ncom);
       end
       % Sort components based on spatial skewness
       skewS = zeros(Ncom, 1);

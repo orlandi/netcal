@@ -42,12 +42,13 @@ arealims = params.minimumSize;
 plotting = 0;
 experiment = loadTraces(experiment, 'denoisedData', 'pbar', params.pbar);
 if(params.pbar > 0)
-  ncbar.setCurrentBarName('Autodetecting ROI using CellSort');
+  ncbar.setCurrentBarName('Autodetecting ROI');
 end
 fullROI = {};
 curID = 0;
 
 for it1 = 1:length(experiment.denoisedData)
+  ncbar.setCurrentBarName(sprintf('Autodetecting ROI - block (%d/%d)', it1, length(experiment.denoisedData)));
   % Temporary hack to fix block size on previous denoised data
   experiment.denoisedData(it1).blockSize = experiment.denoisedData(it1).blockCoordinatesLast-experiment.denoisedData(it1).blockCoordinates+1;
 
@@ -102,6 +103,8 @@ for it1 = 1:length(experiment.denoisedData)
     [y, x] = ind2sub(size(mask), newROI{it2}.pixels);
     newROI{it2}.center = [mean(x), mean(y)]; % Same as the centroid
     newROI{it2}.maxDistance = max(sqrt((newROI{it2}.center(1)-x).^2+(newROI{it2}.center(2)-y).^2));
+    ncbar.setCurrentBarName(sprintf('Autodetecting ROI - block (%d/%d) - IC (%d/%d)', it1, length(experiment.denoisedData), it2, size(ica_segments, 1)));
+    ncbar.update(it2/size(ica_segments, 1));
   end
   if(params.eliminateBorderROIs)
     if(~isempty(invalidROI))

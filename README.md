@@ -27,6 +27,80 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.3.0] - 2018-09-06
+
+### Added
+- Complete overhaul of the drift correction. Now it should be compatible with the denoiser and cell sort
+- Option to automatically add custom pipeline functions (any m file inside the plugins/pipeline folder is a candidate)
+
+### Modified
+- AutoLevels is now based on (iterative) accurate percentile calculations. Not on fixed pixel values
+
+### Fixed
+- Many issues with 32 bit images
+
+## [8.2.8] - 2018-09-05
+
+### Added
+- More features to the drift correction (mostly for in vivo recordings)
+
+### Modified
+- Quit accelerator is now Ctrl+Q And Clear Log is Ctrl+X
+
+## [8.2.7] - 2018-09-04
+
+### Added
+- Drift correction preprocessing feature. For samples that move around: badly fixed coverslips, human intervention, in vivo recordings, etc. You can find it in preprocessing -> drif correction. Uses MATLAB image registration features. For now only rigid body and translation transformations. Once run, it will automatically be applied everytime a frame is captured. So should be compatible with any preexisting function. However, consider it an EXPERIMENTAL feature.
+
+## [8.2.6] - 2018-09-04
+
+### Modified
+- Added verbose output to fast ICA analysis
+
+### Fixed
+- Autolevels function not working on 32 bit images
+
+## [8.2.5] - 2018-09-03
+
+### Fixed
+- Updater issues
+
+## [8.2.4] - 2018-09-03
+
+### Modified
+- Statistics plots now run much faster (when multiple statistics are selected)
+
+### Fixed
+- Bug when UnivarScatter would enter in an infinite loop
+- Bug when trying to arrange inexistent figures
+
+## [8.2.3] - 2018-08-31
+
+### Fixed
+- FastICA was only available on the development branch
+
+## [8.2.2] - 2018-08-30
+
+### Fixed
+-  New .TIF or .TIFF could not be added from the load Experiment menu
+
+## [8.2.1] - 2018-08-29
+
+### Added
+- Plot statistics now shows the # experiment being processed
+- Clustering coefficient measures for directed networks
+- Bunch of new network statistics measures
+- Treatment based network statistics
+
+### Modified
+- Now any network plots requires an active network to be set
+- New option to set the active network (adjacency matrix) based on some inference measure
+
+### Fixed
+- Tif files without metadata are now being loaded correctly
+- DenoiseRecording was using the transposed image in some instances
+- Small bug fixes
+
 ## [8.2.0] - 2018-08-14
 
 ### Added

@@ -52,6 +52,7 @@ frameSpikes = [];
 showSpikes = false;
 showBursts = false;
 showPopulations = false;
+affineTransformCorrection = false;
 burstsOverlay = [];
 frameBursts = [];
 frameBurstsIdx = [];
@@ -100,7 +101,10 @@ clear newExperiment;
 if(isfield(experiment, 'ROI'))
     ROIid = getROIid(experiment.ROI);
 end
-
+if(isfield(experiment, 'affineTransformEnabled'))
+  originalAffineTransformCorrection = experiment.affineTransformEnabled;
+  experiment.affineTransformEnabled = false;
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Create components
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -150,8 +154,15 @@ hs.menu.preferences.regionCorrection = uimenu(hs.menu.preferences.root, 'Label',
 hs.menu.preferences.selectedMovie.root = uimenu(hs.menu.preferences.root, 'Label', 'Selected movie', 'Enable', 'off');
 hs.menu.preferences.selectedMovie.original = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Original', 'Enable', 'off', 'Checked', 'on', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'original'});
 hs.menu.preferences.selectedMovie.denoised = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Denoised', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'denoised'});
-hs.menu.preferences.selectedMovie.both = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Both', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'both'});
-  
+hs.menu.preferences.selectedMovie.drift = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Drif corrected', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'drifCorrected'});
+hs.menu.preferences.selectedMovie.both = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Original + Denoised', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'both'});
+hs.menu.preferences.selectedMovie.both2 = uimenu(hs.menu.preferences.selectedMovie.root, 'Label', 'Original + Drift', 'Enable', 'off', 'Tag', 'selectedMovie', 'Callback', {@menuPreferencesSelectedMovie, 'both2'});
+
+%hs.menu.preferences.affineTransform = uimenu(hs.menu.preferences.root, 'Label', 'Affine Transform', 'Enable', 'off', 'Tag', 'affineTransform', 'Callback', @toggleAffineTransform);
+if(isfield(experiment, 'affineTransform'))
+  hs.menu.preferences.affineTransform.Enable = 'on';
+end
+
 if(isfield(experiment, 't'))
   hs.menu.preferences.avgTraceCorrection.root.Enable = 'on';
   hs.menu.preferences.avgTraceCorrection.avg.Enable = 'on';
@@ -175,6 +186,13 @@ if(isfield(experiment, 'denoisedData'))
   currentMovie = 1;
   denoisedBlocksPerFrame = [];
 else
+  currentMovie = 1;
+end
+if(isfield(experiment, 'affineTransform'))
+  hs.menu.preferences.selectedMovie.root.Enable = 'on';
+  hs.menu.preferences.selectedMovie.original.Enable = 'on';
+  hs.menu.preferences.selectedMovie.drift.Enable = 'on';
+  hs.menu.preferences.selectedMovie.both2.Enable = 'on';
   currentMovie = 1;
 end
 
@@ -296,7 +314,9 @@ if(isfield(experiment, 'tag') && strcmp(experiment.tag, 'dummy'))
   %end
 else
   [fID, experiment] = openVideoStream(experiment);
+  
   currFrame = getFrame(experiment, 1, fID);
+  
 end
 
 currFrame2 = [];
@@ -516,9 +536,9 @@ function mainWindowResize(~, ~)
     hs.mainWindowFramesSlider.Position(1) = pos(1);
     hs.mainWindowFramesSlider.Position(3) = pos(3);
     switch currentMovie
-    case {1, 2}
+    case {1, 2, 4}
       realRatio = size(currFrame,2)/size(currFrame,1);
-      case 3
+      case {3, 5}
         realRatio = size(currFrame,2)/size(currFrame,1)*2;
     end
     curPos = hs.mainWindowFramesAxes.Parent.Position;
@@ -575,7 +595,9 @@ function closeCallback(~, ~, varargin)
       logMsg(ME.message, 'e');
     end
   end
-  
+  if(isfield(experiment, 'affineTransformEnabled'))
+    experiment.affineTransformEnabled = originalAffineTransformCorrection;
+  end
   guiSave(experiment, experimentChanged, varargin{:});
   
   delete(hFigW);
@@ -584,9 +606,17 @@ end
 % ImageJ old auto version
 %--------------------------------------------------------------------------
 function autoLevels(~, ~)
-  [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, experiment.bpp, autoLevelsReset);
+  if(affineTransformCorrection)
+    [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, experiment.bpp, autoLevelsReset, [], true);
+  else
+    [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, experiment.bpp, autoLevelsReset);
+  end
   if(currentMovie == 3)
-    [minIntensity2, maxIntensity2] = autoLevelsFIJI(currFrame2, experiment.bpp, autoLevelsReset, false);
+    [minIntensity2, maxIntensity2] = autoLevelsFIJI2(currFrame2, experiment.bpp, autoLevelsReset, false);
+  end
+  if(currentMovie == 5)
+    minIntensity2 = minIntensity;
+    maxIntensity2 = maxIntensity;
   end
   
   maxIntensityText.String = sprintf('%.2f', maxIntensity);
@@ -598,27 +628,53 @@ end
 %--------------------------------------------------------------------------
 function frameChange(~, ~)
   hs.mainWindowFramesSlider.Value = round(hs.mainWindowFramesSlider.Value);
-    try
-      switch currentMovie
-        case 1
-          currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
-        case 2
-          currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
-        case 3
-          currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
-          currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
-          %currFrame2 = currFrame;
-      end
-      if(~strcmpi(avgTraceCorrection, 'none'))
-        applyAvgTraceCorrection();
-      end
-      if(baseLineCorrection)
-        applyBaselineCorrection();
-      end
-    catch
-      logMsg(sprintf('Something went wrong loading frame %d. Maybe the file is corrupt?', hs.mainWindowFramesSlider.Value), 'w');
+ 
+  try
+    switch currentMovie
+      case {1,4}
+        currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+      case 2
+        currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+      case 3
+        currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+        currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+        %currFrame2 = currFrame;
+      case 5
+        useAffineTransform(false);
+        currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+        useAffineTransform(true);
+        currFrame2 = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
     end
-    
+    if(~strcmpi(avgTraceCorrection, 'none'))
+      applyAvgTraceCorrection();
+    end
+    if(baseLineCorrection)
+      applyBaselineCorrection();
+    end
+  catch
+    logMsg(sprintf('Something went wrong loading frame %d. Maybe the file is corrupt?', hs.mainWindowFramesSlider.Value), 'w');
+  end
+  
+%   if(affineTransformCorrection)
+%     selFrames = experiment.affineTransformFrames;
+%     tList = experiment.affineTransform;
+%     currFrameIdx = hs.mainWindowFramesSlider.Value;
+%     closestIdx = find(selFrames <= currFrameIdx, 1, 'last');
+%     if(selFrames(closestIdx) == currFrameIdx || currFrameIdx > selFrames(end))
+%       validT = tList(:, :, closestIdx);
+%     else
+%       curT = tList(:, :, closestIdx);
+%       nextT = tList(:, :, closestIdx+1);
+%       angleChange = asin(nextT(2,1))-asin(curT(2,1));
+%       interpAngle = angleChange*(currFrameIdx-selFrames(closestIdx))/(selFrames(closestIdx+1)-selFrames(closestIdx))+asin(curT(2,1));
+%       posChange = [nextT(3, 1)-curT(3,1), nextT(3, 2)-curT(3,2)];
+%       interpPosChange = posChange*(currFrameIdx-selFrames(closestIdx))/(selFrames(closestIdx+1)-selFrames(closestIdx))+[curT(3,1), curT(3,2)];
+%       validT = [cos(interpAngle), -sin(interpAngle), 0; sin(interpAngle), cos(interpAngle), 0; interpPosChange(1), interpPosChange(2), 1];
+%     end
+%     % Now apply the transformation
+%     Rfixed = imref2d([experiment.height experiment.width]);
+%     currFrame = imwarp(currFrame, affine2d(validT), 'OutputView', Rfixed, 'FillValues', NaN);
+%   end
   currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
   updateImage();
 end
@@ -1056,16 +1112,23 @@ function moviePlay(~, ~)
       end
       hs.mainWindowFramesSlider.Value = closestFrame;
       currentFrameText.String = sprintf('%.0f', hs.mainWindowFramesSlider.Value);
+      
       switch currentMovie
-        case 1
+        case {1,4}
           currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
         case 2
           currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
         case 3
           currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
           currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+        case 5
+          useAffineTransform(false);
+          currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+          useAffineTransform(true);
+          currFrame2 = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
           %currFrame2 = currFrame;
       end
+      
       if(~strcmpi(avgTraceCorrection, 'none'))
         applyAvgTraceCorrection();
       end
@@ -1161,7 +1224,7 @@ function currentFrameChange(hObject, ~)
     hs.mainWindowFramesSlider.Value = round(input);
     
     switch currentMovie
-      case 1
+      case {1, 4}
         currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
       case 2
         currFrame = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
@@ -1169,7 +1232,13 @@ function currentFrameChange(hObject, ~)
         currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
         %currFrame2 = currFrame;
         currFrame2 = getDenoisedFrame(experiment, hs.mainWindowFramesSlider.Value, denoisedBlocksPerFrame, denoisedSubset, showMeans);
+      case 5
+        useAffineTransform(false);
+        currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
+        useAffineTransform(true);
+        currFrame = getFrame(experiment, hs.mainWindowFramesSlider.Value, fID);
     end
+    
     if(~strcmpi(avgTraceCorrection, 'none'))
       applyAvgTraceCorrection();
     end
@@ -1239,6 +1308,7 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
   end
   
   % Do whatever you have to do
+  useAffineTransform(false);
   switch selected
     case 'original'
       currentMovie = 1;
@@ -1252,10 +1322,24 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
         [fID, experiment] = openVideoStream(experiment);
       end
       currentMovie = 3;
+    case 'drifCorrected'
+      useAffineTransform(true);
+      currentMovie = 4;
+      if(isempty(fID))
+        [fID, experiment] = openVideoStream(experiment);
+      end
+    case 'both2'
+      useAffineTransform(true);
+      currentMovie = 5;
+      maxIntensity2 = maxIntensity;
+      minIntensity2 = minIntensity;
+      if(isempty(fID))
+        [fID, experiment] = openVideoStream(experiment);
+      end
   end
   % 1 original - 2 denoised - 3 both - using ints instead of strings to speed up frame grabbing
   switch currentMovie
-    case 1
+    case {1,4}
       delete(hs.mainWindowFramesAxes);
       if(~isempty(hs.mainWindowFramesAxes2) && isvalid(hs.mainWindowFramesAxes2))
         delete(hs.mainWindowFramesAxes2)
@@ -1264,8 +1348,10 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
       
       imData = imagesc(currFrame, 'HitTest', 'off');
       axis equal tight;
-      maxIntensity = max(currFrame(:));
-      minIntensity = min(currFrame(:));
+      if(currentMovie == 1)
+        maxIntensity = max(currFrame(:));
+        minIntensity = min(currFrame(:));
+      end
       set(hs.mainWindowFramesAxes, 'XTick', []);
       set(hs.mainWindowFramesAxes, 'YTick', []);
       set(hs.mainWindowFramesAxes, 'LooseInset', [0,0,0,0]);
@@ -1302,13 +1388,15 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
 %       else
 %         hFigComponents = createComponentsFigure();
 %       end
-    case 3
-      if(ischar(experiment.denoisedData))
-        ncbar.automatic('Loading denoised data');
-        experiment = loadTraces(experiment, 'denoisedData');
-        ncbar.close();
+    case {3,5}
+      if(currentMovie == 3)
+        if(ischar(experiment.denoisedData))
+          ncbar.automatic('Loading denoised data');
+          experiment = loadTraces(experiment, 'denoisedData');
+          ncbar.close();
+        end
+        denoisedBlocksPerFrame = [arrayfun(@(x)x.frames(1), experiment.denoisedData)', arrayfun(@(x)x.frames(2), experiment.denoisedData)'];
       end
-      denoisedBlocksPerFrame = [arrayfun(@(x)x.frames(1), experiment.denoisedData)', arrayfun(@(x)x.frames(2), experiment.denoisedData)'];
       delete(hs.mainWindowFramesAxes);
       if(~isempty(hs.mainWindowFramesAxes2) && isvalid(hs.mainWindowFramesAxes2))
         delete(hs.mainWindowFramesAxes2)
@@ -1319,8 +1407,10 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
       
       imData = imagesc(currFrame, 'HitTest', 'off');
       axis equal tight;
-      maxIntensity = max(currFrame(:));
-      minIntensity = min(currFrame(:));
+      if(currentMovie == 3)
+        maxIntensity = max(currFrame(:));
+        minIntensity = min(currFrame(:));
+      end
       set(hs.mainWindowFramesAxes, 'XTick', []);
       set(hs.mainWindowFramesAxes, 'YTick', []);
       set(hs.mainWindowFramesAxes, 'LooseInset', [0,0,0,0]);
@@ -1334,8 +1424,10 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
       currFrame2 = currFrame;
       imData2 = imagesc(currFrame, 'HitTest', 'off');
       axis equal tight;
-      maxIntensity2 = max(currFrame(:));
-      minIntensity2 = min(currFrame(:));
+      if(currentMovie == 3)
+        maxIntensity = max(currFrame(:));
+        minIntensity = min(currFrame(:));
+      end
       set(hs.mainWindowFramesAxes2, 'XTick', []);
       set(hs.mainWindowFramesAxes2, 'YTick', []);
       set(hs.mainWindowFramesAxes2, 'LooseInset', [0,0,0,0]);
@@ -1351,9 +1443,25 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
   end
   frameChange([],[]);
   autoLevelsReset = true;
-  autoLevels();
+  if(currentMovie ~= 4)
+    autoLevels();
+  end
   updateImage();
   mainWindowResize();
+end
+
+%--------------------------------------------------------------------------
+function useAffineTransform(val)
+  if(~isfield(experiment, 'affineTransformEnabled'))
+    return;
+  end
+  if(val)
+    affineTransformCorrection = true;
+    experiment.affineTransformEnabled = true;
+  else
+    affineTransformCorrection = false;
+    experiment.affineTransformEnabled = false;
+  end
 end
 
 %--------------------------------------------------------------------------
@@ -1490,7 +1598,7 @@ function hFigC = createComponentsFigure()
       showMeans = false;
     end
     frameChange();
-    [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, experiment.bpp, true, true, true);
+    [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, experiment.bpp, true, true, true);
   end
   %------------------------------------------------------------------------
   function selectComponent(hObject, ~, curComponent)
@@ -1528,7 +1636,7 @@ function hFigC = createComponentsFigure()
       denoisedSubset(it).coeff = denoisedSubset(it).coeff(:, find(activeComponents));
     end
     frameChange();
-    [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, experiment.bpp, true, true, true);
+    [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, experiment.bpp, true, true, true);
   end
 end
 
@@ -1607,7 +1715,12 @@ function exportCurrentMovie(~, ~)
         frameChange();
         updateImage();
         frame = getframe(hs.mainWindowFramesAxes, hs.mainWindowFramesAxes.Position);
-        writeVideo(newMovie, frame.cdata(:, :, :));
+        %profile = {'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'Motion JPEG 2000', 'MPEG-4'};
+        if(strcmp(exportMovieOptionsCurrent.profile, 'Grayscale AVI'))
+          writeVideo(newMovie, rgb2gray(frame.cdata(:, :, :)));
+        else
+          writeVideo(newMovie, frame.cdata(:, :, :));
+        end
       otherwise
         frameData = zeros(size(frame.cdata));
         for it2 = 1:frameWindow
@@ -1701,7 +1814,7 @@ function updateImage()
   set(imData, 'CData', currFrame);
 
   caxis(hs.mainWindowFramesAxes, [minIntensity maxIntensity]);
-  if(currentMovie == 3)
+  if(currentMovie == 3 || currentMovie == 5)
     set(imData2, 'CData', currFrame2);
     if(minIntensity2 <= maxIntensity2)
       caxis(hs.mainWindowFramesAxes2, [minIntensity2 maxIntensity2]);

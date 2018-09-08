@@ -40,6 +40,9 @@ if N_FIG == 0
 else
     autoArrange = 0;
 end
+if(isempty(findobj('Type','figure', 'Tag', 'netcalPlot')))
+  return;
+end
 figHandle = sortFigureHandles(findobj('Type','figure', 'Tag', 'netcalPlot'));
 n_fig = size(figHandle,1);
 if n_fig <= 0

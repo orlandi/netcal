@@ -147,15 +147,15 @@ for i = 1:numFrames
 
   minIntensity = min([minIntensity currentFrame(:)']);
   maxIntensity = max([maxIntensity currentFrame(:)']);
-  avgTrace(i) = mean(currentFrame(:));
+  avgTrace(i) = nanmean(currentFrame(:));
   if(params.computeLowerPercentileTrace || params.computeHigherPercentileTrace)
     sortedIntensities = sort(currentFrame(:));
   end
   if(params.computeLowerPercentileTrace)
-    avgTraceLower(i) = mean(sortedIntensities(1:lowerPercentilePixel));
+    avgTraceLower(i) = nanmean(sortedIntensities(1:lowerPercentilePixel));
   end
   if(params.computeHigherPercentileTrace)
-    avgTraceHigher(i) = mean(sortedIntensities(higherPercentilePixel:end));
+    avgTraceHigher(i) = nanmean(sortedIntensities(higherPercentilePixel:end));
   end
   if(params.pbar > 0)
     ncbar.update(i/numFrames);
@@ -250,16 +250,16 @@ if(params.exportAverageImage)
       fileName = [figFolder experiment.name '_averageImageDenoisedAutoCorrected.' imgFormat];
   end
   
-  [minI, maxI] = autoLevelsFIJI(data, experiment.bpp);
+  [minI, maxI] = autoLevelsFIJI2(data, experiment.bpp);
   data(data < minI) = minI;
   data(data > maxI) = maxI;
   try
-    imwrite(uint16((double(data)-minI)/(maxI-minI)), fileName, 'compression','lzw');
+    imwrite(uint16((double(data)-double(minI))/double(maxI-minI)), fileName, 'compression','lzw');
     if(params.verbose)
       logMsg(sprintf('Auto corrected average image exported to: %s', fileName));
     end
-  catch
-    logMsg(ME.message, 'e');
+  catch ME
+    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     logMsg('There was a problem exporting the average image', 'e');
   end
   
@@ -278,7 +278,7 @@ if(params.exportAverageImage)
       logMsg(sprintf('Average image exported to: %s', fileName));
     end
   catch ME
-    logMsg(ME.message, 'e');
+    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
     logMsg('There was a problem exporting the average image', 'e');
   end
   close(hFig);
@@ -347,27 +347,27 @@ function hFig = plotAvgImg(experiment, visible)
   switch params.movieToPreprocess
     case 'standard'
       if(experiment.bpp == 8)
-        imgData = uint8(experiment.avgImg);
+        imgData = (experiment.avgImg);
       elseif(experiment.bpp == 16)
-        imgData = uint16(experiment.avgImg);
+        imgData = (experiment.avgImg);
       else
-        imgData = uint16(experiment.avgImg);
+        imgData = (experiment.avgImg);
       end
       hFig = figure('Name', 'Average fluorescence image autocorrected', 'NumberTitle', 'off', 'Visible', visible);
     case 'denoised'
       if(experiment.bpp == 8)
-        imgData = uint8(experiment.avgImgDenoised);
+        imgData = (experiment.avgImgDenoised);
       elseif(experiment.bpp == 16)
-        imgData = uint16(experiment.avgImgDenoised);
+        imgData = (experiment.avgImgDenoised);
       else
-        imgData = uint16(experiment.avgImgDenoised);
+        imgData = (experiment.avgImgDenoised);
       end
       hFig = figure('Name', 'Average fluorescence image denoised autocorrected', 'NumberTitle', 'off', 'Visible', visible);
   end
   
   imagesc(imgData);
   axis equal tight;
-  [minI, maxI] = autoLevelsFIJI(imgData, experiment.bpp);
+  [minI, maxI] = autoLevelsFIJI2(imgData, experiment.bpp);
   caxis([minI maxI]);
   colormap(gray);
   colorbar;

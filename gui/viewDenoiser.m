@@ -191,8 +191,10 @@ uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Configure', 'FontSize'
 uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Run', 'FontSize', textFontSize, 'Callback', @trainDenoiser);
 uix.Empty('Parent', hs.mainWindowRightButtons);
 uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show blocks', 'FontSize', textFontSize, 'Callback', @showBlocksMenu);
-uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show spatial components', 'FontSize', textFontSize, 'Callback', @showComponentsMenu);
-uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show temporal components', 'FontSize', textFontSize, 'Callback', @showComponentsTemporalMenu);
+uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show ICA spatial components', 'FontSize', textFontSize, 'Callback', {@showComponentsMenu, 'ICA'});
+uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show ICA temporal components', 'FontSize', textFontSize, 'Callback', {@showComponentsTemporalMenu, 'ICA'});
+uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show PCA spatial components', 'FontSize', textFontSize, 'Callback', {@showComponentsMenu, 'PCA'});
+uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show PCA temporal components', 'FontSize', textFontSize, 'Callback', {@showComponentsTemporalMenu, 'PCA'});
 uix.Empty('Parent', hs.mainWindowRightButtons);
 uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show latent factors', 'FontSize', textFontSize, 'Callback', @showLatent);
 uicontrol('Parent', hs.mainWindowRightButtons, 'String', 'Show denoised movie', 'FontSize', textFontSize, 'Callback', @showMovie);
@@ -204,7 +206,7 @@ minIntensityText = uicontrol('Parent', b, 'Style','edit',...
 uicontrol('Parent', b, 'Style','text', 'String', 'Minimum', 'FontSize', textFontSize, 'HorizontalAlignment', 'left');
 set(b, 'Widths', [30 -1], 'Spacing', 5, 'Padding', 0);
 
-set(hs.mainWindowRightButtons, 'Heights', [20 -1 100 25 25 25 25 25 25 25 25 25 25 25 -1 20], 'Padding', 5);
+set(hs.mainWindowRightButtons, 'Heights', [20 -1 100 25 25 25 25 25 25 25 25 25 25 25 25 25 -1 20], 'Padding', 5);
 %set(hs.mainWindowRightButtons, 'ButtonSize', [100 35], 'Spacing', 55);
 
 % Below right buttons
@@ -351,24 +353,35 @@ function showBlocksMenu(~, ~)
 end
 
 %--------------------------------------------------------------------------
-function showComponentsMenu(~, ~)
+function showComponentsMenu(~, ~, mode)
   if(~isfield(experiment, 'denoisedDataTraining'))
     logMsg('No training data found. Run the denoiser first.', 'w');
     return;
   end
-  currentMode = 'components';
+  switch mode
+    case 'ICA'
+      currentMode = 'componentsICA';
+    case 'PCA'
+      currentMode = 'componentsPCA';
+  end
+  
   
   updateImage();
   autoLevels([], [], true);
 end
 
 %--------------------------------------------------------------------------
-function showComponentsTemporalMenu(~, ~)
+function showComponentsTemporalMenu(~, ~, mode)
   if(~isfield(experiment, 'denoisedDataTraining'))
     logMsg('No training data found. Run the denoiser first.', 'w');
     return;
   end
-  currentMode = 'componentsTemporal';
+  switch mode
+    case 'ICA'
+      currentMode = 'componentsTemporalICA';
+    case 'PCA'
+      currentMode = 'componentsTemporalPCA';
+  end
   updateImage();
   end
 
@@ -423,9 +436,9 @@ function autoLevels(~, ~, reset)
   end
   switch currentMovie
     case 'glia'
-      [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, bpp, autoLevelsReset, true, true);
+      [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, bpp, autoLevelsReset, true, true);
     otherwise
-      [minIntensity, maxIntensity] = autoLevelsFIJI(currFrame, bpp, autoLevelsReset);
+      [minIntensity, maxIntensity] = autoLevelsFIJI2(currFrame, bpp, autoLevelsReset);
   end
   
   maxIntensityText.String = sprintf('%.2f', maxIntensity);
@@ -457,7 +470,7 @@ function trainDenoiser(~, ~)
   experiment.denoiseRecordingOptionsCurrent.movie = currentMovie;
   experiment = denoiseRecording(experiment, experiment.denoiseRecordingOptionsCurrent, 'training', true, 'trainingBlock', blockSelected);
   setappdata(gcf, 'training', experiment.denoisedDataTraining(1));
-  showComponentsMenu([], []);
+  showComponentsMenu([], [], 'ICA');
   currentPage = 1;
   changeComponentsPage([], [], 0)
 end
@@ -468,7 +481,7 @@ function showLatent(~, ~)
     logMsg('No training data found. Run the denoiser first.', 'w');
     return;
   end
-  latent = experiment.denoisedDataTraining(1).latent;
+  latent = experiment.denoisedDataTraining(1).fullLatent;
   largestComponent = experiment.denoisedDataTraining(1).largestComponent;
   
   figure;
@@ -632,16 +645,22 @@ function updateImage()
       plotGrid();
       set(imData, 'CData', currFrame);
       caxis([minIntensity maxIntensity]);
-    case 'components'
+    case 'componentsICA'
       hs.mainWindowBottomButtons.Visible = 'on';
-      plotComponents();
+      plotComponents('ICA');
       set(imData, 'CData', currFrame);
       caxis([minIntensity maxIntensity]);
-    case 'componentsTemporal'
-      plotComponentsTemporal();
+    case 'componentsPCA'
+      hs.mainWindowBottomButtons.Visible = 'on';
+      plotComponents('PCA');
+      set(imData, 'CData', currFrame);
+      caxis([minIntensity maxIntensity]);
+    case 'componentsTemporalICA'
+      plotComponentsTemporal('ICA');
+    case 'componentsTemporalPCA'
+      plotComponentsTemporal('PCA');
       %plotComponentsGrid();
   end
-  
 end
 
 %--------------------------------------------------------------------------
@@ -664,8 +683,8 @@ function plotGrid()
   gridImgFull = cat(3, gridImg, gridImg, gridImg);
 
   % Let's generate the block positions
-  height = size(gridImg, 2);
-  width = size(gridImg, 1);
+  height = size(gridImg, 1);
+  width = size(gridImg, 2);
   numRowBlocks = ceil((height-blockSize(1))/(blockSize(1)-blockOverlap(1)))+1;
   numColBlocks = ceil((width-blockSize(2))/(blockSize(2)-blockOverlap(2)))+1;
   blockRowCoordinates = 1+((1:numRowBlocks)-1)*(blockSize(1)-blockOverlap(1));
@@ -701,7 +720,17 @@ function plotGrid()
 end
 
 %--------------------------------------------------------------------------
-function plotComponents()
+function plotComponents(mode)
+  switch mode
+    case 'ICA'
+      coeff = experiment.denoisedDataTraining(1).coeff;
+      score = experiment.denoisedDataTraining(1).score;
+      means = experiment.denoisedDataTraining(1).means;
+    case 'PCA'
+      coeff = experiment.denoisedDataTraining(1).coeffPCA;
+      score = experiment.denoisedDataTraining(1).scorePCA;
+      means = experiment.denoisedDataTraining(1).meansPCA;
+  end
   axes(hs.mainWindowFramesAxes);
   cla;
   imData = imagesc(currFrame);
@@ -719,8 +748,7 @@ function plotComponents()
     N = 16; % Hard coded number of blocks - let's concatenate data
   end
   %experiment.denoisedDataTraining(1)
-  coeff = experiment.denoisedDataTraining(1).coeff;
-  score = experiment.denoisedDataTraining(1).score;
+  
   blockSize = experiment.denoisedDataTraining(1).blockSize;
   largestComponent = experiment.denoisedDataTraining(1).largestComponent;
   % Coeff1
@@ -739,6 +767,12 @@ function plotComponents()
   textText = {};
   % Ugh
   %normalizationMask = zeros(size(currFrame));
+  if(strcmpi(experiment.extension, '.his'))
+    needsTranspose = true;
+  else
+    needsTranspose = false;
+  end
+  coeffT = coeff';
   for it1 = 1:sqrt(N)
     for it2= 1:sqrt(N)
       % First entry is special, plot the SUM of the selected components
@@ -747,7 +781,7 @@ function plotComponents()
         avgData = zeros(blockSize(1), blockSize(2));
         for k = 1:largestComponent
           zData = sum(coeff(:, k),2);
-          %zData = zData + experiment.denoisedDataTraining(1).means';
+          zData = zData + experiment.denoisedDataTraining(1).means';
           zData = reshape(zData, [experiment.denoisedDataTraining(1).blockSize(1), experiment.denoisedDataTraining(1).blockSize(2)]);
           avgData = avgData + zData;
         end
@@ -756,7 +790,12 @@ function plotComponents()
         zData = (zData-min(zData(:)))/(max(zData(:))-min(zData(:)));
         rangeR = ((it1-1)*blockSize(1):it1*blockSize(1)-1)+1;
         rangeC = ((it2-1)*blockSize(2):it2*blockSize(2)-1)+1;
-        currFrame(rangeR, rangeC) = zData'*(2^experiment.bpp-1);
+        
+        if(needsTranspose)
+          currFrame(rangeR, rangeC) = zData'*(2^experiment.bpp-1);
+        else
+          currFrame(rangeR, rangeC) = zData*(2^experiment.bpp-1);
+        end
         %normalizationMask(rangeR, rangeC) = 1;
         textX = [textX, rangeC(1)];
         textY = [textY, rangeR(1)];
@@ -768,7 +807,8 @@ function plotComponents()
           continue;
         end
         %zData = sum(coeff(:, coeffIdx),2);
-        zData = mean(score(:, coeffIdx)*coeff(:, coeffIdx)');
+        %zData = mean(score(:, coeffIdx)*coeff(:, coeffIdx)');
+        zData = mean(score(:, coeffIdx)*coeffT(coeffIdx, :));
         zData = reshape(zData, [blockSize(1), blockSize(2)]);
         pmin = prctile(zData(:), 0.1);
         pmax = prctile(zData(:), 99.9);
@@ -778,8 +818,12 @@ function plotComponents()
         zData = (zData-min(zData(:)))/(max(zData(:))-min(zData(:)));
         rangeR = ((it1-1)*blockSize(1):it1*blockSize(1)-1)+1;
         rangeC = ((it2-1)*blockSize(2):it2*blockSize(2)-1)+1;
-        currFrame(rangeR, rangeC) = zData';
-        currFrame(rangeR, rangeC) = zData'*(2^experiment.bpp-1);
+        %currFrame(rangeR, rangeC) = zData';
+        if(needsTranspose)
+          currFrame(rangeR, rangeC) = zData'*(2^experiment.bpp-1);
+        else
+          currFrame(rangeR, rangeC) = zData*(2^experiment.bpp-1);
+        end
         % Now color code the components
         if(coeffIdx <= largestComponent)
           colorIdx = 1;
@@ -807,16 +851,24 @@ function plotComponents()
 end
 
 %--------------------------------------------------------------------------
-function plotComponentsTemporal()
+function plotComponentsTemporal(mode)
+  switch mode
+    case 'ICA'
+      coeff = experiment.denoisedDataTraining(1).coeff;
+      scores = experiment.denoisedDataTraining(1).score;
+      means = experiment.denoisedDataTraining(1).means;
+    case 'PCA'
+      coeff = experiment.denoisedDataTraining(1).coeffPCA;
+      scores = experiment.denoisedDataTraining(1).scorePCA;
+      means = experiment.denoisedDataTraining(1).meansPCA;
+  end
   if(experiment.denoiseRecordingOptionsCurrent.blockSize(1) >= 512)
     N = 4;
   else
     N = 16; % Hard coded number of blocks - let's concatenate data
   end
   %experiment.denoisedDataTraining(1)
-  coeff = experiment.denoisedDataTraining(1).coeff;
-  scores = experiment.denoisedDataTraining(1).score;
-  means = experiment.denoisedDataTraining(1).means;
+  
   blockSize = experiment.denoiseRecordingOptionsCurrent.blockSize;
   largestComponent = experiment.denoisedDataTraining(1).largestComponent;
   % Coeff1
@@ -875,7 +927,12 @@ function plotComponentsTemporal()
         tr = (tr-min(tr(:)))/(max(tr(:))-min(tr(:)));
         plot(1:length(tr), tr+coeffIdx-0.5);
         %val = max(selectedTraces(:, currentOrder(firstTrace+i-1)))-min(selectedTraces(:, currentOrder(firstTrace+i-1)));
-        text(xl(2)*0.9, coeffIdx-0.5, sprintf('%.1f', val/mean(means)));
+        %if(nanmean(means) > 0)
+        %text(xl(2)*0.9, coeffIdx-0.5, sprintf('%.1f', val+nanmean(means)));
+        text(xl(2)*0.9, coeffIdx-0.5, sprintf('%.1f', val));
+        %else
+        %  text(xl(2)*0.9, coeffIdx-0.5, sprintf('%.1f', val));
+        %end
 
 %         zData = sum(coeff(:, coeffIdx),2);
 %         zData = reshape(zData, [blockSize(1), blockSize(2)]);

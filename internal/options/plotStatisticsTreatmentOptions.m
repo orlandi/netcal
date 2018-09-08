@@ -27,11 +27,12 @@ classdef plotStatisticsTreatmentOptions < plotFigureOptions & baseOptions
     % - difference: will substract the statistic of intetest, i.e., post-pre
     % - ratio: will do the ratio between the statistic of interest, i.e., post/pre (this is the X fold change from the pre)
     % - difference: will substract the statistic of intetest, i.e., post-pre. Using only the group members that belong to both preprations
+    % - differencePreZero: will set to 0 the pre values not found in the post group
     % - ratio: will do the ratio between the statistic of interest, i.e., post/pre (this is the X fold change from the pre). Using only the group members that belong to both preprations
     % - 'Mann-Whitney: will perform a Mann-Whitney (Wilcoxon rank) between the two statistics of interest and return the p-value
     % - Kolmogorov-Smirnov: will perform a two-sample Kolmogorov-Smirnov test between the two statistics of interest and return the p-value
     % - Ttest2: will perform a two-tailed t-test between the 2 statistics of interest and return the p-value
-    comparisonType = {'difference', 'ratio', 'differenceIntersect', 'ratioIntersect', 'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'};
+    comparisonType = {'difference', 'ratio', 'differencePreZero', 'differenceIntersect', 'ratioIntersect', 'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'};
     
     % If it should also compare differences between the first and last treatments (only valid when more than 2 treatments are present)
     compareExtremes = false;
@@ -104,11 +105,14 @@ classdef plotStatisticsTreatmentOptions < plotFigureOptions & baseOptions
     % (Only for mixed factor) If true, will also compute significance across samples from the same group
     % HolmBonferroniCorrection:
     % If true, will apply Holm-Bonferroni connection to any significance checks
+    % automaticallyExportData:
+    % If true, will generate a csv file with all the data in the project exports folder
     pipelineProject = struct('groupingOrder', {{'none', 'label average'}}, 'labelGroups', {{'';''}}, 'barGroupingOrder', {{'default', 'group'}}, ...
                              'factor', {{'experiment', 'ROI'}}, 'factorAverageFunction', {{'mean', 'median', 'std', 'var', 'skewness', 'cv'}}, ...
                              'showMeanError', false, 'showSignificance', {{'none', 'partial', 'all'}}, ...
                              'significanceTest', {{'Mann-Whitney','Kolmogorov-Smirnov', 'Ttest2'}}, 'avoidCrossComparisons', true, ...
-                             'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false);
+                             'computeIntraGroupComparisons', false, 'HolmBonferroniCorrection', false, ...
+                             'automaticallyExportData', true);
     
     % If true will turn any zero values into NaNs (so they are not used for the statistics. Useful when working with rates and things like that
     zeroToNan = true;

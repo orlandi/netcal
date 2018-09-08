@@ -1425,6 +1425,8 @@ function displayROI(varargin)
   switch mode
     case ' fast'
       ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', mode);      
+      %ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', 'edgeHard');
+      %ROIimg = visualizeROI(zeros(experiment.height, experiment.width), ROI, 'plot', false, 'color', true, 'mode','edgeHard', 'cmap', cmap);
       nROIimg = bwperim(sum(ROIimg,3) > 0);
       nROIimg = cat(3, nROIimg, nROIimg, nROIimg);
       ROIimg(~nROIimg) = ROIimg(~nROIimg)*0.25;
@@ -1438,7 +1440,12 @@ function displayROI(varargin)
       alpha = zeros(size(ROIimg,1), size(ROIimg,2));
     otherwise
       %ncbar.automatic('Plotting ROI...');
-      ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', mode);      
+      %ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', mode);      
+      if(~isempty(ROI) && isfield(ROI{1}, 'weights'))
+        ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', 'edgeHard');
+      else
+        ROIimg = visualizeROI(zeros(size(newImg)), ROI, 'plot', false, 'color', true, 'mode', mode);
+      end
       invalid = (ROIimg(:,:,1) == 0 & ROIimg(:,:,2) == 0 & ROIimg(:,:,3) == 0);
       alpha = ones(size(ROIimg,1), size(ROIimg,2))*0.25;
       alpha(invalid) = 0;
