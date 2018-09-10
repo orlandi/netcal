@@ -1,7 +1,7 @@
 function exportFigCallback(~, ~ , extensions, defaultName, varargin)
 % EXPORTFIGCALLBACK Used to export figures
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 
     % Varargin: resolution (dpi number)

@@ -21,7 +21,7 @@ function h = quiverFlow(ax, u, v, gap, scaling, colors, varargin)
 % EXAMPLE:
 %    h = quiverFlow(u, v, 5, 3)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also gliaAverageMovie, gliaOpticFlow, quiver
 

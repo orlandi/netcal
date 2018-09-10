@@ -2,7 +2,7 @@ classdef viewTracesOptions < baseOptions
 % VIEWTRACESOPTIONS View traces options
 %   Class containing the view traces options
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewTraces, baseOptions, optionsWindow
 

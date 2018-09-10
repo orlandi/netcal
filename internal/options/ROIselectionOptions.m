@@ -2,7 +2,7 @@ classdef ROIselectionOptions < baseOptions
 % ROISELECTIONOPTIONS Options for ROI selection
 %   Class containing the possible options for the ROI selection procedures, both automatic and manual
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewROI, baseOptions, optionsWindow
 

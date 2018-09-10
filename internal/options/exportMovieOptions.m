@@ -1,7 +1,7 @@
 classdef exportMovieOptions < baseOptions
 % Optional input parameters for exportMovieOptions
 %   Class containing the options for exporting movies
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also baseOptions, optionsWindow
 
@@ -9,8 +9,9 @@ classdef exportMovieOptions < baseOptions
     % Desired frame rate of the new movie
     frameRate = 20;
 
-    % Resampling method
-    % - none: Will not do anything (this might result in the movie playing at unrealistic speeds)
+    % Resampling method. Use this if you want the movie to play at real
+    % time but with a smaller frame rate than the original
+    % - none: Will not do anything
     % - sum: Will add together all frames involved in the new frame (only for downsampling). This might result in dynamic range clipping.
     % - average: Same as sum, but dividing (only for downsampling). This might result in quality reduction due to rounding errors (for integer data).
     resamplingMethod = {'none', 'sum', 'mean'};
@@ -26,13 +27,12 @@ classdef exportMovieOptions < baseOptions
     % Range (see rangeSelection)
     range = [1 inf];
     
-    %Please note that on pipeline mode the profile is always Motion JPEG 2000
-    
     % Profile to use.
-    profile = {'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'Motion JPEG 2000', 'MPEG-4'};
+    profile = {'Big Tiff', 'Archival', 'Uncompressed AVI', 'Grayscale AVI', 'Motion JPEG AVI', 'Motion JPEG 2000', 'MPEG-4'};
     
-    % Bits per pixel of the new movie (1 to 16)
-    bitsPerPixel = {'8', '16'};
+    % Bits per pixel of the new movie (8, 16, 32) - not all profiles will
+    % be compatible
+    bitsPerPixel = {'16', '8', '32', 'single', 'double'};
     
     % If the movie should be compressed (only if the profile allows it)
     compressMovie = true;

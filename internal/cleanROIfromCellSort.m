@@ -17,7 +17,7 @@ function experiment = cleanROIfromCellSort(experiment, varargin)
 % EXAMPLE:
 %    experiment = cleanROIfromCellSort(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: clean ROI from CellSort and trace extraction

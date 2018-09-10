@@ -27,7 +27,7 @@ function outputImage = normalizeImage(inputImage, varargin)
 %
 % REFERENCES:
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 params.lowerSaturation = 0;
 params.upperSaturation = 0;

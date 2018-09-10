@@ -1,7 +1,7 @@
 function menuHandle = generateSelectionMenu(experiment, parent)
 % GENERATESLECTIONMENU PENDING
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
   menuHandle = struct;
   menuHandle.root = uimenu(parent, 'Label', 'Selection', 'Tag', 'selection');

@@ -2,7 +2,7 @@ classdef fluorescenceAutomaticOptions < baseOptions
 % FLUORESCENCEAUTOMATICOPTIONS Options for Automatic fluorescence
 %   Class containing the possible options for automatic fluorescence analysis
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also baseOptions, optionsWindow
 

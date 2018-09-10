@@ -13,7 +13,7 @@ function saveProject(project, varargin)
 %
 % See also: newProject, loadProject
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 params.verbose = true;
 params.gui = [];

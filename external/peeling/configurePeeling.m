@@ -14,7 +14,7 @@ function [ca_p, peel_p, exp_p] = configurePeeling(experiment, traces, varargin)
 % EXAMPLE:
 %    ROI = refineROI(stillImage, ROI, varargin)
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 params.amp1 = [];
 params.amp2 = [];
 params.tau1 = [];

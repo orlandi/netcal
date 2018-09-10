@@ -2,7 +2,7 @@ classdef networkInferenceXcorrOptions < networkInferenceOptions
 % NETWORKINFERENCEXCORROPTIONS # Cross-correlation based network inference
 %   Uses cross-correlation as a proxy of functional connectivity, using either the maximum value (for any delay) or the 0 lag measure
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also networkInferenceOptions, baseOptions, optionsWindow
 

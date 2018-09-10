@@ -2,7 +2,7 @@ classdef experimentTree < uiextras.jTree.CheckboxTree
 % EXPERIMENTTREE Pending
 % Heavily based on the uiextras.jTree
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 
   %% Properties

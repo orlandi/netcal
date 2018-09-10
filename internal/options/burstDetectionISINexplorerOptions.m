@@ -2,7 +2,7 @@ classdef burstDetectionISINexplorerOptions < baseOptions
 % BURSTDETECTIONISINEXPLOREROPTIONS Options to explore parametesr for the ISI_N burst detection
 %   Class containing the options for ISI_N detection. See: https://doi.org/10.3389/fncom.2013.00193
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also burstDetection, baseOptions, optionsWindow
 

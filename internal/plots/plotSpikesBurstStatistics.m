@@ -1,5 +1,5 @@
 function projexp = plotSpikesBurstStatistics(projexp, varargin)
-% plotSpikesBurstStatistics # Plot spikes burst statistics
+% PLOTSPIKESBURSTSTATISTICS Plot spikes burst statistics
 % Plots statistics associated to spikes (global) bursts: amplitude, duration, IBI
 %
 % USAGE:
@@ -18,11 +18,11 @@ function projexp = plotSpikesBurstStatistics(projexp, varargin)
 %    experiment = plotSpikesBurstStatistics(experiment)
 %    project = plotSpikesBurstStatistics(project)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
-% name: plot burst statistics
-% parentGroups: spikes: bursts: plots
+% name: plot spikes burst statistics
+% parentGroups: spikes: bursts: plots, statistics: spikes
 % optionsClass: plotSpikesBurstStatisticsOptions
 % requiredFields: spikeBursts
 

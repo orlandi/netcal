@@ -1,7 +1,7 @@
 classdef plotStatisticsTreatment < handle
   % Main class to plot any one-dimensional statistic for a treatment. Taking into account projects, experiments, labels, groups, etc
   %
-  %   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+  %   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
   
   properties

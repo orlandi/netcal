@@ -16,7 +16,7 @@ function experiment = burstDetectionISINautomatic(experiment, varargin)
 % EXAMPLE:
 %    experiment = burstDetectionISIN(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: ISI_N burst detection semi-automatic

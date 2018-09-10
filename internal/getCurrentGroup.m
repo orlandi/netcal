@@ -1,7 +1,7 @@
 function [groupType, groupIdx] = getCurrentGroup()
 % GETCURRENTGROUP
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 	
   groupList = findobj(gcf, '-regexp','Tag', 'selection');
   groupType = [];

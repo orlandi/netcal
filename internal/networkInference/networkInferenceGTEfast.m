@@ -1,5 +1,5 @@
 function experiment = networkInferenceGTEfast(experiment, varargin)
-% NETWORKINFERENCEGTEFAST # Network inference using Generalized Transfer Entropy
+% NETWORKINFERENCEGTEFAST Network inference using Generalized Transfer Entropy
 %
 % USAGE:
 %   experiment = networkInferenceGTEfast(experiment, options)
@@ -16,7 +16,7 @@ function experiment = networkInferenceGTEfast(experiment, varargin)
 % EXAMPLE:
 %   experiment = networkInferenceGTEfast(experiment, networkInferenceGTEfastOptions)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also peelingOptions
 

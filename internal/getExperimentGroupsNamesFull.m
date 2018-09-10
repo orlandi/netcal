@@ -14,7 +14,7 @@ function names = getExperimentGroupsNamesFull(experiment, varargin)
 % EXAMPLE:
 %     names = getExperimentGroups(experiment)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
   
 names = {};
 if(isfield(experiment, 'traceGroups') && ~isempty(experiment.traceGroups) && isfield(experiment, 'traceGroupsNames'))

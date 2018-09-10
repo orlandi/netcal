@@ -2,7 +2,7 @@ classdef patternCountClassifierOptions < baseOptions
 % PATTERNCOUNTCLASSIFIEROPTIONS Options for the pattern count classifier
 %   Class containing the parameters to classify traces using a pattern count
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewTraces, baseOptions, optionsWindow
 

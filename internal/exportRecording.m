@@ -16,7 +16,7 @@ function experiment = exportRecording(experiment, varargin)
 % EXAMPLE:
 %    experiment = exportRecording(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: export recording
@@ -59,27 +59,90 @@ if(isempty(exportMovieOptionsCurrent.frameSkip) || exportMovieOptionsCurrent.fra
   exportMovieOptionsCurrent.frameSkip = 1;
 end
 
-newMovie = VideoWriter(fileName, exportMovieOptionsCurrent.profile);
-%newMovie = VideoWriter(fileName, 'Motion JPEG 2000');
-if(~params.compressMovie)
-  newMovie.LosslessCompression = false;
-else
-  if(params.compressionLevel > 1)
-    newMovie.LosslessCompression = false;
-    newMovie.CompressionRatio = params.compressionLevel;
-  else
-    newMovie.LosslessCompression = true;
-  end
-end
-params.bitsPerPixel = eval(params.bitsPerPixel);
-newMovie.MJ2BitDepth = params.bitsPerPixel;
-switch newMovie.MJ2BitDepth
-  case 8
-    movieType = @uint8;
-  case 16
-    movieType = @uint16;
+
+switch exportMovieOptionsCurrent.profile
+  case 'Big Tiff'
+    options = struct;
+    if(exportMovieOptionsCurrent.compressMovie)
+      options.compress = 'lzw';
+    else
+      options.compress = 'no';
+    end
+    options.overwrite = true;
+    options.big = true;
+    options.message = false;
+    fileName = [fileName '.btf'];
+    switch params.bitsPerPixel
+      case '8'
+        bppFunc = @uint8;
+        bpp = 8;
+      case '16'
+        bppFunc = @uint16;
+        bpp = 16;
+      case '32'
+        bppFunc = @uint32;
+        bpp = 32;
+      case 'single'
+        bppFunc = @single;
+        bpp = 1;
+      case 'double'
+        bppFunc = @double;
+        bpp = 1;
+    end
+    %options.append
+    %res = saveastiff(data, path, options)
   otherwise
-    movieType = @uint16;
+    newMovie = VideoWriter(fileName, exportMovieOptionsCurrent.profile);
+    %newMovie = VideoWriter(fileName, 'Motion JPEG 2000');
+    try
+      if(~params.compressMovie)
+        newMovie.LosslessCompression = false;
+      else
+        if(params.compressionLevel > 1)
+          newMovie.LosslessCompression = false;
+          newMovie.CompressionRatio = params.compressionLevel;
+        else
+          newMovie.LosslessCompression = true;
+        end
+      end
+      newMovie.MJ2BitDepth = params.bitsPerPixel;
+      switch params.bitsPerPixel
+      case '8'
+        bppFunc = @uint8;
+        bpp = 8;
+      case '16'
+        bppFunc = @uint16;
+        bpp = 16;
+      case '32'
+        bppFunc = @uint32;
+        bpp = 32;
+      case 'single'
+        bppFunc = @single;
+        bpp = 1;
+      case 'double'
+        bppFunc = @double;
+        bpp = 1;
+    end
+    catch
+      switch params.bitsPerPixel
+      case '8'
+        bppFunc = @uint8;
+        bpp = 8;
+      case '16'
+        bppFunc = @uint16;
+        bpp = 16;
+      case '32'
+        bppFunc = @uint32;
+        bpp = 32;
+      case 'single'
+        bppFunc = @single;
+        bpp = 1;
+      case 'double'
+        bppFunc = @double;
+        bpp = 1;
+    end
+    end
+    
 end
 % The iterator loop
 switch exportMovieOptionsCurrent.resamplingMethod
@@ -102,8 +165,12 @@ switch exportMovieOptionsCurrent.resamplingMethod
     end
     frameList = frameRange(1):frameWindow:frameRange(2);
 end
-newMovie.FrameRate = exportMovieOptionsCurrent.frameRate;
-open(newMovie);
+switch exportMovieOptionsCurrent.profile
+  case 'Big Tiff'
+  otherwise
+    newMovie.FrameRate = exportMovieOptionsCurrent.frameRate;
+    open(newMovie);
+end
 %ncbar('Saving current movie');
 numFrames = length(frameList);
 
@@ -127,8 +194,7 @@ for it = 1:numFrames
     case 'none'
       frame = getFrame(experiment, frameList(it), fid);
       frame = (double(frame)-minI)/(maxI-minI);
-      frame = movieType(frame*(2^params.bitsPerPixel-1));
-      writeVideo(newMovie, repmat(frame, 1, 1, format));
+      frame = bppFunc(frame*(2^bpp-1));
     otherwise
       frameData = zeros(experiment.height, experiment.width);
       for it2 = 1:frameWindow
@@ -139,13 +205,29 @@ for it = 1:numFrames
         frameData = frameData/frameWindow;
       end
       frame = (double(frameData)-minI)/(maxI-minI);
-      frame = movieType(frame*(2^params.bitsPerPixel-1));
-      writeVideo(newMovie, repmat(frame, 1, 1, format));
+      frame = bppFunc(frame*(2^bpp-1));
+  end
+  switch exportMovieOptionsCurrent.profile
+    case 'Big Tiff'
+      if(it == 1)
+        options.overwrite = true;
+        options.append = false;
+        saveastiff(bppFunc(frame), fileName, options);
+      else
+        options.overwrite = false;
+        options.append = true;
+        saveastiff(bppFunc(frame), fileName, options);
+      end
+    otherwise
+    writeVideo(newMovie, repmat(frame, 1, 1, format));
   end
   ncbar.update(it/numFrames);
 end
-
-close(newMovie);
+switch exportMovieOptionsCurrent.profile
+  case 'Big Tiff'
+  otherwise
+    close(newMovie);
+end
 closeVideoStream(fid);
 
 %--------------------------------------------------------------------------

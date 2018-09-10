@@ -3,7 +3,7 @@ classdef setActiveNetworkOptions < baseOptions
 % trace across the whole recording
 %   Class containing the options for tsetting the active network
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also setActiveNetwork, baseOptions, optionsWindow
 

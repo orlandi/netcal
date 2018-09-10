@@ -2,7 +2,7 @@ classdef traceUnsupervisedEventDetectionOptions < baseOptions
 % TRACEUNSUPERVISEDEVENTDETECTIONOPTIONS Options for unsupervised event detection
 %   Class containing the options for pattern detrection
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also traceUnsupervisedEventDetection, baseOptions, optionsWindow
 

@@ -2,7 +2,7 @@ classdef peelingOptions < baseOptions
 % PEELINGOPTIONS Peeling options
 %   Class containing the parameters to perform spike inference with the peeling algorithm
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also Peeling, baseOptions, optionsWindow
 

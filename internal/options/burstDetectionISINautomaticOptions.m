@@ -2,7 +2,7 @@ classdef burstDetectionISINautomaticOptions < baseOptions
 % BURSTDETECTIONISINAUTOMATICOPTIONS Options for the semi-automatic ISI_N burst detection
 %   Class containing the options for semi-automatic ISI_N detection. See: https://doi.org/10.3389/fncom.2013.00193
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also burstDetectionISINautomatic, baseOptions, optionsWindow
 

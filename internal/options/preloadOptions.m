@@ -1,4 +1,4 @@
-function [success, curOptions, experiment] = preloadOptions(experiment, optionsClass, gui, allowChanges, shouldExist)
+function [success, curOptions, experiment] = preloadOptions(experiment, optionsClass, gui, allowChanges, shouldExist, project)
 % PRELOADOPTIONS loads a given type of options for an experiment. If the
 % experiment has the class defined, it will load it, if not, it will check
 % in the project, and if not, it will load default options.
@@ -18,6 +18,7 @@ function [success, curOptions, experiment] = preloadOptions(experiment, optionsC
 %
 %    shouldExist - will output a warning if the class does not already
 %    exist
+%    project - the project structure
 %
 % OUTPUT arguments:
 %
@@ -30,7 +31,7 @@ function [success, curOptions, experiment] = preloadOptions(experiment, optionsC
 % EXAMPLE:
 %    [success, curOptions, experiment] = preloadOptions(experiment, learningOptions, gcbf, true, false)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also baseOptions, optionsWindow
 
@@ -40,7 +41,9 @@ end
 if(nargin < 5)
   shouldExist = false;
 end
-
+if(nargin < 6)
+  project = [];
+end
 optionsClassName = class(optionsClass);
 success = true;
 
@@ -52,7 +55,6 @@ if(~isempty(experiment) && isfield(experiment, [optionsClassName 'Current']))
     logMsg(['Something went wrong loading ' optionsClassName '. Using defaults'], 'w');
     optionsClassCurrent = eval(optionsClassName);
   end
-  
 else
   if(~isempty(gui))
     project = getappdata(gui, 'project');
@@ -82,7 +84,7 @@ end
 %curOptions = curOptions.setExperimentDefaults(experiment);
 
 if(allowChanges)
-  [success, curOptions] = optionsWindow(curOptions, 'experiment', experiment);
+  [success, curOptions] = optionsWindow(curOptions, 'experiment', experiment, 'project', project);
 else
   curOptions = curOptions.setDefaults;
 end

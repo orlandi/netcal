@@ -19,7 +19,7 @@ function [hFigW, project] = viewPCA(project, features, featuresNames, PCAfield)
 % EXAMPLE:
 %    [hFigW, project] = viewPCA(project, features, featuresNames)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Initialization

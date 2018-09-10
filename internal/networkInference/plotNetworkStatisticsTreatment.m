@@ -17,11 +17,11 @@ function projexp = plotNetworkStatisticsTreatment(projexp, varargin)
 % EXAMPLE:
 %    experiment = plotNetworkStatisticsTreatment(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
-% name: plot network statistics treatment
-% parentGroups: network: plots
+% name: plot network statistics treatments
+% parentGroups: network: plots, treatments, statistics: network
 % optionsClass: plotNetworkStatisticsTreatmentOptions
 % requiredFields: GTE
 

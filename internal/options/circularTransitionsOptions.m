@@ -2,7 +2,7 @@ classdef circularTransitionsOptions < baseOptions
 % CIRCULARTRANSITIONSOPTIONS Options to generate the circular transitions plot
 %   Class containing the configurable options for the circular transitions plot
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotCircularTransitions, baseOptions, optionsWindow
 

@@ -2,7 +2,7 @@ classdef importPatternsOptions < baseOptions
 % IMPORTPATTERNSOPTIONS Options for importing patterns
 %   Class containing the options for importing patterns
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also importFilePatterns, baseOptions, optionsWindow
 

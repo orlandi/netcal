@@ -16,7 +16,7 @@ function projexp = exportFluorescenceFeatures(projexp, varargin)
 % EXAMPLE:
 %    experiment = exportFluorescenceFeatures(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: export fluorescence features

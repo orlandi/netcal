@@ -24,7 +24,7 @@ function ROI = loadROI(experiment, filename, varargin)
 % EXAMPLE:
 %    ROI = loadROI(experiment, filename)
 %
-% Copyright (C) 2015-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2015-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also autoDetectROI loadExperiment
 

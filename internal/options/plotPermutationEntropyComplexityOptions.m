@@ -3,7 +3,7 @@ classdef plotPermutationEntropyComplexityOptions < plotStatisticsOptions & baseO
 %   Plots the permutation entropy or the permnutation complexity. See;
 %   [http://dx.doi.org/10.1103/PhysRevE.95.062106](http://dx.doi.org/10.1103/PhysRevE.95.062106)
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotPermutationEntropyComplexity, plotBaseOptions, baseOptions, optionsWindow
 

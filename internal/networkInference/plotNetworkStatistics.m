@@ -17,11 +17,11 @@ function projexp = plotNetworkStatistics(projexp, varargin)
 % EXAMPLE:
 %    experiment = plotNetworkStatistics(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot network statistics
-% parentGroups: network: plots
+% parentGroups: network: plots, statistics: network
 % optionsClass: plotNetworkStatisticsOptions
 % requiredFields: RS
 

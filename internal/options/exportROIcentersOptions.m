@@ -2,7 +2,7 @@ classdef exportROIcentersOptions < baseOptions
 % EXPORTROICENTERSOPTIONS Options for exporting ROI centers
 %   Class containing the options for exporting ROI centers
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also exportROIcenters, baseOptions, optionsWindow
 

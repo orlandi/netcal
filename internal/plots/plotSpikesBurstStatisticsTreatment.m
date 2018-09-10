@@ -1,5 +1,5 @@
 function projexp = plotSpikesBurstStatisticsTreatment(projexp, varargin)
-% plotSpikesBurstStatisticsTreatment # Plot spikes burst statistics
+% PLOTSPIKESBURSTSTATISTICSTREATMENT Plot spikes burst statistics
 % Plots statistics associated to spikes
 %
 % USAGE:
@@ -18,11 +18,11 @@ function projexp = plotSpikesBurstStatisticsTreatment(projexp, varargin)
 %    experiment = plotFluorescenceBurstStatisticsTreatment(experiment)
 %    project = plotFluorescenceBurstStatisticsTreatment(project)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot spikes burst statistics for treatments
-% parentGroups: spikes: bursts: plots, treatments: plots
+% parentGroups: spikes: bursts: plots, treatments, statistics: spikes
 % optionsClass: plotSpikesBurstStatisticsTreatmentOptions
 % requiredFields: spikes, spikeBursts
 

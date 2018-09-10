@@ -2,7 +2,7 @@ classdef linearTransitionsOptions < baseOptions
 % LINEARTRANSITIONSOPTIONS Options to generate the linear transitions plot
 %   Class containing the configurable options for the linear transitions plot
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotLinearTransitions, baseOptions, optionsWindow
 

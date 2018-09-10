@@ -2,7 +2,7 @@ classdef identifyISIoptions < baseOptions
 % IDENTIFYISIOPTIONS Base options for identify ISI
 %   Finds groups of spiking cells with similar ISI distributions
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also identifyISI, baseOptions, optionsWindow
 

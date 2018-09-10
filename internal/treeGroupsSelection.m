@@ -16,7 +16,7 @@ function [selectionNames selectionStruct] = treeGroupsSelection(experiment, titl
 % EXAMPLE:
 %   selection = treeGroupsSelection(experiment, title)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 if(nargin < 2)
   title = 'Select Groups';

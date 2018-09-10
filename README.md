@@ -27,7 +27,24 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
-## [8.3.0] - 2018-09-06
+## [8.4.0] - 2018-09-08
+
+### ATTENTION
+Hey! Due to some mailing issues, if you ever sent me a question/request to javierorlandi@javierorlandi.com or  \*@itsnetcal.com and never got answered. Please send it again to javiergorlandi@gmail.com or javier.orlandigomez@ucalgary.ca . Thanks! (I believe those mails have not been functioning properly for the last year)
+
+### Added
+- Several options to automatically import ROI from files and experiments to multiple experiments at once
+- Redesigned export movie pipeline function (so it also works ok with drifft corrected movies)
+- Added big tiff export support
+- Pipeline mode: help window to provide a small description of any selected available function
+- Most pipeline statistics functions are now available on the single and batch mode menus
+- Several pipeline functions added to the main menus
+
+### Fixed
+- Error when ROI with and without weights coexisted
+- Error when trying to plot fluorescence burst statistics from the bursts GUI
+
+## [8.3.0] - 2018-09-07
 
 ### Added
 - Complete overhaul of the drift correction. Now it should be compatible with the denoiser and cell sort

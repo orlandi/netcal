@@ -9,7 +9,7 @@ classdef preprocessExperimentOptions < baseOptions
 % clear picture of the recording. This is the one you will be using to
 % select the regions of interest later on).
 %
-% Mostof the options below are pretty self explanatory. The ones that ou
+% Most of the options below are pretty self explanatory. The ones that you
 % will typically use (or care about) are:
 % - **fast:** if set to true, it will only use one out of every 10 frames
 % to get the averages. If your recording does't have a lot of noise, this
@@ -28,7 +28,7 @@ classdef preprocessExperimentOptions < baseOptions
 %
 %   Class containing the possible paramters for preprocessing an experiment
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also preprocessExperiment, baseOptions, optionsWindow
 

@@ -2,7 +2,7 @@ classdef netcalOptions < baseOptions
 % NETCALOPTIONS # Global preferences
 %   Set of options that affect NETCAL global's behavior
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi
+%   Copyright (C) 2016-2018, Javier G. Orlandi
 %
 %   See also netcal, baseOptions, optionsWindow
 

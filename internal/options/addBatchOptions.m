@@ -3,7 +3,7 @@ classdef addBatchOptions < baseOptions
 %   It will look recursively from the root folder for files with the right
 %   extension, and ask which ones needs to be imported
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also netcal, baseOptions, optionsWindow
 

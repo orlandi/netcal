@@ -2,7 +2,7 @@ classdef burstDetectionSpikesOptions < baseOptions
 % BURSTDETECTIONSPIKESOPTIONS Options for burst detection
 %   Class containing the options for burst detection
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also burstDetection, baseOptions, optionsWindow
 

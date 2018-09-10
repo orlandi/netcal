@@ -20,7 +20,7 @@ function [success, optionsObject] = optionsWindow(optionsObject, varargin)
 % EXAMPLE:
 %   [success, parameters] = optionsWindow(baseOptions, 'Simple window')
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % This function is derived from the original propertiesGUI from
 % Yair M. Altman http://undocumentedmatlab.com/blog/propertiesgui
@@ -70,7 +70,8 @@ originalClassObject = originalClassObject.setDefaults();
 if(~isempty(params.experiment) && isequaln(optionsObject, originalClassObject))
   optionsObject = optionsObject.setExperimentDefaults(params.experiment);
 end
-% Set project defaults if it still hold the original values
+
+% Set project defaults if it still holds the original values
 if(~isempty(params.project) && isequaln(optionsObject, originalClassObject))
   optionsObject = optionsObject.setProjectDefaults(params.project);
 end

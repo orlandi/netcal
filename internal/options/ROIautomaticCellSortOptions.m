@@ -2,7 +2,7 @@ classdef ROIautomaticCellSortOptions < baseOptions
 % ROISELECTIONCELLSORTOPTIONS Options for ROI selection with CellSort
 %   Class containing the possible options for the CellSort ROI Selection
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewROI, baseOptions, optionsWindow
 

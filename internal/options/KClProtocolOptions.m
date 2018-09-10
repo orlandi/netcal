@@ -2,7 +2,7 @@ classdef KClProtocolOptions < baseOptions
 % KCLPROTOCOLOPTIONS Options for defining a protocol of acute KCl application
 %   Class containing the parameters for defining a protocol of acute KCl application
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewTraces, baseOptions, optionsWindow
 

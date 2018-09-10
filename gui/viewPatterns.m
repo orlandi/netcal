@@ -15,7 +15,7 @@ function [hFigW, experiment] = viewPatterns(experiment, varargin)
 % EXAMPLE:
 %    [hFigW, experiment] = viewPatterns(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also loadExperiment
 

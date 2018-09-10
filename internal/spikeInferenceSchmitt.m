@@ -24,7 +24,7 @@ function [experiment, trainingData] = spikeInferenceSchmitt(experiment, varargin
 % EXAMPLE:
 %   experiment = spikeInferenceSchmitt(experiment, schmittOptions)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also schmittOptions
 

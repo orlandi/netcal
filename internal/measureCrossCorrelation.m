@@ -20,7 +20,7 @@ function experiment = measureCrossCorrelation(experiment, varargin)
 % EXAMPLE:
 %    experiment = measureCrossCorrelationexperiment)
 %
-% Copyright (C) 2016-2017, Alexander J. Kipp <ajkipp@ucalgary.ca>, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2017, Alexander J. Kipp <ajkipp@ucalgary.ca>, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % 
 

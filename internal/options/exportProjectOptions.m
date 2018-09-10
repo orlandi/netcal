@@ -2,7 +2,7 @@ classdef exportProjectOptions < baseOptions
 % EXPORTPROJECTOPTIONS Options for exporting projects
 %   Class containing the possible ways to export projects
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also baseOptions, optionsWIndow
 

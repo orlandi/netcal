@@ -2,7 +2,7 @@ classdef burstDetectionSurpriseOptions < plotFigureOptions & baseOptions
 % BURSTDETECTIONSURPRISEOPTIONS Options for the surprise-based burst detection
 %   Class containing the options for the surprise-based burst detection. See: https://doi.org/10.1016/j.jneumeth.2006.09.024
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also burstDetectionSurprise, baseOptions, optionsWindow
 

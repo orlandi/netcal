@@ -23,7 +23,7 @@ function autoArrangeFigures(NH, NW, monitor_id)
 %
 % leejaejun, Koreatech, Korea Republic, 2014.12.13
 % jaejun0201@gmail.com
-% Modified by Javier G. Orlandi <javierorlandi@javierorlandi.com> - 2018
+% Modified by Javier G. Orlandi <javiergorlandi@gmail.com> - 2018
 
 if nargin < 2
     NH = 0;

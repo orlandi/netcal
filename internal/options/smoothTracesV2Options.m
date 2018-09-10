@@ -2,7 +2,7 @@ classdef smoothTracesV2Options < baseOptions
 % SMOOTHTRACESV2OPTIONS Smooth traces options
 %   Class containing the possible ways in which to smooth the traces
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also smothTraces, baseOptions, optionsWindow
 

@@ -20,7 +20,7 @@ function projexp = plotPermutationEntropyComplexity(projexp, varargin)
 %    experiment = plotPermutationEntropyComplexity(experiment)
 %    project = plotPermutationEntropyComplexity(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot permutation entropy/complexity

@@ -2,7 +2,7 @@ classdef measureTracesQCECoptions < baseOptions
 % MEASURETRACESQCECOPTIONS Options for QCEC. See DOI: 10.1103/PhysRevE.95.062106
 %   Class containing the options for QCEC
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also measureTracesQCEC
 

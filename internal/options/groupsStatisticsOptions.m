@@ -2,7 +2,7 @@ classdef groupsStatisticsOptions < baseOptions
 % GROUPSSTATISTICSOPTIONS Options for the group statistics
 %   Class containing the options for computing and displaying group statistics
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewGroups, baseOptions, optionsWindow
 

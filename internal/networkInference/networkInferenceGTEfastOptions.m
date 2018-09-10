@@ -2,7 +2,7 @@ classdef networkInferenceGTEfastOptions < plotFigureOptions & baseOptions
 % GTEOPTIONS Options for Generalized Transfer Entropy
 %   Class containing the parameters to perform network inference with the GTE algorithm
 %
-%   Copyright (C) 2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also networkInferenceGTEfast, baseOptions, optionsWindow
 

@@ -20,7 +20,7 @@ function saveROI(experiment, ROI, varargin)
 % EXAMPLE:
 %    saveROI(experiment, ROI)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 params.tag = '_ROI';
 params.verbose = true;

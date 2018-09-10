@@ -16,11 +16,11 @@ function projexp = exportPopulationsStatistics(projexp, varargin)
 % EXAMPLE:
 %    experiment = exportPopulationsStatistics(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: export labeled groups statistics
-% parentGroups: groups: exports
+% parentGroups: populations: exports
 % optionsClass: exportPopulationsStatisticsOptions
 % requiredFields: traceBursts, folder, name
 

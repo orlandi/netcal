@@ -28,7 +28,7 @@ function out = visualizeROI(stillImage, ROI, varargin)
 % EXAMPLE:
 %    out = visualizeROI(stillImage, ROI)
 %
-% Copyright (C) 2015-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2015-2017, Javier G. Orlandi <javiergorlandi@gmail.com>
 % Based on imoverlay
 %
 % See also autoDetectROI loadROI

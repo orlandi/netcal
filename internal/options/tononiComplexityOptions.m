@@ -3,7 +3,7 @@ classdef tononiComplexityOptions < baseOptions
 %   Options for measuring Tononi Complexity. Implemented from the NCCToolboxV1.
 %   See: [http://www.pnas.org/content/91/11/5033](http://www.pnas.org/content/91/11/5033)
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also baseOptions, optionsWindow
 

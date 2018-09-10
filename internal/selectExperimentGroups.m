@@ -1,7 +1,7 @@
 function [selectedPopulations, aggregatedOptionsCurrent, success] = selectExperimentGroups(experiment, populationSelectionType)
 % SELECTEXPERIMENTGROUPS PENDING
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
   if(nargin < 2)
     populationSelectionType = 'single';
   end

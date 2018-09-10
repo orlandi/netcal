@@ -2,7 +2,7 @@ classdef plotFigureOptions < baseOptions
 % PLOTFIGUREOPTIONS # Default options for plotting figures
 %   These options will be inherited by most functions that plot something that isn't an image
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also baseOptions, optionsWindow
 

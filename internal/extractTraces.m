@@ -18,7 +18,7 @@ function experiment = extractTraces(experiment, varargin)
 % EXAMPLE:
 %    experiment = extractTraces(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: extract traces
@@ -100,11 +100,16 @@ for i = 1:length(selectedFrames)
     %signCoincidence(i-1) = max(positiveD, numPixels-positiveD)/numPixels;
     signCoincidence(i-1) = abs(positiveD-negativeD)/numPixels;
   end
-  if(isfield(ROI{1}, 'weights'))
+  if(any(cellfun(@(x)isfield(x, 'weights'), experiment.ROI)))
     for j = 1:length(ROI)
+      % Fix in case some ROI do not have weights
+      if(~isfield(ROI{j}, 'weights'))
+        ROI{j}.weights = ones(size(ROI{j}.pixels));
+      end
       traces(i, j) = sum(currentFrame(ROI{j}.pixels).*ROI{j}.weights)/sum(ROI{j}.weights);
       %traces(i, j) = avgFunc(currentFrame(ROI{j}.pixels));
     end
+    experiment.ROI = ROI;
   else
     for j = 1:length(ROI)
       traces(i, j) = avgFunc(currentFrame(ROI{j}.pixels));

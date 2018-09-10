@@ -25,7 +25,7 @@ function ROI = refineROIthreshold(stillImage, ROI, varargin)
 % EXAMPLE:
 %    ROI = refineROIthreshold(stillImage, ROI, varargin)
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also autoDetectROI loadExperiment loadROI
 

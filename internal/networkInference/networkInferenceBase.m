@@ -1,7 +1,7 @@
 classdef networkInferenceBase < handle
 % Base class to perform any network inference measure
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi
+%   Copyright (C) 2016-2018, Javier G. Orlandi
 %
 %   See also networkInferenceOptions
 

@@ -3,7 +3,7 @@ classdef plotSpikeTreatmentStatisticsOptions < plotBaseOptions & baseOptions
 %   Produces a boxplot for a given spike statistic, e.g., ISI, IBI, ...
 %   It can show a single box for each experimetn and group, or merge them together into a joint statistic. Change the groupingOrder for that.
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotSpikeStatistics, plotBaseOptions, baseOptions, optionsWindow
 

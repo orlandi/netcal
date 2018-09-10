@@ -2,7 +2,7 @@ classdef plotQCECOptions < plotBaseOptions & baseOptions
 % PLOTQCECOPTIONS Base options for plotting q-CE curves
 %   Class containing the options for plotting q-CE curves
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotQCEC, plotBaseOptions, baseOptions, optionsWindow
 

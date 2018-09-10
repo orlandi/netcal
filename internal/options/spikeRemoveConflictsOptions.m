@@ -2,7 +2,7 @@ classdef spikeRemoveConflictsOptions < baseOptions
 % SPIKEREMOVECONFLICTSOPTIONS Base options for removing spike conflicts
 %   Class containing the options for removing spike conflicts
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also spikeRemoveConflicts, spikeDetectConflicts, baseOptions, optionsWindow
 

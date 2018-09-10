@@ -12,7 +12,7 @@ function msg = logMsgHeader(msg, condition, varargin)
 % EXAMPLE:
 %    logMsgHeader('This is a message', 'start', gcf)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also logMsg
 if(nargin < 3)

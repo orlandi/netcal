@@ -2,7 +2,7 @@ classdef exportSpikesOptions < baseOptions
 % EXPORTSPIKESOPTIONS Options for exporting spikes
 %   Class containing the options for spike exports
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also exportSpikes, baseOptions, optionsWindow
 

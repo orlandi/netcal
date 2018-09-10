@@ -2,7 +2,7 @@ classdef plotStatisticsOptions < plotFigureOptions & baseOptions
 % PLOTSTATISTICSOPTIONS # Main class to plot statistics
 %   Produces a distribution estimation or boxplot for a given spike statistic
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotStatistics, plotFigureOptions, baseOptions, optionsWindow
 

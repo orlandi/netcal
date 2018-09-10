@@ -2,7 +2,7 @@ classdef computePSDavgOptions < baseOptions
 % COMPUTEPSDAVGOPTIONS ### Compute Power Spectrum Density AVerages
 % Computes several average images based on PSD at various frequency cutoffs
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also preprocessExperiment, baseOptions, optionsWindow
 

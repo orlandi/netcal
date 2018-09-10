@@ -1,4 +1,4 @@
-function [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType]  = getPipelineParameters(file)
+function [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType, helpTooltip]  = getPipelineParameters(file)
 % GETPIPELINEPARAMETERS gets the pipeline parameters from a function file
 %
 % USAGE:
@@ -20,10 +20,14 @@ function [functionName, parametersClass, functionHandle, requiredFields, produce
 %
 %   parentGroups - groups to where this function belongs (in the function list)
 %
+%   functionType - what kind of pipeline function (experiment/project/etc)
+%
+%   helpTooltip - help text to display
+%
 % EXAMPLE:
 %   [functionName, parametersClass, functionHandle, requiredFields, producedFields]  = getPipelineParameters(file)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also netcal
 
@@ -38,10 +42,12 @@ while(~feof(fID))
   if(~isempty(line))
     block{end+1} = strtrim(line);
   end
+  % Continue until a break is found
   if(~isempty(line) && ~feof(fID))
     continue;
   end
   
+  % If we are here, a block is finished
   for i = 1:length(block)
     if(any(regexp(block{1},'% PIPELINE*')))
       foundGoodBlock = true;
@@ -79,9 +85,18 @@ requiredFields = [];
 producedFields = [];
 parentGroups = [];
 functionType = [];
-
+helpTooltip = {};
 if(foundGoodBlock)
   [~, functionHandle, ~] = fileparts(file);
+  try
+    helpText = help(file);
+    lBreaks = strfind(helpText,sprintf('\n \n'));
+    h1 = strtrim(strrep(helpText(1:lBreaks), upper(functionHandle), ''));
+    h1(1) = upper(h1(1));
+    h1 = strtrim(strsplit(h1,'\n'));
+    helpTooltip = h1;
+  catch
+  end
   functionType = mode;
   for i = 1:length(block)
     for j = 1:length(strList)

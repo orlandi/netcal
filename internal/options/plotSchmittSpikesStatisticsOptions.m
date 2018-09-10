@@ -3,7 +3,7 @@ classdef plotSchmittSpikesStatisticsOptions < plotStatisticsOptions & baseOption
 % Plots statistics associated to schmitt inference
 %   It can show a single box for each experimetn and group, or merge them together into a joint statistic. Change the groupingOrder for that.
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotSchmittSpikesStatistics, plotStatisticsOptions, baseOptions, optionsWindow
    

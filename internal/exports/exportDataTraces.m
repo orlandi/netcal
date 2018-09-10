@@ -16,7 +16,7 @@ function experiment = exportDataTraces(experiment, varargin)
 % EXAMPLE:
 %    experiment = exportDataTraces(experiment)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: export traces

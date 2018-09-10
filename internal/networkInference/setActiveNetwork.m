@@ -1,6 +1,5 @@
 function experiment = setActiveNetwork(experiment, varargin)
-% SETACTIVENEWTORK Sets some network inference measure as the active network (adjacency matrix)
-% trace across the whole recording
+% SETACTIVENETWORK Sets some network inference measure as the active network (adjacency matrix)
 %
 % USAGE:
 %   experiment = setActiveNetwork(experiment, options)
@@ -20,7 +19,7 @@ function experiment = setActiveNetwork(experiment, varargin)
 % EXAMPLE:
 %   experiment = setActiveNetwork(experiment, setActiveNetworkOptions)
 %
-% Copyright (C) 2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also setActiveNetworkOptions
 

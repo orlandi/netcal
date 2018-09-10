@@ -19,7 +19,7 @@ function hFigW = camControl(hObject, ~, varargin)
 % EXAMPLE:
 %    hFigW = camControl);
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % TODO
 % Hey, if we write consecutive frames to multiple hard drives we do not

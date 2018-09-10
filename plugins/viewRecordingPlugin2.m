@@ -13,7 +13,7 @@ function [hFigW] = viewRecordingPlugin2(hObj, eventHandle)
 % EXAMPLE:
 %    hFigW = viewRecordingPlugin2()
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 %#ok<*AGROW>
 %#ok<*ASGLU>

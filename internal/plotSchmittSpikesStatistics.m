@@ -1,5 +1,5 @@
 function projexp = plotSchmittSpikesStatistics(projexp, varargin)
-% PLOTSCHMITTSPIKESSTATISTICS # Plot schmitt spikes statistics
+% PLOTSCHMITTSPIKESSTATISTICS Plot schmitt spikes statistics
 % Plots statistics associated to schmitt spikes inference
 %
 % USAGE:
@@ -18,11 +18,11 @@ function projexp = plotSchmittSpikesStatistics(projexp, varargin)
 %    experiment = plotSchmittSpikesStatistics(experiment)
 %    project = plotSchmittSpikesStatistics(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot schmitt spike statistics
-% parentGroups: spikes: plots
+% parentGroups: spikes: plots, statistics: spikes
 % optionsClass: plotSchmittSpikesStatisticsOptions
 % requiredFields: schmittSpikesData
 

@@ -21,7 +21,7 @@ function frameBlock = getFrameBlock(experiment, frame, fid, blockSize, varargin)
 %
 % REFERENCES:
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 % See also: loadExperiment, getFrame
 
 if(~isempty(varargin) && ~isempty(varargin{1}))

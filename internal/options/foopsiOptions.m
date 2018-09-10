@@ -2,7 +2,7 @@ classdef foopsiOptions < baseOptions
 % FOOPSI Options for the FOOPSI algorithm
 %   Class containing the parameters to perform spike inference with the foopsi algorithm
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also spikeInferenceFoopsi, baseOptions, optionsWindow
 

@@ -2,7 +2,7 @@ classdef spikeDetectConflictsRateOptions < baseOptions
 % SPIKEDETECTCONFLICTSRATEOPTIONS Base options for detecting spike conflicts based on rates
 %   Class containing the options for detecting spike conflicts based on rates
 %
-%   Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also spikeDetectConflictsRate, baseOptions, optionsWindow
 

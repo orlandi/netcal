@@ -2,7 +2,7 @@ classdef avalancheOptions < baseOptions & avalanchePlotsOptions
 % AVALANCHEOPTIONS options for avalanche analysis
 %   Class containing the parameters for avalanche analysis
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also avalanchePlotsOptions, baseOptions, optionsWindow
 

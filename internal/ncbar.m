@@ -13,7 +13,7 @@ classdef ncbar < handle
 % Modification of the progressbar by Steve Hoelzer
 % https://www.mathworks.com/matlabcentral/fileexchange/6922-progressbar
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 
   % List of variles

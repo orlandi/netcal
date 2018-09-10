@@ -15,7 +15,7 @@ function [members, name, idx] = getExperimentGroupMembers(experiment, name)
 % EXAMPLE:
 %     members = getExperimentGroupMembers(experiment, 'everything')
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 members = [];
 % Fix

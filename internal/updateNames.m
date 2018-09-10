@@ -21,7 +21,7 @@ function experiment = updateNames(experiment, oldName, newName, skipFields)
 % EXAMPLE:
 %     experiment = loadExperiment(filename)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 if(nargin < 4)
   skipFields = [];

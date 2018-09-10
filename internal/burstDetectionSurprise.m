@@ -16,7 +16,7 @@ function experiment = burstDetectionSurprise(experiment, varargin)
 % EXAMPLE:
 %    experiment = burstDetectionSurprise(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % EXPERIMENT PIPELINE
 % name: surprise burst detection

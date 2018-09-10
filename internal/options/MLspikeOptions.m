@@ -2,7 +2,7 @@ classdef MLspikeOptions < baseOptions
 % MLSPIKEOPTIONS Options for the MLspike algorithm
 %   Class containing the parameters to perform spike inference with the MLspike algorithm
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also spikeInferenceFoopsi, baseOptions, optionsWindow
 

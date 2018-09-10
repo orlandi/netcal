@@ -29,7 +29,7 @@ function [orderedTraces, perm, newmat] = identifySimilaritiesInTraces(experiment
 % EXAMPLE:
 %    [traces, perm, distmat] = identifySimilaritiesInTraces(traces)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 params.verbose = true;
 params.similarityMatrixTag = '_traceSimilarity_all';

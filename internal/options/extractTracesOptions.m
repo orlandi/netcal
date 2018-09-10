@@ -2,7 +2,7 @@ classdef extractTracesOptions < baseOptions
 % EXTRACTTRACESOPTIONS Options for extract traces
 %   Class containing the possible ways to extract the traces
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also extractTraces, baseOptions, optionsWIndow
 

@@ -15,7 +15,7 @@ function ROI = autoDetectROI(stillImage, varargin)
 % EXAMPLE:
 %    ROI = autoDetectROI(image, ROIautomaticOptions)
 %
-% Copyright (C) 2015, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 %--------------------------------------------------------------------------
 [params, var] = processFunctionStartup(ROIautomaticOptions, varargin{:});

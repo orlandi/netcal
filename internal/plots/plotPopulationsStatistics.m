@@ -18,11 +18,11 @@ function projexp = plotPopulationsStatistics(projexp, varargin)
 %    experiment = plotPopulationsStatistics(experiment)
 %    project = plotPopulationsStatistics(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot populations statistics
-% parentGroups: groups: plots
+% parentGroups: populations: plots, statistics: populations
 % optionsClass: plotPopulationsStatisticsOptions
 % requiredFields: spikes
 

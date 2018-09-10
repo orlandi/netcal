@@ -19,7 +19,7 @@ function [field, idx] = getExperimentGroupCoordinates(experiment, name)
 %     [field, idx] = getExperimentGroupCoordinates(experiment, 'everything')
 %     members = experiment.traceGroups.(field){idx}
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 field = [];
 idx = [];

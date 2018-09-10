@@ -1,5 +1,5 @@
 function projexp = plotFluorescenceBurstStatistics(projexp, varargin)
-% PLOTBURSTSTATISTICS # Plot fluorescence burst statistics
+% PLOTFLUORESCENCEBURSTSTATISTICS # Plot fluorescence burst statistics
 % Plots statistics associated to fluorescence (global) bursts: amplitude, duration, IBI
 %
 % USAGE:
@@ -18,11 +18,11 @@ function projexp = plotFluorescenceBurstStatistics(projexp, varargin)
 %    experiment = plotFluorescenceBurstStatistics(experiment)
 %    project = plotFluorescenceBurstStatistics(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot burst statistics
-% parentGroups: fluorescence: bursts: plots
+% parentGroups: fluorescence: bursts: plots, statistics: fluorescence
 % optionsClass: plotFluorescenceBurstStatisticsOptions
 % requiredFields: traceBursts
 

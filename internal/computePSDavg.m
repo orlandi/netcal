@@ -16,7 +16,7 @@ function experiment = computePSDavg(experiment, varargin)
 % EXAMPLE:
 %    experiment = computePSDavg(experiment, varargin)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % Based on Simultaneous Denoising, Deconvolution, and Demixing of Calcium Imaging Data http://dx.doi.org/10.1016/j.neuron.2015.11.037
 %

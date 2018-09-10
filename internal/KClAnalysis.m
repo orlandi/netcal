@@ -16,7 +16,7 @@ function experiment = KClAnalysis(experiment, varargin)
 % EXAMPLE:
 %   experiment = KClAnalysis(experiment, KClProtocolOptions)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also KClProtocolOptions
 

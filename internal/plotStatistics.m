@@ -1,7 +1,7 @@
 classdef plotStatistics < handle
 % Main class to plot any one-dimensional statistic. Taking into account projects, experiments, labels, groups, etc
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi
+%   Copyright (C) 2016-2018, Javier G. Orlandi
   
   properties
     figureHandle;

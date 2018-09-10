@@ -2,7 +2,7 @@ classdef plotRasterOptions < plotFigureOptions & baseOptions
 % PLOTRASTEROPTIONS Base options for a raster plot
 %   Class containing the options for a raster plot
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also plotRaster, plotBaseOptions, baseOptions, optionsWindow
 

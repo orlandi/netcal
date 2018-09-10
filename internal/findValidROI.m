@@ -17,7 +17,7 @@ function [idx, ID, success] = findValidROI(varargin)
 % EXAMPLE:
 %    [idx, ID, success] = findValidROI(exp1, exp2, exp3)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
   success = true;
   Nexp = length(varargin);

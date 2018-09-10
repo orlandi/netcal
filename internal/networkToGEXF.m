@@ -17,21 +17,24 @@ function networkToGEXF(network, filename, varargin)
 %    fileName - GEXF output file.
 %
 % INPUT optional arguments ('key' followed by its value): 
-%    'sortEdges' - true/false. True to sort the edges by weight (not
-%    importnat, only here for historical purposes) (default true)
-%    'score' - vector containing an additional attribute called score
-%    associated to each node, e.g. firing rate (default empty).
+%    'score', scoreList  - Always come in pairs. First entry corresponds to
+%    the name of a node property. Second entry is the actual property list
+%    (vector the same length as the number of nodes)
 %
 % OUTPUT arguments:
 %    none
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
+if(~isempty(varargin))
+  scoreNames = cell(length(varargin)/2, 1);
+  scoreVals = cell(length(varargin)/2, 1);
+  for it = 1:(length(varargin)/2)
+    scoreNames{it} = varargin{(it-1)*2+1};
+    scoreVals{it} = varargin{it*2};
+  end
+end
 
-params.score = [];
-params.sortEdges = true;
-params = parse_pv_pairs(params,varargin); 
-
-score = params.score;
+sortEdges = true;
 
 RS = network.RS;
 X = network.X;
@@ -47,20 +50,23 @@ fid = fopen(filename, 'w');
 fprintf(fid, '<?xml version="1.0" encoding="UTF-8"?>\n');
 fprintf(fid, '<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">\n');
 fprintf(fid, '<graph mode="static" defaultedgetype="directed">\n');
-if(~isempty(score))
-    fprintf(fid, '<attributes class="node">\n');
-    fprintf(fid, '  <attribute id="0" title="score" type="float"/>\n');
-    fprintf(fid, '</attributes>\n');
+if(~isempty(scoreNames))
+  fprintf(fid, '<attributes class="node">\n');
+  for it = 1:length(scoreNames)
+    fprintf(fid, '  <attribute id="%d" title="%s" type="float"/>\n', it-1, scoreNames{it});
+  end
+  fprintf(fid, '</attributes>\n');
 end
-
 
 fprintf(fid, '<nodes>\n');
 for i=1:length(RS)
     fprintf(fid, '<node id="%d" label="%d">\n', [i-1 i-1]);
     fprintf(fid, '  <viz:position x="%.5f" y="%.5f" z="0.0"/>\n', [X(i) Y(i)]);
-    if(~isempty(score))
+    if(~isempty(scoreNames))
         fprintf(fid, '  <attvalues>\n');
-        fprintf(fid, '    <attvalue for="0" value="%.5f"/>\n', score(i));
+        for it = 1:length(scoreNames)
+          fprintf(fid, '    <attvalue for="%d" value="%.5f"/>\n', it-1, scoreVals{it}(i));
+        end
         fprintf(fid, '  </attvalues>\n');    
     end
     fprintf(fid, '</node>\n');
@@ -76,12 +82,12 @@ for i=1:length(newConFile)
 end
 
 % Sort the edges by weight
-if(params.sortEdges)
-    newConFile = sortrows(newConFile,-3);
+if(sortEdges)
+  newConFile = sortrows(newConFile,-3);
 end
 
 for i=1:length(newConFile)
-    fprintf(fid, '<edge id="%d" source="%d" target="%d"  weight="%d"/>\n', [i-1 newConFile(i, :)]);
+  fprintf(fid, '<edge id="%d" source="%d" target="%d"  weight="%d"/>\n', [i-1 newConFile(i, :)]);
 end
 
 fprintf(fid, '</edges>\n');

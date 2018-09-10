@@ -2,7 +2,7 @@ classdef ROIresizeOptions < baseOptions
 % ROIRESIZEOPTIONS Options for resizing ROI
 %   All ROI shapes will be transformed to the desired shape and resized to the desired size from their current center of mass
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewROI, baseOptions, optionsWindow
 

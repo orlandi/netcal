@@ -1,7 +1,7 @@
 function curSortingOrder = getCurrentSortingOrder()
 % GETCURRENTSORTINGORDER PENDING
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
   sortMenu = findobj(gcbf, 'Tag', 'sort');
   curSortingOrder = [];
   if(isempty(sortMenu) || ~isvalid(sortMenu))

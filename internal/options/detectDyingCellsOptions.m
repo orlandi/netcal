@@ -2,7 +2,7 @@ classdef detectDyingCellsOptions < baseOptions
 % DETECTDYINGCELLSOPTIONS Options for detecting dying cells based on large and sudden fluroescence changes. The way this works is that it defines a running baseline looking only at X timesteps into the past. At the same time, it looks at future points, if all of them within a given interval are above a limit, an abrupt change has happened and the cell might have died
 %   Class containing the options for dying cells detection
 %
-%   Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also detectDyingCells, baseOptions, optionsWindow
 

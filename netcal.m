@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.3.0';
+currVersion = '8.4.0';
 appFolder = fileparts(mfilename('fullpath'));
 updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
 
@@ -182,9 +182,16 @@ hs.pipelineExperimentPanelInfoParent = uix.Panel('Parent', hs.pipelineExperiment
 set(hs.pipelineExperimentVBox, 'Heights', [-1 125]);
 
 % Now the function list                             
-hs.pipelineFunctionListPanel = uix.Panel('Parent', hs.pipelineExperimentPanelHBox, ...
+hs.pipelineFunctionListVBox = uix.VBox('Parent', hs.pipelineExperimentPanelHBox, 'Visible', 'on');
+hs.pipelineFunctionListPanel = uix.Panel('Parent', hs.pipelineFunctionListVBox, ...
                                'BorderType', 'none', 'FontSize', headerFontSize,...
                                'Title', 'Available functions');
+hs.pipelineFunctionListInfoPanelParent = uix.Panel('Parent', hs.pipelineFunctionListVBox, ...
+                               'BorderType', 'none', 'FontSize', headerFontSize,...
+                               'Title', 'Description');
+hs.pipelineFunctionListInfoPanel = uicontrol('Parent', hs.pipelineFunctionListInfoPanelParent, ...
+                               'style', 'edit', 'max', 5, 'Background', 'w');
+set(hs.pipelineFunctionListVBox, 'Heights', [-1 125]);
 
 % Actual pipeline function panel with all its buttons
 hs.pipelinePanelVBox = uix.VBox('Parent', hs.pipelineExperimentPanelHBox, 'Visible', 'on');
@@ -262,7 +269,17 @@ for it = 1:length(nameList)
   hs.([nameList{it}, nameListBoxTag]).setEditable(false);
 end
 
-% The other 2 editable panels
+% The other editable panels
+curPanel = findjobj(hs.pipelineFunctionListInfoPanel);
+try
+  curPanel.setVerticalScrollBarPolicy(curPanel.java.VERTICAL_SCROLLBAR_AS_NEEDED);
+  curPanel = curPanel.getViewport;
+catch
+  % may possibly already be the viewport, depending on release/platform etc.
+end
+hs.pipelineFunctionListInfoPanelEditBox = handle(curPanel.getView,'CallbackProperties');
+hs.pipelineFunctionListInfoPanelEditBox.setEditable(false);
+logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
 
 % Set initial log messages
 logMessage(hs.infoPanelEditBox, 'No experiment selected');
@@ -1312,12 +1329,19 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
   else
     populationSelection = false;
   end
+  if(~isempty(varargin) && strcmp(varargin{1}, 'project'))
+    passProject = true;
+    varargin = varargin(2:end);
+  else
+    passProject = false;
+  end
   if(~isempty(varargin) && length(varargin) > 1 && strcmp(varargin{2}, 'noChanges'))
     allowOptionsChanges = false;
     varargin = varargin(3:end);
   else
     allowOptionsChanges = true;
   end
+  
   switch experimentSelectionMode
     case 'single'
       if(isempty(project.currentExperiment))
@@ -1326,10 +1350,26 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
       end
       % Load the experiment
       experiment = loadCurrentExperiment(project, 'pbar', 0);
+      if(passProject)
+          proj = project;
+          proj.checkedExperiments = strcmp(project.experiments, experiment.name);
+      end
       if(~isempty(optionsClass))
         % Define the options
-        [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, netcalMainWindow, allowOptionsChanges, false);
+        if(passProject)
+          [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, netcalMainWindow, allowOptionsChanges, false, proj);
+        else
+          [success, optionsClassCurrent] = preloadOptions(experiment, optionsClass, netcalMainWindow, allowOptionsChanges, false);
+        end
         if(success)
+          if(isprop(optionsClassCurrent, 'pipelineMode'))
+            switch optionsClassCurrent.pipelineMode
+              case 'experiment'
+              case 'project'
+                logMsg('"pipelineMode: project" can only be selected on batch mode or pipeline', 'e');
+                return;
+            end
+          end  
           if(populationSelection)
             groupNames = getExperimentGroupsNames(experiment);
             % Select the population
@@ -1345,20 +1385,37 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
             end
             % Just in case
             subset = unique(subset);
-            experiment = analysisFunction(experiment, optionsClassCurrent, 'subset', subset, varargin{:});
+            if(passProject)
+              project = analysisFunction(project, optionsClassCurrent, 'subset', subset, varargin{:});
+            else
+              experiment = analysisFunction(experiment, optionsClassCurrent, 'subset', subset, varargin{:});
+            end
           else
             % Do the analysis
-            experiment = analysisFunction(experiment, optionsClassCurrent, varargin{:});
+            if(passProject)
+              varargin{:}
+              proj = analysisFunction(proj, optionsClassCurrent, varargin{:});
+            else
+              experiment = analysisFunction(experiment, optionsClassCurrent, varargin{:});
+            end
           end
           % Save the options
-          experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
-          project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
-          %setappdata(netcalMainWindow, [class(optionsClassCurrent) 'Current'], optionsClassCurrent);
-          saveExperiment(experiment, 'verbose', false);
+          if(passProject)
+            project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+          else
+            experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+            project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
+            %setappdata(netcalMainWindow, [class(optionsClassCurrent) 'Current'], optionsClassCurrent);
+            saveExperiment(experiment, 'verbose', false);
+          end
         end
       else
-        experiment = analysisFunction(experiment, varargin{:});
-        saveExperiment(experiment, 'verbose', false);
+        if(passProject)
+          proj = analysisFunction(proj, varargin{:});
+        else
+          experiment = analysisFunction(experiment, varargin{:});
+          saveExperiment(experiment, 'verbose', false);
+        end
       end
     case 'multiple'
       checkedExperiments = find(project.checkedExperiments);
@@ -1367,13 +1424,19 @@ function menuExperimentGlobalAnalysis(hObject, ~, analysisFunction, optionsClass
         return;
       end
       runMode = 'experiment';
-      
+      if(passProject)
+        runMode = 'project';
+      end
       % Define the options
       if(~isempty(optionsClass))
         % Load using the first checked exp
         experimentName = project.experiments{checkedExperiments(1)};
         exp = [project.folderFiles experimentName '.exp'];
-        [success, optionsClassCurrent] = preloadOptions(exp, optionsClass, netcalMainWindow, allowOptionsChanges, false);
+        if(passProject)
+          [success, optionsClassCurrent] = preloadOptions(exp, optionsClass, netcalMainWindow, allowOptionsChanges, false, project);
+        else
+          [success, optionsClassCurrent] = preloadOptions(exp, optionsClass, netcalMainWindow, allowOptionsChanges, false);
+        end
         if(~success)
           return;
         end
@@ -2052,149 +2115,149 @@ function menuPreferences(~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuAggregatedPopulationStatistics(~, ~, groupType)
-  project = getappdata(netcalMainWindow, 'project');
-  fullNames = namesWithLabels();
-  if(sum(project.checkedExperiments) == 0)
-    logMsg('No checked experiments found', 'e');
-    return;
-  else
-    checkedExperiments = find(project.checkedExperiments);
-  end
-
-  % Define the options
-  optionsClass = aggregatedOptions;
-  if(~isempty(optionsClass))
-    [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, true, false);
-    if(~success)
-      return;
-    end
-  end
-  aggregatedOptionsCurrent = optionsClassCurrent;
-  
-  % Preload the groups from the first checked experiment and select the appropiate one
-  experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
-  groupNames = getExperimentGroupsNames(experiment);
-  % Select the population
-  [selectedPopulations, success] = listdlg('PromptString', 'Select groups', 'SelectionMode', 'multiple', 'ListString', groupNames);
-  if(~success)
-    return;
-  end
-  selectedPopulations = groupNames(selectedPopulations);
-  Npopulations = length(selectedPopulations);
-  Nexperiments = length(checkedExperiments);
-  % Define required data
-  populationFractions = zeros(length(selectedPopulations), length(checkedExperiments));
-  
-  % Load the data
-  ncbar('Processing experiments');
-  for it = 1:length(checkedExperiments)
-    [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
-    for it2 = 1:length(selectedPopulations)
-      try
-        members = getExperimentGroupMembers(experiment, selectedPopulations{it2});
-      catch ME
-        logMsg(sprintf('There was an error getting group members from %s on experiment %s. Are you sure the group exists? Setting it to 0', selectedPopulations{it2}, experiment.name), 'e');
-        logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-        members = [];
-      end
-      populationFractions(it2, it) = length(members);
-    end
-    if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-      populationFractions(:, it) = populationFractions(:, it)/sum(populationFractions(:, it));
-    end
-    ncbar.update(it/length(checkedExperiments));
-  end
-  ncbar.close();
-  
-  % Now the plot
-  S = 0.05;
-  G = 0.3;
-  
-  hfig = figure;
-  hold on;
-  currentColormap = eval(['@' aggregatedOptionsCurrent.colormap]);
-
-  h = [];
-  
-  switch groupType
-    case 'experiments'
-      W = 1/Npopulations*(1-(Npopulations-1)*S-G);
-      X = (1:Nexperiments) -1/2 + (G+W)/2;
-      cmap = currentColormap(Npopulations);
-      iterator1Length = Npopulations;
-      iterator2Length = Nexperiments;
-      legendStr = strrep(selectedPopulations,'_','\_');
-      xlim([0.5 Nexperiments+0.5]);
-      set(gca, 'XTick', 1:Nexperiments);
-      set(gca, 'XTickLabel', strrep(fullNames(checkedExperiments),'_','\_'));
-      exportRows = project.experiments(checkedExperiments);
-      exportCols = selectedPopulations;
-    case 'populations'
-      W = 1/Nexperiments*(1-(Nexperiments-1)*S-G);
-      X = (1:Npopulations) -1/2 + (G+W)/2;
-      cmap = currentColormap(Nexperiments);
-      iterator1Length = Nexperiments;
-      iterator2Length = Npopulations;
-      populationFractions = populationFractions';
-      legendStr = strrep(fullNames(checkedExperiments),'_','\_');
-      xlim([0.5 Npopulations+0.5]);
-      set(gca, 'XTick', 1:Npopulations);
-      set(gca, 'XTickLabel', strrep(selectedPopulations,'_','\_'));
-      exportRows = selectedPopulations;
-      exportCols = project.experiments(checkedExperiments);
-  end
-  
-  for j = 1:iterator1Length
-      h = [h; bar(X+(S+W)*(j-1), populationFractions(j, :), W)];
-      set(h(j), 'FaceColor', cmap(j, :));
-      if(aggregatedOptionsCurrent.showNumbersAboveBars)
-          for k = 1:iterator2Length
-            if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-               text(X(k)+(S+W)*(j-1), populationFractions(j, k),[num2str(100*populationFractions(j, k),'%0.1f') '%'],...
-                         'HorizontalAlignment','center',...
-                         'VerticalAlignment','bottom', 'FontSize', 12);
-            else
-               text(X(k)+(S+W)*(j-1), populationFractions(j, k),num2str(populationFractions(j, k),'%0.0f'),...
-                         'HorizontalAlignment','center',...
-                         'VerticalAlignment','bottom', 'FontSize', 12);
-            end
-             
-          end
-      end
-  end
-  legend(legendStr);
-  legend('Location', 'NW');
-  
-  if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-    ylim([0 1]);
-  end
-  set(gca, 'XTickLabelRotation', aggregatedOptionsCurrent.xLabelsRotation);
-
-  if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-    yt = get(gca, 'ytick');
-    ytl = strcat(strtrim(cellstr(num2str(yt'*100))), '%');
-    set(gca, 'yticklabel', ytl);
-  else
-    yl = ylim;
-    ylim([yl(1) yl(2)*1.1]);
-  end
-  box on;
-
-  title(['Population statistics - Project : ' project.name]);
-  ui = uimenu(hfig, 'Label', 'Export');
-  uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder 'populationFractionStatisticsExperiment']});
-  
-  uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-      [project.folder 'populationStatistics'], ...
-      populationFractions, ...
-      exportRows, ...
-      project.name,...
-      exportCols});
-    project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-    setappdata(netcalMainWindow, 'project', project);
-  setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-end
+% function menuAggregatedPopulationStatistics(~, ~, groupType)
+%   project = getappdata(netcalMainWindow, 'project');
+%   fullNames = namesWithLabels();
+%   if(sum(project.checkedExperiments) == 0)
+%     logMsg('No checked experiments found', 'e');
+%     return;
+%   else
+%     checkedExperiments = find(project.checkedExperiments);
+%   end
+% 
+%   % Define the options
+%   optionsClass = aggregatedOptions;
+%   if(~isempty(optionsClass))
+%     [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, true, false);
+%     if(~success)
+%       return;
+%     end
+%   end
+%   aggregatedOptionsCurrent = optionsClassCurrent;
+%   
+%   % Preload the groups from the first checked experiment and select the appropiate one
+%   experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
+%   groupNames = getExperimentGroupsNames(experiment);
+%   % Select the population
+%   [selectedPopulations, success] = listdlg('PromptString', 'Select groups', 'SelectionMode', 'multiple', 'ListString', groupNames);
+%   if(~success)
+%     return;
+%   end
+%   selectedPopulations = groupNames(selectedPopulations);
+%   Npopulations = length(selectedPopulations);
+%   Nexperiments = length(checkedExperiments);
+%   % Define required data
+%   populationFractions = zeros(length(selectedPopulations), length(checkedExperiments));
+%   
+%   % Load the data
+%   ncbar('Processing experiments');
+%   for it = 1:length(checkedExperiments)
+%     [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
+%     for it2 = 1:length(selectedPopulations)
+%       try
+%         members = getExperimentGroupMembers(experiment, selectedPopulations{it2});
+%       catch ME
+%         logMsg(sprintf('There was an error getting group members from %s on experiment %s. Are you sure the group exists? Setting it to 0', selectedPopulations{it2}, experiment.name), 'e');
+%         logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+%         members = [];
+%       end
+%       populationFractions(it2, it) = length(members);
+%     end
+%     if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
+%       populationFractions(:, it) = populationFractions(:, it)/sum(populationFractions(:, it));
+%     end
+%     ncbar.update(it/length(checkedExperiments));
+%   end
+%   ncbar.close();
+%   
+%   % Now the plot
+%   S = 0.05;
+%   G = 0.3;
+%   
+%   hfig = figure;
+%   hold on;
+%   currentColormap = eval(['@' aggregatedOptionsCurrent.colormap]);
+% 
+%   h = [];
+%   
+%   switch groupType
+%     case 'experiments'
+%       W = 1/Npopulations*(1-(Npopulations-1)*S-G);
+%       X = (1:Nexperiments) -1/2 + (G+W)/2;
+%       cmap = currentColormap(Npopulations);
+%       iterator1Length = Npopulations;
+%       iterator2Length = Nexperiments;
+%       legendStr = strrep(selectedPopulations,'_','\_');
+%       xlim([0.5 Nexperiments+0.5]);
+%       set(gca, 'XTick', 1:Nexperiments);
+%       set(gca, 'XTickLabel', strrep(fullNames(checkedExperiments),'_','\_'));
+%       exportRows = project.experiments(checkedExperiments);
+%       exportCols = selectedPopulations;
+%     case 'populations'
+%       W = 1/Nexperiments*(1-(Nexperiments-1)*S-G);
+%       X = (1:Npopulations) -1/2 + (G+W)/2;
+%       cmap = currentColormap(Nexperiments);
+%       iterator1Length = Nexperiments;
+%       iterator2Length = Npopulations;
+%       populationFractions = populationFractions';
+%       legendStr = strrep(fullNames(checkedExperiments),'_','\_');
+%       xlim([0.5 Npopulations+0.5]);
+%       set(gca, 'XTick', 1:Npopulations);
+%       set(gca, 'XTickLabel', strrep(selectedPopulations,'_','\_'));
+%       exportRows = selectedPopulations;
+%       exportCols = project.experiments(checkedExperiments);
+%   end
+%   
+%   for j = 1:iterator1Length
+%       h = [h; bar(X+(S+W)*(j-1), populationFractions(j, :), W)];
+%       set(h(j), 'FaceColor', cmap(j, :));
+%       if(aggregatedOptionsCurrent.showNumbersAboveBars)
+%           for k = 1:iterator2Length
+%             if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
+%                text(X(k)+(S+W)*(j-1), populationFractions(j, k),[num2str(100*populationFractions(j, k),'%0.1f') '%'],...
+%                          'HorizontalAlignment','center',...
+%                          'VerticalAlignment','bottom', 'FontSize', 12);
+%             else
+%                text(X(k)+(S+W)*(j-1), populationFractions(j, k),num2str(populationFractions(j, k),'%0.0f'),...
+%                          'HorizontalAlignment','center',...
+%                          'VerticalAlignment','bottom', 'FontSize', 12);
+%             end
+%              
+%           end
+%       end
+%   end
+%   legend(legendStr);
+%   legend('Location', 'NW');
+%   
+%   if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
+%     ylim([0 1]);
+%   end
+%   set(gca, 'XTickLabelRotation', aggregatedOptionsCurrent.xLabelsRotation);
+% 
+%   if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
+%     yt = get(gca, 'ytick');
+%     ytl = strcat(strtrim(cellstr(num2str(yt'*100))), '%');
+%     set(gca, 'yticklabel', ytl);
+%   else
+%     yl = ylim;
+%     ylim([yl(1) yl(2)*1.1]);
+%   end
+%   box on;
+% 
+%   title(['Population statistics - Project : ' project.name]);
+%   ui = uimenu(hfig, 'Label', 'Export');
+%   uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder 'populationFractionStatisticsExperiment']});
+%   
+%   uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
+%       [project.folder 'populationStatistics'], ...
+%       populationFractions, ...
+%       exportRows, ...
+%       project.name,...
+%       exportCols});
+%     project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
+%     setappdata(netcalMainWindow, 'project', project);
+%   setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
+% end
 
 
 %--------------------------------------------------------------------------
@@ -2251,18 +2314,18 @@ function menuAggregatedCompareExperiments(~, ~)
 end
 
 
-%--------------------------------------------------------------------------
-function menuAggregatedPreferences(~, ~, ~)
-  project = getappdata(netcalMainWindow, 'project');
-  [success, aggregatedOptionsCurrent] = preloadOptions([], aggregatedOptions, gcbf, true, false);
-  if(~success)
-    return;
-  end
-  project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-  setappdata(netcalMainWindow, 'project', project);
-  setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-  updateMenu();
-end
+% %--------------------------------------------------------------------------
+% function menuAggregatedPreferences(~, ~, ~)
+%   project = getappdata(netcalMainWindow, 'project');
+%   [success, aggregatedOptionsCurrent] = preloadOptions([], aggregatedOptions, gcbf, true, false);
+%   if(~success)
+%     return;
+%   end
+%   project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
+%   setappdata(netcalMainWindow, 'project', project);
+%   setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
+%   updateMenu();
+% end
 
 %--------------------------------------------------------------------------
 function menuAggregatedPCA(~, ~, ~)
@@ -3684,7 +3747,7 @@ function updateModulesMenu()
     % Disable development modules
     if(~DEVELOPMENT)
       %if(any(strcmp(moduleTag, {'gliaAnalysis', 'networkInference', 'viewGlia'})))
-      if(any(strcmp(moduleTag, {'gliaAnalysis', 'viewGlia', 'networkInferenceTDMI', 'networkInferenceGTE', 'networkInferenceGC'})))
+      if(any(strcmp(moduleTag, {'gliaAnalysis', 'viewGlia', 'networkInferenceTDMI', 'networkInferenceGC'})))
         currentMenu.Enable = 'off';
         if(~strcmp(currentMenu.Label(end), '*'))
           currentMenu.Label = [currentMenu.Label '*'];
@@ -4249,15 +4312,15 @@ function list = pipelineFuctionList()
   end
   list = {};
   for i = 1:length(fileList)
-    [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType]  = getPipelineParameters(fileList(i).name);
+    [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType, helpTooltip]  = getPipelineParameters(fileList(i).name);
     if(isempty(functionName))
       continue;
     end
     try
       if(~isempty(parametersClass))
-        list{end+1} = {functionName, functionHandle, eval(parametersClass), requiredFields, producedFields, parentGroups, functionType};
+        list{end+1} = {functionName, functionHandle, eval(parametersClass), requiredFields, producedFields, parentGroups, functionType, helpTooltip};
       else
-        list{end+1} = {functionName, functionHandle, [], requiredFields, producedFields, parentGroups, functionType};
+        list{end+1} = {functionName, functionHandle, [], requiredFields, producedFields, parentGroups, functionType, helpTooltip};
       end
     catch ME
       try
@@ -4271,7 +4334,7 @@ function list = pipelineFuctionList()
   fileList = rdir([appFolder filesep 'plugins' filesep 'pipeline' filesep, '**', filesep, '*.*'],...
                   'regexp(lower(name), ''(\.m)$'')');
   for i = 1:length(fileList)
-    [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType]  = getPipelineParameters(fileList(i).name);
+    [functionName, parametersClass, functionHandle, requiredFields, producedFields, parentGroups, functionType, helpTooltip]  = getPipelineParameters(fileList(i).name);
     if(isempty(functionName))
       continue;
     end
@@ -4281,9 +4344,9 @@ function list = pipelineFuctionList()
     end
     try
       if(~isempty(parametersClass))
-        list{end+1} = {functionName, functionHandle, eval(parametersClass), requiredFields, producedFields, parentGroups, functionType};
+        list{end+1} = {functionName, functionHandle, eval(parametersClass), requiredFields, producedFields, parentGroups, functionType, helpTooltip};
       else
-        list{end+1} = {functionName, functionHandle, [], requiredFields, producedFields, parentGroups, functionType};
+        list{end+1} = {functionName, functionHandle, [], requiredFields, producedFields, parentGroups, functionType, helpTooltip};
       end
     catch ME
       try
@@ -4365,7 +4428,7 @@ function createPipelineFunctions()
         rr = uiextras.jTree.TreeNode('Name', strtrim(functionList{it}{1}), ...
                                      'Parent', previousParent, ...
                                      'TooltipString', functionList{it}{1}, ...
-                                     'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}, functionList{it}{7}});
+                                     'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}, functionList{it}{7}, functionList{it}{8}});
         pipelineTreeContextMenuRoot = uicontextmenu('Parent', netcalMainWindow);
         uimenu(pipelineTreeContextMenuRoot, 'Label', 'Help', 'Callback', {@pipelineFunctionHelp, functionList{it}{3}});
         set(rr, 'UIContextMenu', pipelineTreeContextMenuRoot);
@@ -4375,6 +4438,8 @@ function createPipelineFunctions()
           case 'experiment'
             colName = 'blue';
           case 'project'
+            colName = 'orange';
+          case 'projANDexp'
             colName = 'orange';
           case 'projexpDebug'
             colName = 'red';
@@ -4392,7 +4457,7 @@ function createPipelineFunctions()
       rr = uiextras.jTree.TreeNode('Name', strtrim(functionList{it}{1}), ...
                                    'Parent', currentTree.Root, ...
                                    'TooltipString', functionList{it}{1}, ...
-                                   'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}});
+                                   'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}, [], functionList{it}{8}});
       pipelineTreeContextMenuRoot = uicontextmenu('Parent', netcalMainWindow);
       uimenu(pipelineTreeContextMenuRoot, 'Label', 'Help', 'Callback', {@pipelineFunctionHelp, functionList{it}{3}});
       set(rr, 'UIContextMenu', pipelineTreeContextMenuRoot);
@@ -4402,6 +4467,8 @@ function createPipelineFunctions()
         case 'experiment'
           colName = 'blue';
         case 'project'
+          colName = 'orange';
+        case 'projANDexp'
           colName = 'orange';
         case 'projexpDebug'
           colName = 'red';
@@ -4421,6 +4488,7 @@ function createPipelineFunctions()
   %currentTree.SelectionType = 'discontiguous';
   currentTree.SelectionType = 'single';
   %currentTree.FontSize = textFontSize;
+  currentTree.SelectionChangeFcn = @selectedMethodAvailableFunction;
   
 
   pipelineTree = CheckboxTreePipeline('Parent',hs.pipelinePanel);
@@ -4561,31 +4629,27 @@ function selectedMethodPipeline(h, e)
   parent = hs.pipelineOptionsPanel;
 
   updateActiveNodeParams(h);
-
+  project = getappdata(netcalMainWindow, 'project');
   if(length(e.Nodes) > 1 || isempty(e.Nodes))
     if(currentTree == 2)
-      optionsWindow([], 'parent', parent, 'parentType', 'secondary');
+      optionsWindow([], 'parent', parent, 'parentType', 'secondary', 'project', project);
     else
-      optionsWindow([], 'parent', parent);
+      optionsWindow([], 'parent', parent, 'project', project);
     end
     activeNode{currentTree} = [];
     return;
   end
 
-  project = getappdata(netcalMainWindow, 'project');
   if(isfield(project, 'checkedExperiments') && sum(project.checkedExperiments) >= 1)
     checkedExperiments = find(project.checkedExperiments);
     experimentName = project.experiments{checkedExperiments(1)};
     experimentFile = [project.folderFiles experimentName '.exp'];
-    optionsWindow(e.Nodes(1).UserData{2}, 'parent', parent, 'experiment', experimentFile);
-  else  
-    optionsWindow(e.Nodes(1).UserData{2}, 'parent', parent);
+    optionsWindow(e.Nodes(1).UserData{2}, 'parent', parent, 'experiment', experimentFile, 'project', project);
+  else
+    optionsWindow(e.Nodes(1).UserData{2}, 'parent', parent, 'project', project);
   end
   
   activeNode{currentTree} = e.Nodes(1).UserData{1};
-
-  %activeNode
-  %e.Nodes(1).UserData{2}
 end
 
 %------------------------------------------------------------------------
@@ -4593,6 +4657,37 @@ function checkedMethodPipeline(h, e)
   % For now don't really need to do anything with checked experiments
 end
 
+%------------------------------------------------------------------------
+function selectedMethodAvailableFunction(h, e)
+  curNode = h.SelectedNodes;
+  if(length(curNode) == 1)
+    curNode = curNode(1);
+    if(isempty(curNode.UserData) || length(curNode.UserData) < 7)
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'clear');
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
+    else
+      %jpan = findjobj(hs.infoPanel);
+      jpan = findjobj(hs.pipelineFunctionListInfoPanel);
+      vp = jpan.getViewport;
+      vpp = vp.getViewPosition;
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'clear');
+      %logMessage(hs.pipelineFunctionListInfoPanelEditBox, sprintf('%s (%s .m)', curNode.Name, curNode.UserData{3}));
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, curNode.Name);
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, sprintf('(%s.m)', curNode.UserData{3}));
+      logMessage(hs.pipelineFunctionListInfoPanelEditBox, '-------');
+      for it = 1:length(curNode.UserData{7})
+        logMessage(hs.pipelineFunctionListInfoPanelEditBox, curNode.UserData{7}{it});
+      end
+      jpan = findjobj(hs.pipelineFunctionListInfoPanel);
+      vp = jpan.getViewport;
+      vp.setViewPosition(vpp);
+      vp.updateUI();
+    end
+  else
+    logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'clear');
+    logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
+  end
+end
 %------------------------------------------------------------------------
 function updateActiveNodeParams(h, selectedNodes)
   
@@ -4807,6 +4902,8 @@ function pipelineRun(~, ~, parallelMode)
           colName = 'blue';
         case 'project'
           colName = 'orange';
+        case 'projANDexp'
+          colName = 'orange';
         case 'projexpDebug'
           colName = 'red';
         case 'experimentDebug'
@@ -4830,6 +4927,8 @@ function pipelineRun(~, ~, parallelMode)
           case 'experiment'
             colName = 'blue';
           case 'project'
+            colName = 'orange';
+          case 'projANDexp'
             colName = 'orange';
           case 'projexpDebug'
             colName = 'red';
@@ -4946,7 +5045,7 @@ function pipelineRun(~, ~, parallelMode)
              end
             end
           end
-        case {'experiment', 'experimentDebug'}
+        case {'experiment', 'experimentDebug', 'projANDexp'}
           for it = 1:length(checkedExperiments)
             experimentIndex = checkedExperiments(it);
             ncbar.setCurrentBar(2);
@@ -4962,7 +5061,11 @@ function pipelineRun(~, ~, parallelMode)
               experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', 3);
               oldExperiment = experiment; % Copy to check for changes
               
-              experiment = feval(analysisFunction, experiment, optarg{:});
+              if(strcmp(modeList{f}, 'projANDexp'))
+                experiment = feval(analysisFunction, experiment, project, optarg{:});
+              else
+                experiment = feval(analysisFunction, experiment, optarg{:});
+              end
               if(~isempty(optionsList{f}))
                 experiment.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
                 project.([class(optionsClassCurrent) 'Current']) = optionsClassCurrent;
@@ -5098,7 +5201,7 @@ function pipelineRun(~, ~, parallelMode)
             logMsg(sprintf('Something went wrong while processing %s on the project', analysisFunction), 'e');
             logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
           end
-        case {'experiment', 'experimentDebug'}
+        case {'experiment', 'experimentDebug', 'projANDexp'}
           % Check if there are options to pass
           if(~isempty(optionsList{f}))
             optionsClassCurrent = optionsList{f};
@@ -5121,7 +5224,12 @@ function pipelineRun(~, ~, parallelMode)
 
             try
               experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', 3);
-              futures(it) = parfeval(analysisFunction, 1, experiment, optarg{:});
+              if(strcmp(modeList{f}, 'projANDexp'))
+                futures(it) = parfeval(analysisFunction, 1, experiment, project, optarg{:});
+              else
+                futures(it) = parfeval(analysisFunction, 1, experiment, optarg{:});
+              end
+              
             catch ME
               numCompleted = numCompleted + 1;
               logMsg(sprintf('Something went wrong while processing %s on %s', analysisFunction, experimentName), 'e');
@@ -5285,22 +5393,6 @@ function savePipeline(~, ~, pipelineFile)
   if(verbose)
     logMsgHeader('Done!', 'finish');
   end
-  
-  
-  % Transpose cell lists if they are column-based before saving
-%   function curStruct = fixNestedFields(curStruct)
-%     fields = fieldnames(curStruct);
-%     for idx = 1:length(fields)
-%      curField = curStruct.(fields{idx});
-%      if isstruct(curField)
-%        curField = fixNestedFields(curField);
-%      elseif(iscell(curField) && size(curField, 1) ~= 1 && size(curField, 2) == 1)
-%          curField = curField';
-%      end
-%      curStruct.(fields{idx}) = curField;
-%     end
-%   end
-
 end
 
 %[functionName, parametersClass, functionHandle, requiredFields, producedFields]
@@ -5478,12 +5570,13 @@ function modules = loadModules()
         {'Percentile', 'preprocessingPercentile', 'preprocessing', {@menuExperimentGlobalAnalysis, @preprocessExperimentPercentile, preprocessExperimentPercentileOptions}, 'avgImg', 'percentileImg'}, ...
         {'Denoising', 'preprocessingDenoising', 'preprocessing', {@menuExperimentGlobalAnalysis, @denoiseRecording, denoiseRecordingOptions}, 'handle', 'denoisedData'}, ...
         {'Power spectrum', 'preprocessingPSD', 'preprocessing', {@menuExperimentGlobalAnalysis, @computePSDavg, computePSDavgOptions}, 'handle', 'avgPSD'}, ...
-      {'ROI detection', 'roiSelection', 'fluorescence', [], 'avgImg', []}, ...
+      {'ROI detection', 'roiSelection', 'fluorescence', [], [], []}, ...
         {'Supervised ROI detection', 'manualROIdetection', 'roiSelection', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI', false, 'single'}, ...
         {'Automatic ROI detection', 'automaticROIdetection', 'roiSelection', {@menuExperimentGlobalAnalysis, @automaticROIdetection, ROIautomaticOptions}, 'avgImg', 'ROI'}, ...
         {'CellSort', 'cellSortBase', 'roiSelection', [], 'denoisedData', 'ROI'}, ...
           {'Automatic ROI detection', 'cellSortROIdetection', 'cellSortBase', {@menuExperimentGlobalAnalysis, @automaticROIdetectionCellSort, ROIautomaticCellSortOptions}, 'denoisedData', 'ROI'}, ...
           {'ROI refinement', 'cellSortROIcleaning', 'cellSortBase', {@menuExperimentGlobalAnalysis, @cleanROIfromCellSort, cleanROIfromCellSortOptions}, 'ROI', 'ROI'}, ...
+        {'Import ROI', 'importROImenu', 'roiSelection', {@menuExperimentGlobalAnalysis, @importROI, importROIoptions, 'project'}, 'handle', 'ROI'}, ...
       {'Extract traces', 'extractTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @extractTraces, extractTracesOptions}, 'ROI', 'rawTraces'}, ...
       {'Smooth traces', 'smoothTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @smoothTraces, smoothTracesOptions}, 'rawTraces', 'traces'}, ...
       {'Similarity', 'similarity', 'fluorescence', {@menuExperimentGlobalAnalysis, @fluorescenceAnalysisSimilarity, similarityOptions}, 'traces', 'similarityOrder'}, ...
@@ -5491,6 +5584,7 @@ function modules = loadModules()
       {'Bursts', 'bursts', 'fluorescence', [], 'rawTraces', []}, ...
         {'Supervised detection', 'manualBursts', 'bursts', {@menuNewGuiWindow, @viewBursts}, 'rawTraces', 'traceBursts', false, 'single'}, ...
         {'Automatic detection', 'automaticBursts', 'bursts', {@menuExperimentGlobalAnalysis, @burstDetection, burstDetectionOptions}, 'rawTraces', 'traceBursts'}, ...
+      {'Export Recording', 'recording', 'fluorescence', {@menuExperimentGlobalAnalysis, @exportRecording, exportMovieOptions}, 'handle', []}, ...
       {'Cut traces', 'cut', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisCutTraces []}, 'rawTraces', [], true}, ...
       {'Rebase time', 'rebase', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisRebaseTime []}, 'rawTraces', []}, ...
     {'Spike inference', 'spikeInference', 'analysis', [], 'rawTraces', []}, ...
@@ -5501,6 +5595,13 @@ function modules = loadModules()
         {'Schmitt', 'spikeInferenceSchmitt', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceSchmitt, schmittOptions}, 'rawTraces', 'spikes'}, ...
         {'Oasis', 'spikeInferenceOasis', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceOasis, oasisOptions}, 'rawTraces', 'spikes'}, ...
         {'MLspike', 'spikeInferenceMLspike', 'spikeInferenceRun', {@menuExperimentGlobalAnalysis, @spikeInferenceMLspike, MLspikeOptions}, 'rawTraces', 'spikes'}, ...
+      {'Bursts', 'spikeBursts', 'spikeInference', [], 'spikes', []}, ...
+        {'Standard', 'spikeBurstsStandard', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionSpikes, burstDetectionSpikesOptions}, 'spikes', 'spikeBursts'}, ...
+        {'ISI_N', 'spikeBurstsISIN', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionISIN, burstDetectionISINoptions}, 'spikes', 'spikeBursts'}, ...
+        {'ISI_N explorer', 'spikeBurstsISINexplorer', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionISINexplorer, burstDetectionISINexplorerOptions}, 'spikes', 'spikeBursts'}, ...
+        {'ISI_N automatic', 'spikeBurstsISINautomatic', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionISINautomatic, burstDetectionISINautomaticOptions}, 'spikes', 'spikeBursts'}, ...
+        {'Surprise', 'spikeBurstsSurprise', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionSurprise, burstDetectionSurpriseOptions}, 'spikes', 'spikeBursts'}, ...
+        {'X (recommended)', 'spikeBurstsX', 'spikeBursts', {@menuExperimentGlobalAnalysis, @burstDetectionX, burstDetectionXoptions}, 'spikes', 'spikeBursts'}, ...
       {'Features', 'spikeInferenceFeatures', 'spikeInference', {@menuExperimentGlobalAnalysis, @getSpikesFeatures, spikeFeaturesOptions}, 'spikes', 'spikeFeatures'}, ...
       {'q-Complexity-entropy', 'qcecSpikes', 'spikeInference', {@menuExperimentGlobalAnalysis, @measureTracesQCEC, measureTracesQCECoptions}, 'spikes', 'qCEC'}};
     if(DEVELOPMENT)
@@ -5523,7 +5624,9 @@ function modules = loadModules()
       {'Branching ratio', 'avalancheBranchingRatio', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisBranchingRatio, avalancheOptions, 'population'}, 'spikes', []}, ...
       {'Exponents', 'avalancheExponents', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisExponents, avalancheOptions}, 'avalanches', []}, ...
     {'Network inference', 'networkInference', 'analysis', [], 'traces', []}, ...
-      {'Partial correlation', 'networkInferenceXcorr', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceXcorr, networkInferenceXcorrOptions}, 'spikes', []}};
+      {'Partial correlation (incompatible)', 'networkInferenceXcorr', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceXcorr, networkInferenceXcorrOptions}, 'spikes', []}, ...
+      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTEfast, networkInferenceGTEfastOptions}, 'GTE', 'spikes', []}, ...
+      {'Set active network', 'networkInferenceActive', 'networkInference', {@menuExperimentGlobalAnalysis, @setActiveNetwork, setActiveNetworkOptions}, 'RS', [], true}};
 %     if(DEVELOPMENT)
 %       modules = {modules{:}, ...
 %       {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceTMDI, networkInferenceTMDIOptions}, 'spikes', []}, ...
@@ -5532,7 +5635,6 @@ function modules = loadModules()
 %     else
       modules = {modules{:}, ...
       {'Time Delayed Mutual Information', 'networkInferenceTDMI', 'networkInference', [], 'spikes', []}, ...
-      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', [], 'spikes', []}, ...
       {'Granger Causality', 'networkInferenceGC', 'networkInference', [], 'spikes', []}};
 %     end
   modules = {modules{:}, ...
@@ -5550,19 +5652,29 @@ function modules = loadModules()
   {'View', 'viewMultiple', [], [], [], [], false, 'multiple'}, ...
     {'Traces', 'viewMultipleTraces', 'viewMultiple', {@menuNewProjectGuiWindow, @viewTracesMultiExperiment}, 'rawTraces', []}, ...
   ...
-  {'Statistics', 'statistics', [], [], [], [], false, 'multiple'}, ...
-    {'Populations', 'populationStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotPopulationsStatistics, plotPopulationsStatisticsOptions}, 'ROI', []}, ...
-    {'Bursts', 'burstStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatistics, plotFluorescenceBurstStatisticsOptions}, 'traceBursts', []}, ...
-    {'Spikes', 'spikeStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikes', []}, ...
-    {'Treatments', 'statisticsTreatments', 'statistics', [], [], [], false, 'multiple'}, ...
+  {'Statistics', 'statistics', [], [], [], [], false}, ...
+    {'Populations', 'populationStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotPopulationsStatistics, plotPopulationsStatisticsOptions}, 'ROI', [], false, 'multiple'}, ...
+    {'Fluorescence', 'fluorescenceStatistics', 'statistics', [], 'rawTraces', []}, ...
+      {'Bursts', 'fluorescenceBurstStatistics', 'fluorescenceStatistics', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatistics, plotFluorescenceBurstStatisticsOptions}, 'traceBursts', []}, ...
+      {'KCl Statistics', 'KClStatistics', 'fluorescenceStatistics', {@menuExperimentGlobalAnalysis, @plotKClStatistics, plotKClStatisticsOptions}, 'KClProtocolData', []}, ...
+    {'Spikes', 'spikeStatisticsBase', 'statistics', [], 'spikes', []}, ...
+      {'Spike features', 'spikeStatistics', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikeFeatures', []}, ...
+      {'Spike features (schmitt)', 'spikeStatisticsSchmitt', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSchmittSpikesStatistics, plotSchmittSpikesStatisticsOptions}, 'schmittSpikesData', []}, ...
+      {'Bursts', 'spikeBurstStatistics', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikeBursts', []}, ...
+    {'Network', 'networkStatisticsBase', 'statistics', [], 'RS', []}, ...
+      {'Network statistics', 'networkStatistics', 'networkStatisticsBase', {@menuExperimentGlobalAnalysis, @plotNetworkStatistics, plotNetworkStatisticsOptions}, 'RS', []}, ...
+    {'Misc', 'miscStatisticsBase', 'statistics', [], [], []}, ...
+      {'q-Complexity-entropy', 'wCECstatistics', 'miscStatisticsBase', {@menuExperimentGlobalAnalysis, @plotPermutationEntropyComplexity, plotPermutationEntropyComplexityOptions}, 'qCEC', []}, ...
+    {'Treatments', 'statisticsTreatments', 'statistics', [], [], [], true, 'multiple'}, ...
       {'Populations', 'populationStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotPopulationsStatisticsTreatment, plotPopulationsStatisticsTreatmentOptions}, 'ROI', []}, ...
-      {'Bursts', 'burstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatisticsTreatment, plotFluorescenceBurstStatisticsTreatmentOptions}, 'traceBursts', []}, ...
-      {'Spikes', 'spikeStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikeStatisticsTreatment, plotSpikeStatisticsTreatmentOptions}, 'spikes', []}, ...
-    {'Principal Component Analysis', 'PCA', 'statistics', [], [], []}, ...
+      {'Fluorescence bursts', 'burstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatisticsTreatment, plotFluorescenceBurstStatisticsTreatmentOptions}, 'traceBursts', []}, ...
+      {'Spike features', 'spikeStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikeStatisticsTreatment, plotSpikeStatisticsTreatmentOptions}, 'spikeFeatures', []}, ...
+      {'Spike bursts', 'spikeBurstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikesBurstStatisticsTreatment, plotSpikesBurstStatisticsTreatmentOptions}, 'spikeBursts', []}, ...
+      {'Network statistics', 'networkStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotNetworkStatisticsTreatment, plotNetworkStatisticsTreatmentOptions}, 'RS', []}, ...
+    {'Principal Component Analysis', 'PCA', 'statistics', [], [], [], true}, ...
       {'Spikes features', 'spikesPCA', 'PCA', @menuAggregatedPCA, [], []}, ...
-      {'Stimulation protocols', 'stimulationPCA', 'PCA', @menuAggregatedStimulationPCA, [], []}, ...
+      {'KCl', 'stimulationPCA', 'PCA', @menuAggregatedStimulationPCA, [], []}, ...
     {'Populations changes between treatments', 'compareExperiments', 'statistics', @menuAggregatedCompareExperiments, [], []}, ...
-    {'Preferences', 'statisticsPreferences', 'statistics', {@menuAggregatedPreferences, 'mean'}, [], [], true}, ...
   ...
   {'Pipeline', 'pipeline', [], [], [], [], false, 'pipeline'}, ...
     {'Check experiment pipeline', 'checkPipeline', 'pipeline', @pipelineCheck, [], []}, ...
@@ -5573,5 +5685,7 @@ function modules = loadModules()
     {'Save', 'savePipeline', 'pipeline', @savePipeline, [], []}, ...
   };
 end
+%{'Preferences', 'statisticsPreferences', 'statistics', {@menuAggregatedPreferences, 'mean'}, [], [], true}, ...
+
 
 end

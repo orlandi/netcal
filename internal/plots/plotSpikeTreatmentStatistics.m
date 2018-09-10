@@ -16,7 +16,7 @@ function project = plotSpikeTreatmentStatistics(projexp, varargin)
 % EXAMPLE:
 %    project = plotSpikeTreatmentStatisticsOptions(project)
 %
-% Copyright (C) 2016-2017, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 % PIPELINE
 % name: plot inter-experiment spike statistics

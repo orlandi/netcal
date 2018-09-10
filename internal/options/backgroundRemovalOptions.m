@@ -2,7 +2,7 @@ classdef backgroundRemovalOptions < baseOptions
 % BACKGROUNDREMOVALOPTIONS Options for Background Removal
 %   Class containing the possible options for background removal.
 %
-%   Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+%   Copyright (C) 2016, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 %   See also viewROI, baseOptions, optionsWindow
 

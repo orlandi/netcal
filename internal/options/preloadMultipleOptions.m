@@ -30,7 +30,7 @@ function [success, curOptions] = preloadMultipleOptions(experiment, optionsClass
 % EXAMPLE:
 %    [success, curOptions] = preloadOptions(experiment, learningOptions, gcbf, true, false, 'Select parameters')
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also baseOptions, optionsWindow
 

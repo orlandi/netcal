@@ -15,7 +15,7 @@ function [hFigW, experiment] = burstAnalysis(experiment)
 % EXAMPLE:
 %    hFigW = burstAnalysis(gui, experiment)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 %
 % See also loadExperiment
 
@@ -722,7 +722,7 @@ function burstStatistics(~, ~, ~)
     h = ax(1);
     axes(h);
     nbins = sshist(bursts.IBI);
-    if(nbins < 6)
+    if(isempty(nbins) || nbins < 6)
       nbins = 10;
     end
     [a, b] = hist(h, bursts.IBI, nbins);
@@ -741,10 +741,11 @@ function burstStatistics(~, ~, ~)
     h = ax(2);
     axes(h);
     nbins = sshist(bursts.duration);
-    if(nbins < 6)
+    if(isempty(nbins) || nbins < 6)
       nbins = 10;
     end
     [a, b] = hist(h, bursts.duration, nbins);
+    
     bar(b, a/trapz(b, a), 'FaceColor', [1 1 1]*0.8, 'EdgeColor', [1 1 1]*0.6);
     hold on;
     [f, xi] = ksdensity(bursts.duration);
@@ -760,7 +761,7 @@ function burstStatistics(~, ~, ~)
     h = ax(3);
     axes(h);
     nbins = sshist(bursts.amplitude);
-    if(nbins < 6)
+    if(isempty(nbins) || nbins < 6)
       nbins = 10;
     end
     [a, b] = hist(h, bursts.amplitude, nbins);

@@ -18,7 +18,7 @@ function pos = setFigurePosition(parent, varargin)
 % EXAMPLE:
 %   pos = setFigurePosition(parent, 'width', 300, 'height', 200)
 %
-% Copyright (C) 2016, Javier G. Orlandi <javierorlandi@javierorlandi.com>
+% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
 
 params.width = 500;
 params.height = 500;
