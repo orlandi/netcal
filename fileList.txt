@@ -130,7 +130,7 @@ internal/processFunctionStartup.m 411
 internal/qlog.m 120
 internal/quiverFlow.m 1397
 internal/recalculateROIstats.m 1380
-internal/recordingDriftCorrection.m 7182
+internal/recordingDriftCorrection.m 7654
 internal/redoSelectionMenu.m 324
 internal/refineROI.m 4508
 internal/refineROIthreshold.m 3068
@@ -354,6 +354,7 @@ external/autoArrangeFigures.m 2886
 external/burstSurprise.m 4784
 external/calcCircle.m 2740
 external/ciplot.m 1050
+external/dftregistration.m 9497
 external/findjobj.m 169591
 external/findpeaks2.m 38133
 external/fix_xticklabels.m 3857
@@ -2138,5 +2139,5 @@ plugins/viewRecordingPlugin.m 53450
 plugins/viewRecordingPlugin2.m 27686
 plugins/pipeline/plotAverageTrace.m 3443
 LICENSE.md 1089
-README.md 53840
-netcal.m 238356
+README.md 53950
+netcal.m 238562

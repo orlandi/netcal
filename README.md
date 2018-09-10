@@ -27,6 +27,11 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.4.1] - 2018-09-10
+
+### Modified
+- Added warnings in case the drift correction returns an unquared mask
+
 ## [8.4.0] - 2018-09-08
 
 ### ATTENTION

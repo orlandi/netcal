@@ -140,6 +140,15 @@ experiment.affineSubPixelResolution = params.subPixelResolution;
 experiment.validR = validR;
 experiment.validC = validC;
 experiment.validPixels = find(mask);
+[mr,mc] = find(mask);
+if(~isempty(setdiff(unique(mr), validR)) || ~isempty(setdiff(unique(mc), validC)))
+  logMsg('Mask and valid pixels mismatch. There migth be something wrong with the associated area. I''ll try and fix it', 'w');
+  experiment.validR = unique(mr);
+  experiment.validC = unique(mc);
+  experiment.affineWidth = length(experiment.validC);
+  experiment.affineHeight = length(experiment.validR);
+end
+figure;imagesc(mask);colormap gray;title('Valid Region');
 
 maxDisp = 0;
 for it = 1:length(selFrames)
