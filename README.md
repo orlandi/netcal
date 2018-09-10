@@ -39,6 +39,7 @@ Hey! Due to some mailing issues, if you ever sent me a question/request to javie
 - Pipeline mode: help window to provide a small description of any selected available function
 - Most pipeline statistics functions are now available on the single and batch mode menus
 - Several pipeline functions added to the main menus
+- Option to export inferred networks to GEPHI (with any additional network statistic you might think of)
 
 ### Fixed
 - Error when ROI with and without weights coexisted

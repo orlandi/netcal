@@ -32,6 +32,9 @@ if(~isempty(varargin))
     scoreNames{it} = varargin{(it-1)*2+1};
     scoreVals{it} = varargin{it*2};
   end
+else
+  scoreNames = {};
+  scoreVals = {};
 end
 
 sortEdges = true;
@@ -65,7 +68,11 @@ for i=1:length(RS)
     if(~isempty(scoreNames))
         fprintf(fid, '  <attvalues>\n');
         for it = 1:length(scoreNames)
-          fprintf(fid, '    <attvalue for="%d" value="%.5f"/>\n', it-1, scoreVals{it}(i));
+          if(isnan(scoreVals{it}(i)))
+            fprintf(fid, '    <attvalue for="%d" value=""/>\n', it-1);
+          else
+            fprintf(fid, '    <attvalue for="%d" value="%.5f"/>\n', it-1, scoreVals{it}(i));
+          end
         end
         fprintf(fid, '  </attvalues>\n');    
     end
