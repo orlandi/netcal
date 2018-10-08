@@ -34,6 +34,7 @@ pipeline.json
 external/toolbox_image/toolbox/.svn/*
 external/toolbox_image/tests/*
 *.svn*
+*.ai
 external/exportfig/.ignore/
 *.gexf
 .DS_Store
