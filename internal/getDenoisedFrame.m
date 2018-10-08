@@ -35,9 +35,16 @@ img = zeros(experiment.height, experiment.width);
 validBlocks = find(denoisedBlocksPerFrame(:,1) <= frame & denoisedBlocksPerFrame(:,2) >= frame);
 %valid = find(activeComponents);
 for it = 1:length(validBlocks)
+  
   currentBlock = validBlocks(it);
   % Temporary hack to fix block size on previous denoised data
-  denoisedData(currentBlock).blockSize = denoisedData(currentBlock).blockCoordinatesLast-denoisedData(currentBlock).blockCoordinates+1; 
+  % Compatibility reasons
+  if(isfield(denoisedData(currentBlock), 'blockCoordinatesLast'))
+    denoisedData(currentBlock).blockSize = denoisedData(currentBlock).blockCoordinatesLast-denoisedData(currentBlock).blockCoordinates+1;
+  else
+    %denoisedData(currentBlock).blockSize = denoisedData(currentBlock).blockCoordinatesLast-denoisedData(currentBlock).blockCoordinates+1;
+  end
+  
   %validCoeff = experiment.denoisedData(currentBlock).coeff;
   %validCoeff(:, ~activeComponents) = 0;
   if(isfield(denoisedData(currentBlock), 'frameList'))
@@ -75,3 +82,9 @@ end
 if(denoisedData(1).needsTranspose)
   img = img';
 end
+
+% Lil hack
+if(strcmpi(experiment.extension, '.his'))
+  img = img';
+end
+

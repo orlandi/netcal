@@ -36,9 +36,17 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.4.1';
+currVersion = '8.5.0';
 appFolder = fileparts(mfilename('fullpath'));
-updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
+if(~DEVELOPMENT)
+  updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
+else
+  try
+    updaterSource = strrep(fileread(fullfile(pwd, 'development', 'updatePath.txt')), sprintf('\n'), '');
+  catch
+    updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
+  end
+end
 
 recentProjectsList = {};
 activeNode = cell(2, 1);
@@ -264,9 +272,11 @@ for it = 1:length(nameList)
   catch
     % may possibly already be the viewport, depending on release/platform etc.
   end
-
-  hs.([nameList{it}, nameListBoxTag]) = handle(jScrollPanel.getView,'CallbackProperties');
-  hs.([nameList{it}, nameListBoxTag]).setEditable(false);
+  try
+    hs.([nameList{it}, nameListBoxTag]) = handle(jScrollPanel.getView,'CallbackProperties');
+    hs.([nameList{it}, nameListBoxTag]).setEditable(false);
+  catch
+  end
 end
 
 % The other editable panels
@@ -277,8 +287,11 @@ try
 catch
   % may possibly already be the viewport, depending on release/platform etc.
 end
-hs.pipelineFunctionListInfoPanelEditBox = handle(curPanel.getView,'CallbackProperties');
-hs.pipelineFunctionListInfoPanelEditBox.setEditable(false);
+try
+  hs.pipelineFunctionListInfoPanelEditBox = handle(curPanel.getView,'CallbackProperties');
+  hs.pipelineFunctionListInfoPanelEditBox.setEditable(false);
+catch
+end
 logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
 
 % Set initial log messages

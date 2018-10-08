@@ -61,10 +61,21 @@ for it1 = 1:length(experiment.denoisedData)
     sp = mean(curBlock.score(:, selComponent)*curBlock.coeff(:, selComponent)', 1);
     spFilters(:, :, selComponent) = reshape(sp, curBlock.blockSize(1), curBlock.blockSize(2));
   end
-
-  [ica_segments, ~, ~] = CellsortSegmentation(permute(spFilters, [3 1 2]), smwidth, thresh, arealims, plotting);
+  %figure;imagesc(sum(spFilters, 3));
+%   % Lil hack
+%    if(strcmpi(experiment.extension, '.his'))
+%      spFilters = permute(spFilters, [2 1 3]);
+%    end
+   
+  [ica_segments, ~, ~] = CellsortSegmentation(permute(spFilters, [3 2 1]), smwidth, thresh, arealims, plotting); % Need to pass the transpose so it's filter x X x Y
+  % Tranpose again to get the right orientation
+  ica_segments = permute(ica_segments, [1 3 2]);
+%   if(strcmpi(experiment.extension, '.his'))
+%     ica_segments = permute(ica_segments, [1 3 2]);
+%   end
   newROI = cell(size(ica_segments, 1), 1);
   invalidROI = [];
+  %fullmask = zeros(curBlock.blockSize(1), curBlock.blockSize(2));
   for it2 = 1:size(ica_segments, 1)
     if(params.eliminateBorderROIs)
       submask = squeeze(ica_segments(it2, :, :));
@@ -95,9 +106,15 @@ for it1 = 1:length(experiment.denoisedData)
     mask = zeros(size(curBlock.mask));
     mask(curBlock.blockCoordinates(1)+(1:curBlock.blockSize(1))-1,...
          curBlock.blockCoordinates(2)+(1:curBlock.blockSize(2))-1) = squeeze(ica_segments(it2, :, :));
+    %fullmask = fullmask + mask;
+    %fullmask = fullmask + squeeze(ica_segments(it2, :, :));
     if(curBlock.needsTranspose)
       mask = mask';
     end
+    % FFS
+%     if(strcmpi(experiment.extension, '.his'))
+%       mask = mask';
+%     end
     newROI{it2}.pixels = find(mask);
     newROI{it2}.weights = mask(newROI{it2}.pixels);
     [y, x] = ind2sub(size(mask), newROI{it2}.pixels);
@@ -106,6 +123,7 @@ for it1 = 1:length(experiment.denoisedData)
     ncbar.setCurrentBarName(sprintf('Autodetecting ROI - block (%d/%d) - IC (%d/%d)', it1, length(experiment.denoisedData), it2, size(ica_segments, 1)));
     ncbar.update(it2/size(ica_segments, 1));
   end
+  %figure;imagesc(fullmask);
   if(params.eliminateBorderROIs)
     if(~isempty(invalidROI))
       newROI(invalidROI) = [];

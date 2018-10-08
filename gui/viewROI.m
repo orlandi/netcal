@@ -49,6 +49,10 @@ hs.mainWindow = figure('Visible','off',...
                        'CloseRequestFcn', @closeCallback,...
                        'WindowButtonMotionFcn', @ROIWindowButtonMotionFcn);
 hFigW = hs.mainWindow;
+% 2018b compatibility
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 900, 'height', 700);
 if(~isempty(gui))
   setappdata(hFigW, 'logHandle', getappdata(gcbf, 'logHandle'));
@@ -170,6 +174,10 @@ uix.Empty('Parent', hs.mainWindowGrid);
 % Frames panel
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
 hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
+% 2018b compatibility
+if(~verLessThan('MATLAB','9.5'))
+  hs.mainWindowFramesAxes.Toolbar.Visible = 'off';
+end
 currFrame = avgImg;
 
 %currFrame(currFrame > me+10*se) = NaN;
@@ -199,7 +207,11 @@ uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 % Colorbar panel
 hs.mainWindowColorbarPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
+% 2018b compatibility
 hs.mainWindowColorbarAxes = axes('Parent', hs.mainWindowColorbarPanel);
+if(~verLessThan('MATLAB','9.5'))
+  hs.mainWindowColorbarAxes.Toolbar.Visible = 'off';
+end
 hs.mainWindowColorbarAxes.Visible = 'off';
 hs.mainWindowColorbar = colorbar('location','East');
 set(hs.mainWindowColorbarAxes, 'LooseInset', [0,0,0,0]);

@@ -55,6 +55,9 @@ hs.mainWindow = figure('Visible','off',...
                        'MenuBar', 'none',...
                        'Name', ['Spike explorer: ' experiment.name]);
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 800, 'height', 600);
 setappdata(hFigW, 'currentOrder', currentOrder);
 setappdata(hFigW, 'experiment', experiment);

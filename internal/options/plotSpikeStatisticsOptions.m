@@ -20,6 +20,7 @@ classdef plotSpikeStatisticsOptions < plotStatisticsOptions & baseOptions
         if(isfield(exp, 'spikeFeaturesNames'))
           obj.statistic = exp.spikeFeaturesNames(:)';
           obj.statistic{end+1} = 'Global Firing Rate (Hz)';
+          obj.statistic{end+1} = 'Interburst Firing Rate (Hz)';
           obj.statistic{end+1} = 'Total non-spiking';
           obj.statistic{end+1} = 'Fraction non-spiking';
           obj.statistic{end+1} = 'ask';

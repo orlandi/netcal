@@ -39,6 +39,12 @@ params.training = false;
 params.trainingBlock = [];
 % Parse them
 params = parse_pv_pairs(params, var);
+if(isempty(params.pbar))
+  ncbar.close();
+  ncbar('Running denoiser', '');
+  pause(1);
+  params.pbar = 2;
+end
 params = barStartup(params, 'Running denoiser');
 %--------------------------------------------------------------------------
 
@@ -137,10 +143,18 @@ for t = 1:(length(frameBlockList)-1)
     end
     if(params.training)
       ncbar.unsetAutomaticBar();
-      ncbar.setBarTitle('Getting frames');
-    elseif(params.pbar > 0)
+      ncbar.setCurrentBarName('Getting frames');
+    elseif(params.pbar == 2)
+      ncbar.setCurrentBar(1);
+      ncbar.setCurrentBarName(sprintf('Running denoiser. Temporal Block (%d/%d)', t,(length(frameBlockList)-1)));
       ncbar.unsetAutomaticBar();
-      ncbar.setBarTitle('Running denoiser. Getting frames');
+      ncbar.setCurrentBar(2);
+      ncbar.setCurrentBarName('Getting frames');
+      ncbar.unsetAutomaticBar();
+      ncbar.update(0);
+    else
+      ncbar.unsetAutomaticBar();
+      ncbar.setCurrentBarName(sprintf('Running denoiser. Getting frames (%d/%d)', t,(length(frameBlockList)-1)));
     end
     if(params.frameBlockAverageSize > 1)
       frameList = firstFrame:params.frameBlockAverageSize:lastFrame;
@@ -148,6 +162,9 @@ for t = 1:(length(frameBlockList)-1)
       for it1 = 1:Nframes
         %[blockIt2 blockIt1 it1]
         frameData(:, :, it1) = mean(getFrameBlock(experiment, frameList(it1), fID, params.frameBlockAverageSize),3);
+        if(params.pbar > 0)
+          ncbar.update(it1/Nframes);
+        end
       end
     else
       for it1 = 1:Nframes
@@ -171,13 +188,21 @@ for t = 1:(length(frameBlockList)-1)
         closeVideoStream(fID);
     end
     % For some reason getting the data like this needs another tranpose maybe only in HIS?
-    if(strcmpi(experiment.extension, '.his'))
-      frameData = permute(frameData, [2 1 3]);
-    end
+%     if(strcmpi(experiment.extension, '.his'))
+%       frameData = permute(frameData, [2 1 3]);
+%     end
   end
   for blockIt2 = 1:length(blockColCoordinates)
     for blockIt1 = 1:length(blockRowCoordinates)
       currentBlock = currentBlock + 1;
+      if(params.pbar == 2)
+        ncbar.setCurrentBar(1);
+        ncbar.setCurrentBarName(sprintf('Running denoiser. Temporal Block (%d/%d) Absolute Block (%d/%d)', t,(length(frameBlockList)-1), currentBlock, Nblocks));
+        %dt = 1/(length(frameBlockList)-1);
+        ncbar.update(currentBlock/Nblocks);
+        ncbar.setCurrentBar(2);
+        ncbar.unsetAutomaticBar();
+      end
       if(params.training)
         if(currentBlock ~= params.trainingBlock)
           continue;
@@ -209,9 +234,16 @@ for t = 1:(length(frameBlockList)-1)
           [fID, experiment] = openVideoStream(experiment);
         end
         if(params.training)
-          ncbar.setBarTitle('Getting frames');
+          ncbar.setCurrentBarName('Getting frames');
+        elseif(params.pbar == 2)
+          ncbar.setCurrentBar(1);
+          ncbar.setCurrentBarName(sprintf('Running denoiser. Temporal Block (%d/%d) Absolute Block (%d/%d)', t,length(frameBlockList)-1, currentBlock, Nblocks));
+          ncbar.update(currentBlock/Nblocks);
+          ncbar.setCurrentBar(2);
+          ncbar.setCurrentBarName('Getting frames');
+          ncbar.unsetAutomaticBar();
         elseif(params.pbar > 0)
-          ncbar.setBarTitle('Running denoiser. Getting frames');
+          ncbar.setCurrentBarName('Running denoiser. Getting frames');
         end
         if(params.frameBlockAverageSize > 1)
           frameList = firstFrame:params.frameBlockAverageSize:lastFrame;
@@ -220,6 +252,7 @@ for t = 1:(length(frameBlockList)-1)
           for it1 = 1:Nframes
             %[blockIt2 blockIt1 it1]
             fullData(:, it1) = mean(getFrameBlock(experiment, frameList(it1), fID, params.frameBlockAverageSize, valid),2);
+            
             if(params.pbar > 0)
               ncbar.update(it1/Nframes);
             end
@@ -249,8 +282,8 @@ for t = 1:(length(frameBlockList)-1)
                   tmpData = fread(fID, [height width], 'double'); % Sequential read
                   fullData(:, it1) = tmpData(valid);
                 otherwise
-                  t = getFrame(experiment, firstFrame+it1-1, fID, valid);
-                  fullData(:, it1) = t(:);
+                  rr = getFrame(experiment, firstFrame+it1-1, fID, valid);
+                  fullData(:, it1) = rr(:);
               end
             end
             if(params.training)
@@ -267,16 +300,23 @@ for t = 1:(length(frameBlockList)-1)
             closeVideoStream(fID);
         end
       else
+        size(frameData)
+        [idx1Last idx2Last height width]
+        size(valid)
         fullData = frameData(idx1:idx1Last, idx2:idx2Last, :);
+        size(fullData)
         fullData = reshape(fullData, [length(valid), size(fullData, 3)]);
       end
       % Now the PCA
       fullData = permute(fullData, [2 1]); % We want frames as observations, pixels as variables
       if(params.training)
-        ncbar.setBarTitle('Computing PCA');
+        ncbar.setCurrentBarName('Computing PCA');
+        ncbar.setAutomaticBar();
+      elseif(params.pbar == 2)
+        ncbar.setCurrentBarName('Computing PCA');
         ncbar.setAutomaticBar();
       elseif(params.pbar > 0)
-        ncbar.setBarTitle('Running denoiser. Computing PCA');
+        ncbar.setCurrentBarName('Running denoiser. Computing PCA');
         ncbar.setAutomaticBar();
       end
       % Turn Nans into 0s
@@ -325,8 +365,10 @@ for t = 1:(length(frameBlockList)-1)
 
       if(params.training)
         ncbar.setCurrentBarName('Computing ICA');
+      elseif(params.pbar == 2)
+        ncbar.setCurrentBarName('Computing ICA');
       elseif(params.pbar > 0)
-        ncbar.setBarTitle('Running denoiser. Computing ICA');
+        ncbar.setCurrentBarName('Running denoiser. Computing ICA');
       end
       [icasig, A, W] = fastica(score*coeff', 'numofic', Ncom, 'verbose', 'on', 'pbar', params.pbar);
 
@@ -390,7 +432,16 @@ for t = 1:(length(frameBlockList)-1)
 
       denoisedData = [denoisedData, denoisedBlock];
       if(~params.training && params.pbar > 0)
-        ncbar.update(currentBlock/Nblocks);
+        if(params.pbar == 2)
+          ncbar.setCurrentBar(1);
+          ncbar.unsetAutomaticBar();
+          ncbar.setCurrentBar(1);
+          ncbar.setCurrentBarName(sprintf('Running denoiser. Temporal Block (%d/%d) Absolute Block (%d/%d)', t,length(frameBlockList)-1, currentBlock, Nblocks));
+          ncbar.update(currentBlock/Nblocks);
+          ncbar.setCurrentBar(2);
+        else
+          ncbar.update(currentBlock/Nblocks);
+        end
       end
     end
   end

@@ -73,6 +73,9 @@ hs.mainWindow = figure('Visible','off',...
                        'Name', ['Pattern viewer: ' experiment.name],...
                        'CloseRequestFcn', @closeCallback);
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 1000, 'height', 600);
 if(~isempty(gui))
   setappdata(hFigW, 'logHandle', getappdata(gcbf, 'logHandle'));

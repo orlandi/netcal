@@ -128,6 +128,10 @@ hs.mainWindow = figure('Visible', initVisible,...
                        'SizeChangedFcn', @mainWindowResize,...
                        'CloseRequestFcn', @closeCallback);
 hFigW = hs.mainWindow;
+% 2018b compatibility
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 800, 'height', 600);
 if(~isempty(gui))
   setappdata(hFigW, 'logHandle', getappdata(gcbf, 'logHandle'));
@@ -300,6 +304,10 @@ uix.Empty('Parent', hs.mainWindowGrid);
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 0, 'BorderType', 'none');
 axesContainer = uicontainer('Parent', hs.mainWindowFramesPanel);
 hs.mainWindowFramesAxes = axes('Parent', axesContainer);
+% 2018b compatibility
+if(~verLessThan('MATLAB','9.5'))
+  hs.mainWindowFramesAxes.Toolbar.Visible = 'off';
+end
 
 hs.mainWindowFramesAxes2 = [];
 
@@ -367,15 +375,22 @@ uix.Empty('Parent', hs.mainWindowGrid);
 %%% COLUMN START
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 uix.Empty('Parent', hs.mainWindowGrid);
+
 % Colorbar panel
 hs.mainWindowColorbarPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
-hs.mainWindowColorbarAxes = axes('Parent', hs.mainWindowColorbarPanel);
+hs.cbarContainer = uicontainer('Parent', hs.mainWindowColorbarPanel);
+% 2018b compatibility
+hs.mainWindowColorbarAxes = axes('Parent', hs.cbarContainer);
+if(~verLessThan('MATLAB','9.5'))
+  hs.mainWindowColorbarAxes.Toolbar.Visible = 'off';
+end
 hs.mainWindowColorbarAxes.Visible = 'off';
 hs.mainWindowColorbar = colorbar('location','East');
 set(hs.mainWindowColorbarAxes, 'LooseInset', [0,0,0,0]);
 caxis(hs.mainWindowColorbarAxes, [1 5]);
 set(hs.mainWindowColorbar, 'XTick', [1 5]);
-
+hs.mainWindowColorbarAxes.Visible = 'off';
+%set(hs.mainWindowColorbar, 'XTickLabel', []);
 
 % Below colorbar panel
 uix.Empty('Parent', hs.mainWindowGrid);
@@ -530,43 +545,44 @@ function mainWindowResize(~, ~)
   catch
     return;
   end
-    pos = hs.mainWindowFramesAxes.Parent.Position;
-    hs.mainWindowColorbar.Position(2) = pos(2);
-    hs.mainWindowColorbar.Position(4) = pos(4);
-    hs.mainWindowFramesSlider.Position(1) = pos(1);
-    hs.mainWindowFramesSlider.Position(3) = pos(3);
-    switch currentMovie
-    case {1, 2, 4}
-      realRatio = size(currFrame,2)/size(currFrame,1);
-      case {3, 5}
-        realRatio = size(currFrame,2)/size(currFrame,1)*2;
+  pos = hs.mainWindowFramesAxes.Parent.Position;
+  hs.cbarContainer.Position(2) = pos(2);
+  hs.cbarContainer.Position(4) = pos(4);
+  hs.mainWindowColorbar.Position = [0 0 1 1];
+  hs.mainWindowFramesSlider.Position(1) = pos(1);
+  hs.mainWindowFramesSlider.Position(3) = pos(3);
+  switch currentMovie
+  case {1, 2, 4}
+    realRatio = size(currFrame,2)/size(currFrame,1);
+    case {3, 5}
+      realRatio = size(currFrame,2)/size(currFrame,1)*2;
+  end
+  curPos = hs.mainWindowFramesAxes.Parent.Position;
+  if(realSize)
+    curSize = get(hs.mainWindow, 'Position');
+    if(isempty(curSize))
+      return;
     end
-    curPos = hs.mainWindowFramesAxes.Parent.Position;
-    if(realSize)
-      curSize = get(hs.mainWindow, 'Position');
-      if(isempty(curSize))
-        return;
-      end
-      curPos(3) = size(currFrame,2);
-      curPos(4) = size(currFrame,1);
+    curPos(3) = size(currFrame,2);
+    curPos(4) = size(currFrame,1);
 
-      minWidth = curPos(3) + 25 + 200 + minGridBorder*2;
-      minHeight = curPos(4) + 100 + minGridBorder*2+100;
+    minWidth = curPos(3) + 25 + 200 + minGridBorder*2;
+    minHeight = curPos(4) + 100 + minGridBorder*2+100;
 
-      newPos = setFigurePosition([], 'width', minWidth, 'height', minHeight);
-      if(newPos(3) ~= minWidth || newPos(4) ~= minHeight)
-        logMsg('Screen not big enough for real size');
-        realSize = false;
-      end
-      hs.mainWindow.Position = newPos;
+    newPos = setFigurePosition([], 'width', minWidth, 'height', minHeight);
+    if(newPos(3) ~= minWidth || newPos(4) ~= minHeight)
+      logMsg('Screen not big enough for real size');
+      realSize = false;
     end
-    curRatio = curPos(3)/curPos(4);
-    if(curRatio > realRatio)
-      set(hs.mainWindowGrid, 'Widths', [-1 max(curPos(4)*realRatio, 400) 25 200 -1], 'Heights', [-1 max(curPos(4),400) 100 -1]);
-    else
-      set(hs.mainWindowGrid, 'Widths', [-1 max(curPos(3), 400) 25 200 -1], 'Heights', [-1 max(curPos(3)/realRatio,400) 100 -1]);
-    end
-    updateImage();
+    hs.mainWindow.Position = newPos;
+  end
+  curRatio = curPos(3)/curPos(4);
+  if(curRatio > realRatio)
+    set(hs.mainWindowGrid, 'Widths', [-1 max(curPos(4)*realRatio, 400) 25 200 -1], 'Heights', [-1 max(curPos(4),400) 100 -1]);
+  else
+    set(hs.mainWindowGrid, 'Widths', [-1 max(curPos(3), 400) 25 200 -1], 'Heights', [-1 max(curPos(3)/realRatio,400) 100 -1]);
+  end
+  updateImage();
 end
 
 %--------------------------------------------------------------------------
@@ -1345,7 +1361,10 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
         delete(hs.mainWindowFramesAxes2)
       end
       hs.mainWindowFramesAxes = axes('Parent', axesContainer);
-      
+      if(~verLessThan('MATLAB','9.5'))
+        aa = gca;
+        aa.Toolbar.Visible = 'off';
+      end
       imData = imagesc(currFrame, 'HitTest', 'off');
       axis equal tight;
       if(currentMovie == 1)
@@ -1372,6 +1391,10 @@ function menuPreferencesSelectedMovie(hObject, ~, selected)
         delete(hs.mainWindowFramesAxes2)
       end
       hs.mainWindowFramesAxes = axes('Parent', axesContainer);
+      if(~verLessThan('MATLAB','9.5'))
+        aa = gca;
+        aa.Toolbar.Visible = 'off';
+      end
       
       imData = imagesc(currFrame, 'HitTest', 'off');
       axis equal tight;

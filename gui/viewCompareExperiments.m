@@ -44,6 +44,9 @@ hs.mainWindow = figure('Visible','off',...
                        'MenuBar', 'none',...
                        'Name', ['Compare experiments: ' project.name]);
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 800, 'height', 700);
 resizeHandle = hFigW.ResizeFcn;
 setappdata(hFigW, 'ResizeHandle', resizeHandle);

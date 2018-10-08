@@ -70,6 +70,9 @@ hs.mainWindow = figure('Visible','off',...
                        'WindowButtonMotionFcn', @buttonMotion, ...
                        'Name', ['Burst analysis: ' experiment.name]);
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 1000, 'height', 650);
 setappdata(hFigW, 'experiment', experiment);
 
@@ -129,6 +132,10 @@ uix.Empty('Parent', hs.mainWindowGrid);
 % Plot --------------------------------------------------------------------
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
 hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFramesPanel));
+if(~verLessThan('MATLAB','9.5'))
+  aa = gca;
+  aa.Toolbar.Visible = 'off';
+end
 set(hs.mainWindowFramesAxes, 'ButtonDownFcn', @rightClick);
 
 

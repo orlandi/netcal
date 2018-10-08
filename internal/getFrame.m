@@ -46,7 +46,7 @@ if(isfield(experiment, 'affineTransformEnabled'))
 end
 
 if(nargin == 2)
-  fid = openVideoStream(experiment);
+  [fid, experiment] = openVideoStream(experiment);
 end
 if(isnumeric(fid) && fid == -1)
   img = zeros(experiment.height, experiment.width, strrep(experiment.pixelType,'*',''));
@@ -169,11 +169,13 @@ if(isfield(experiment, 'affineTransformEnabled') && experiment.affineTransformEn
       img = img(experiment.validPixels);
       img = reshape(img, [experiment.affineHeight experiment.affineWidth]);
   end
+end
+
+if(isfield(experiment, 'affineTransformEnabled'))
   if(originalPartial)
     img = img(originalPixelList);
   end
 end
-
 % Now the background correction
 if(isfield(experiment, 'backgroundImageCorrection') && experiment.backgroundImageCorrection)
 %   if(experiment.backgroundImageMultiplier == 1)

@@ -63,6 +63,9 @@ hs.mainWindow = figure('Visible','off',...
                        'SizeChangedFcn', @mainWindowResize,...
                        'CloseRequestFcn', @closeCallback);
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 1000, 'height', 600);
 if(~isempty(gui))
   setappdata(hFigW, 'logHandle', getappdata(gcbf, 'logHandle'));
@@ -127,6 +130,10 @@ uix.Empty('Parent', hs.mainWindowGrid);
 % Frames panel
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
 hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
+if(~verLessThan('MATLAB','9.5'))
+  aa = gca;
+  aa.Toolbar.Visible = 'off';
+end
 currFrame = avgImg;
 
 imData = imagesc(currFrame);
@@ -147,7 +154,12 @@ uix.Empty('Parent', hs.mainWindowGrid);
 uix.Empty('Parent', hs.mainWindowGrid);
 % Colorbar panel
 hs.mainWindowColorbarPanel = uix.Panel('Parent', hs.mainWindowGrid, 'Padding', 5, 'BorderType', 'none');
-hs.mainWindowColorbarAxes = axes('Parent', hs.mainWindowColorbarPanel);
+hs.cbarContainer = uicontainer('Parent', hs.mainWindowColorbarPanel);
+hs.mainWindowColorbarAxes = axes('Parent', hs.cbarContainer);
+if(~verLessThan('MATLAB','9.5'))
+  aa = gca;
+  aa.Toolbar.Visible = 'off';
+end
 hs.mainWindowColorbarAxes.Visible = 'off';
 hs.mainWindowColorbar = colorbar('location','East');
 set(hs.mainWindowColorbarAxes, 'LooseInset', [0,0,0,0]);
@@ -281,8 +293,9 @@ function mainWindowResize(~, ~)
     set(hs.mainWindowGrid, 'Widths', [minGridBorder 200 -1 25 200 minGridBorder], ...
         'Heights', [minGridBorder -1 minGridBorder]);
     pos = plotboxpos(hs.mainWindowFramesAxes);
-    hs.mainWindowColorbar.Position(2) = pos(2);
-    hs.mainWindowColorbar.Position(4) = pos(4);
+    hs.cbarContainer.Position(2) = pos(2);
+    hs.cbarContainer.Position(4) = pos(4);
+    hs.mainWindowColorbar.Position = [0 0 1 1];
     hs.mainWindowFramesSlider.Position(1) = pos(1);
     hs.mainWindowFramesSlider.Position(3) = pos(3);
     realRatio = size(currFrame,2)/size(currFrame,1);
@@ -486,6 +499,10 @@ function statsNearestNeighbor(~, ~)
   % Now the plot
   hfig = figure;
   ax = axes('Parent',hfig);
+  if(~verLessThan('MATLAB','9.5'))
+    aa = gca;
+    aa.Toolbar.Visible = 'off';
+  end
   currentColormap = eval(['@' groupsStatisticsOptionsCurrent.colormap]);
   cmap = currentColormap(Npopulations+1);
   cmap = cmap(2:end, :);

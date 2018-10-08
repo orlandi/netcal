@@ -54,9 +54,9 @@ if(strcmpi(tmpStat, 'ask') || strcmpi(tmpStat, 'all'))
     varargin{1}.statistic = statList{selection(it)};
     obj = plotStatistics;
     if(it == 1)
-      obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'multiStatistic', 'init', 'loadFields', {'spikes', 'spikeFeaturesNames', 'spikeFeatures'});
+      obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'multiStatistic', 'init', 'loadFields', {'spikes', 'spikeFeaturesNames', 'spikeFeatures', 'spikeBursts', 't', 'rawT'});
     else
-      obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'multiStatistic', 'present', 'plotDataFull', plotDataFull{it}, 'loadFields', {'spikes', 'spikeFeaturesNames', 'spikeFeatures'});
+      obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'multiStatistic', 'present', 'plotDataFull', plotDataFull{it}, 'loadFields', {'spikes', 'spikeFeaturesNames', 'spikeFeatures', 'spikeBursts', 't', 'rawT'});
     end
     if(obj.getData(@getData, projexp, statList(selection)))
       if(it == 1)
@@ -69,7 +69,7 @@ if(strcmpi(tmpStat, 'ask') || strcmpi(tmpStat, 'all'))
   end
 else
   obj = plotStatistics;
-  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikes','spikeFeaturesNames', 'spikeFeatures'});
+  obj.init(projexp, defClass, defTitle, varargin{:}, 'gui', gcbf, 'loadFields', {'spikes','spikeFeaturesNames', 'spikeFeatures', 'spikeBursts', 't', 'rawT'});
   if(obj.getData(@getData, projexp, obj.params.statistic))
     obj.createFigure();
   end
@@ -93,6 +93,28 @@ end
           data = sum(cellfun(@(x)isempty(x)||all(isnan(x)),experiment.spikes(members)));
         case 'Fraction non-spiking'
           data = sum(cellfun(@(x)isempty(x)||all(isnan(x)),experiment.spikes(members)))/length(members);
+        case 'Interburst Firing Rate (Hz)'
+          bursts = getExperimentGroupBursts(experiment, groupName, 'spikes');
+          try
+            validT = experiment.t(end)-experiment.t(1);
+          catch
+            validT = experiment.rawT(end)-experiment.rawT(1);
+          end
+          if(~isempty(bursts.start))
+            data = zeros(size(members));
+            for it2 = 1:length(members)
+              curSpikes = experiment.spikes{members(it2)};
+              invalidSpikes = [];
+
+                for it3 = 1:length(bursts.start)
+                  invalidSpikes = [invalidSpikes, find(curSpikes >= bursts.start(it3) & curSpikes <= bursts.start(it3)+bursts.duration(it3))];
+                end
+                curSpikes(invalidSpikes) = [];
+                data(it2) = length(curSpikes)/(validT-sum(bursts.duration));
+            end
+          else
+            data = nan(size(members));
+          end
         otherwise
         if(~isempty(members))
           selectedStatistic = strcmp(experiment.spikeFeaturesNames, stat{it_stat});

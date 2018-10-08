@@ -27,6 +27,40 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 # Change Log
 
+## [8.6.0] - 2018-10-08
+
+### Added
+- Tutorials / Documentation section
+- Ability to change the default average image (useful for ROI detection)
+- ROI detection using a contour image
+
+## [8.5.0] - 2018-09-29
+
+### Added
+- Working on full compatibility with MATLAB R2018b
+
+## [8.4.5] - 2018-09-27
+
+### Attention
+If you are upgradint to MATLAB R2018b make sure to update the GUI Layout Toolbox too! (Version 2.3.2 minimum)
+
+### Added
+- Support for MATLAB R201b (experimental)
+
+### Fixed
+- Findjobj required an update tow ork wiht r2018b
+- Spatial kernel on CellSort ROI detection was only being applied on the second dimension
+
+## [8.4.4] - 2018-09-26
+
+### Fixed
+- Leftover errors on the denoiser when using too large blocks
+
+## [8.4.3] - 2018-09-26
+
+### Modified
+- Small changes to the denoiser output
+
 ## [8.4.1] - 2018-09-10
 
 ### Modified

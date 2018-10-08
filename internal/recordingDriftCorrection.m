@@ -70,7 +70,7 @@ tList = zeros(3, 3, length(selFrames));
 %optimizer.InitialRadius = optimizer.InitialRadius/3.5;
 optimizer.InitialRadius = optimizer.InitialRadius;
 
-fID = openVideoStream(experiment);
+[fID, experiment] = openVideoStream(experiment);
 
 % Let's get the first frame
 tmpFrame = zeros(experiment.height, experiment.width, frameAvg);

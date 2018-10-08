@@ -86,6 +86,7 @@ rectangleEnd = [];
 rectangleH = [];
 movieLineH = [];
 buttonDown = false;
+axDragEnabled = false;
 
 selectedTraces = [];
 selectedT = [];
@@ -129,8 +130,10 @@ hs.mainWindow = figure('Visible','off',...
                        'WindowScrollWheelFcn', @wheelFcn, ...
                        'KeyPressFcn', @KeyPress, ...
                        'Name', ['Trace explorer: ' experiment.name]);
-
 hFigW = hs.mainWindow;
+if(~verLessThan('MATLAB','9.5'))
+  addToolbarExplorationButtons(hFigW);
+end
 hFigW.Position = setFigurePosition(gui, 'width', 1000, 'height', 650);
 setappdata(hFigW, 'experiment', experiment);
 
@@ -357,6 +360,11 @@ hs.mainWindowPlotsHBox = uix.HBox('Parent', hs.mainWindowGrid);
 hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowPlotsHBox, 'Padding', 5, 'BorderType', 'none');
 %hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
 hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFramesPanel));
+if(~verLessThan('MATLAB','9.5'))
+  aa = gca;
+  aa.Toolbar.Visible = 'off';
+end
+%axdrag();
 if(isfield(experiment, 'virtual'))
   hs.mainWindowFramesAxes.Color = 'r';
 end
@@ -1056,6 +1064,10 @@ function KClPlot(~, ~, type)
   superBox = uix.VBox('Parent', hs.protocolWindow);
   figPanel = uix.Panel('Parent', superBox, 'Padding', 5, 'BorderType', 'none');
   h = axes('Parent', uicontainer('Parent', figPanel));
+  if(~verLessThan('MATLAB','9.5'))
+    aa = gca;
+    aa.Toolbar.Visible = 'off';
+  end
 
   set(superBox, 'Heights', [-1], 'Padding', 0, 'Spacing', 0);
 
@@ -2644,6 +2656,10 @@ function viewPositionsOnScreen(~, ~, ~)
   superBox = uix.VBox('Parent', hs.onScreenSelectionWindow);
   figPanel = uix.Panel('Parent', superBox, 'Padding', 5, 'BorderType', 'none');
   h = axes('Parent', uicontainer('Parent', figPanel));
+  if(~verLessThan('MATLAB','9.5'))
+    aa = gca;
+    aa.Toolbar.Visible = 'off';
+  end
   lowerPanel = uix.Panel('Parent', superBox, 'Padding', 5, 'BorderType', 'none');
   lowerPanelSlider  = uicontrol('Style', 'slider', 'Parent', lowerPanel,...
                                      'Min', 0, 'Max', 1, 'Value', 0.5, ...
@@ -2755,6 +2771,10 @@ function viewPositionsOnScreenMovie(~, ~)
   superBox = uix.VBox('Parent', hs.onScreenSelectionMovieWindow);
   figPanel = uix.Panel('Parent', superBox, 'Padding', 5, 'BorderType', 'none');
   h = axes('Parent', uicontainer('Parent', figPanel));
+  if(~verLessThan('MATLAB','9.5'))
+    aa = gca;
+    aa.Toolbar.Visible = 'off';
+  end
   lowerPanel = uix.Panel('Parent', superBox, 'Padding', 5, 'BorderType', 'none');
   lowerPanelSlider  = uicontrol('Style', 'slider', 'Parent', lowerPanel,...
                                      'Min', 0, 'Max', 1, 'Value', 0.5, ...
@@ -3438,9 +3458,13 @@ function updateImage(varargin)
     hs.mainWindowFramesPanel = uix.Panel('Parent', hs.mainWindowPlotsHBox, 'Padding', 0, 'BorderType', 'none');
     %hs.mainWindowFramesAxes = axes('Parent', hs.mainWindowFramesPanel);
     hs.mainWindowFramesAxes = axes('Parent', uicontainer('Parent', hs.mainWindowFramesPanel));
+    if(~verLessThan('MATLAB','9.5'))
+      aa = gca;
+      aa.Toolbar.Visible = 'off';
+    end
     if(isfield(experiment, 'virtual'))
-  hs.mainWindowFramesAxes.Color = 'r';
-end
+      hs.mainWindowFramesAxes.Color = 'r';
+    end
   end
   
   hs.mainWindowFramesAxes.Units = 'normalized';
@@ -3873,8 +3897,54 @@ function cleanMenu(h)
   set(b,'Visible','Off');
   b = findall(a, 'ToolTipString', 'Show Plot Tools and Dock Figure');
   set(b,'Visible','Off');
+  
+  t = findall(a, 'Type', 'uitoolbar');
+  t = t(1);
+  %%% PDF ICON
+  [img,map] = imread(fullfile(matlabroot,...
+                    'toolbox','matlab','icons','pdficon.gif'));
+  icon = ind2rgb(img,map);
+  p = uipushtool(t,'TooltipString','Export Figure',...
+                    'ClickedCallback',...
+                    @exportTraces);
+  p.CData = icon;
+  %%% AXES ICON
+  [img,map] = imread(fullfile(matlabroot,...
+                    'toolbox','matlab','icons','unknownicon.gif'));
+  icon = ind2rgb(img,map);
+  p = uipushtool(t,'TooltipString','Export Figure',...
+                    'ClickedCallback',...
+                    @toggleAxDrag);
+  p.CData = icon;
+
 end
 
+%--------------------------------------------------------------------------
+function toggleAxDrag(~, ~)
+  if(axDragEnabled)
+    axdrag('disable');
+    axDragEnabled = false;
+    hs.mainWindow.WindowButtonUpFcn = @rightClickUp;
+    hs.mainWindow.WindowButtonMotionFcn = @buttonMotion;
+    hs.mainWindow.WindowScrollWheelFcn = @wheelFcn;
+    hs.mainWindow.KeyPressFcn = @KeyPress;
+  
+%     cla(hs.mainWindowFramesAxes,'reset');
+%     hs.mainWindowFramesAxes.Units = 'normalized';
+%     hs.mainWindowFramesAxes.OuterPosition = [0 0 1 1];
+%     set(hs.mainWindow,'CurrentAxes', hs.mainWindowFramesAxes)
+%     hs.mainWindowFramesAxes.ButtonDownFcn = @rightClick;
+%     xlabel(hs.mainWindowFramesAxes, 'time (s)');
+%     ylabel(hs.mainWindowFramesAxes, 'Fluorescence (a.u.)');
+%     box(hs.mainWindowFramesAxes, 'on');
+%     hold(hs.mainWindowFramesAxes, 'on');
+  else
+    axdrag('initialize');
+    axDragEnabled = true;
+  end
+end
+
+%--------------------------------------------------------------------------
 function fullNames = namesWithLabels(varargin)
     % Varargin 1: selection (if 0, everything)
     if(length(varargin) >= 1)
