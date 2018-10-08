@@ -1,0 +1,6 @@
+[submodule "external/CellSort"]
+	path = external/CellSort
+	url = https://github.com/orlandi/CellSort
+[submodule "external/CaImAn-MATLAB"]
+	path = external/CaImAn-MATLAB
+	url = https://github.com/orlandi/CaImAn-MATLAB

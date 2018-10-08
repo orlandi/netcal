@@ -1,0 +1,40 @@
+# Production #
+#############
+production/*
+netcalCurrent.zip
+tex/*
+internal/hacks/*
+tmp/*
+*.mat
+*sublime*
+development/*
+external/cvx
+/*.m
+!netcal.m
+
+# Tmp files #
+#############
+*.swp
+*.asv
+*.pdf
+*.m~
+*.tif
+untitled*
+.ipynb*
+*.ipynb
+
+# Configuration files #
+#######################
+netcal.opt
+netcal.json
+pipeline.json
+
+# Other #
+########
+external/toolbox_image/toolbox/.svn/*
+external/toolbox_image/tests/*
+*.svn*
+*.ai
+external/exportfig/.ignore/
+*.gexf
+.DS_Store

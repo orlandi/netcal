@@ -1,0 +1,162 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>fn_savefig</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="help_fn_savefig.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>fn_savefig</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Source</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>fn_savig([hobj][,fname][,options...])
+im = fn_savig([hobj][,options...])</pre><h2>Description<a name="2"></a></h2><pre>Save an image of one or several figure(s). Large number of options
+are available.
+If function is called with no argument, or only with hf, an interface is
+displayed that lets user choose the saving options.
+If an output is requested, this forces 'capture' method and no file is
+saved.</pre><pre>Input:
+- hobj        vector of figure handles [default: current figure], or axes
+              handle ('capture' method only)
+- fname       char array or cell array - file name(s) [default: prompt
+              user]
+              if 'show', show captured image in new figure instead (of
+              saving); if 'clipboard', copies to clipboard instead
+- 'askname' or 'autoname'     prompt or do not prompt user for figure
+              name, but build an automatic name, inside folder
+              fn_cd('capture') [default]
+- format      'png', 'bmp', 'jpg', 'svg', 'eps', 'ps' or 'fig', or a cell
+              array with several formats [default: inferred from file
+              name, or 'png' if file name has no extension]
+- 'capture' or 'savefig'  capture method: 'capture' [default unless a
+              vector format is requested] uses Matlab function
+              getframe to capture an image which is saved to a file
+              (i.e. the image will be strictly identical to what is seen
+              on screen); 'savefig' uses Matlab function saveas to save
+              (i.e. display will be changed according to some figure
+              properties such as 'PaperPosition', see also parameter
+              'scaling' below)
+- 'subframe'  user select a sub-part of the figure to save ('capture'
+              method only)
+- rectangle   a 4-element vector defining the sub-part of the figure to
+              save ('capture' method only)
+- 'content'   cut image to remove white sides ('capture' method only)
+- scaling     a scalar that defines by how much to scale the figure
+              compared to screen display ('savefig' method only)
+- 'append', 'append+pdf' or 'ps2pdf'  append to file (ps file only) and
+              make pdf if specified ('ps2pdf' does not save the figure,
+              but only convert existing ps file to pdf)</pre><pre>See also: fn_saveimg</pre><h2>Source<a name="3"></a></h2><p>Thomas Deneux</p><p>Copyright 2003-2017</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% fn_savefig
+
+%% Syntax
+%  fn_savig([hobj][,fname][,options...])
+%  im = fn_savig([hobj][,options...])
+
+%% Description
+%  Save an image of one or several figure(s). Large number of options
+%  are available. 
+%  If function is called with no argument, or only with hf, an interface is
+%  displayed that lets user choose the saving options.
+%  If an output is requested, this forces 'capture' method and no file is
+%  saved.
+%  
+%  Input:
+%  - hobj        vector of figure handles [default: current figure], or axes
+%                handle ('capture' method only)
+%  - fname       char array or cell array - file name(s) [default: prompt
+%                user]
+%                if 'show', show captured image in new figure instead (of
+%                saving); if 'clipboard', copies to clipboard instead
+%  - 'askname' or 'autoname'     prompt or do not prompt user for figure
+%                name, but build an automatic name, inside folder
+%                fn_cd('capture') [default]
+%  - format      'png', 'bmp', 'jpg', 'svg', 'eps', 'ps' or 'fig', or a cell
+%                array with several formats [default: inferred from file
+%                name, or 'png' if file name has no extension]
+%  - 'capture' or 'savefig'  capture method: 'capture' [default unless a
+%                vector format is requested] uses Matlab function 
+%                getframe to capture an image which is saved to a file
+%                (i.e. the image will be strictly identical to what is seen
+%                on screen); 'savefig' uses Matlab function saveas to save
+%                (i.e. display will be changed according to some figure
+%                properties such as 'PaperPosition', see also parameter
+%                'scaling' below)
+%  - 'subframe'  user select a sub-part of the figure to save ('capture'
+%                method only)
+%  - rectangle   a 4-element vector defining the sub-part of the figure to
+%                save ('capture' method only)
+%  - 'content'   cut image to remove white sides ('capture' method only)
+%  - scaling     a scalar that defines by how much to scale the figure
+%                compared to screen display ('savefig' method only)
+%  - 'append', 'append+pdf' or 'ps2pdf'  append to file (ps file only) and
+%                make pdf if specified ('ps2pdf' does not save the figure,
+%                but only convert existing ps file to pdf)
+%  
+%  See also: fn_saveimg
+
+%% Source
+% Thomas Deneux
+%
+% Copyright 2003-2017
+%
+
+##### SOURCE END #####
+--></body></html>
