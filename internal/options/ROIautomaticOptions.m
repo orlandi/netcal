@@ -7,8 +7,19 @@ classdef ROIautomaticOptions < baseOptions
 %   See also viewROI, baseOptions, optionsWindow
 
   properties
-    % Prefered automatic ROI detection method
-    automaticType = {'threshold', 'quick_dev', 'splitThreshold', 'thresholdSmall'};
+    % Prefered automatic ROI detection method:
+    % - threshold: Based on a simple threshold detection (set the threshold
+    % with sizeAutomaticThreshold)
+    % - quick_dev: uses a bunch of morphological operations and looks for
+    % circular bodies with a characteristic size (use sizeAutomaticCellSize
+    % to change the size)
+    % - splitThreshold: combintaion of threshold and quick_dev
+    % - thresholdSmall: same as threshold but allows for much smaller
+    % objects
+    % - binaryContour: only looks for connected components on the active
+    % image (only useful if it has already been generated with another
+    % software)
+    automaticType = {'threshold', 'quick_dev', 'splitThreshold', 'thresholdSmall', 'binaryContour'};
 
     % Typical cell size (in pixels, only applicable to quick_dev and splitThreshold). The actual instruction is  to delete any objects with less pixels than max(9, (sizeAutomaticCellSize/2-1)^2);
     sizeAutomaticCellSize = 13;

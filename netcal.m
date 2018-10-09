@@ -36,7 +36,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.5.0';
+currVersion = '8.6.0';
 appFolder = fileparts(mfilename('fullpath'));
 if(~DEVELOPMENT)
   updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
@@ -333,6 +333,7 @@ if(needsUpdating)
     return;
 end
 pluginChecker();
+docChecker();
 optionsChecker();
 %releaseNotesChecker();
 
@@ -2812,6 +2813,7 @@ function updateMenu()
 
   % Conditions for plugins menu
   pluginChecker();
+  docChecker();
   optionsChecker();
 
   % Conditions for the help menu (all on)
@@ -3418,6 +3420,91 @@ function pluginChecker()
   end
 end
 
+%--------------------------------------------------------------------------
+function docChecker()
+  % Reset the list
+  for it = 1:length(hs.menu.docs.list)
+    delete(hs.menu.docs.list(it));
+  end
+  hs.menu.docs.list = [];
+
+  %docsList = dir([appFolder filesep 'docs' filesep '*.md']);
+  docsList = rdir([appFolder filesep 'docs' filesep 'tutorials' filesep, '**', filesep, '*']);
+  if(~isempty(docsList))
+    hs.menu.docs.root.Enable = 'on';
+    for i = 1:length(docsList)
+      [fpa, fpb, fpc] = fileparts(docsList(i).name);
+      relFolder = strrep(fpa, [appFolder filesep 'docs' filesep 'tutorials' filesep], '');
+      relFolder = strsplit(relFolder, filesep);
+      
+      if(~strcmpi(fpc, '.md'))
+        continue;
+      elseif(strcmpi(fpb(1), 'index.md'))
+        continue;
+      elseif(strcmpi(fpb(1), '.'))
+        continue;
+      end
+      % Get the parent
+      curName = [];
+      lastParent = [];
+      for it = 1:length(relFolder)
+        valid = find(arrayfun(@(x)strcmp(x.Tag, curName), hs.menu.docs.list));
+        curName = [curName, relFolder{it}];
+        if(isempty(valid))
+          hs.menu.docs.list = [hs.menu.docs.list; ...
+                              uimenu(hs.menu.docs.root, 'Label', relFolder{it}, 'Enable', 'on', 'Tag', curName)];
+        else
+          hs.menu.docs.list = [hs.menu.docs.list; ...
+                              uimenu(hs.menu.docs.list(valid), 'Label', relFolder{it}, 'Enable', 'on', 'Tag', curName)];
+        end
+        lastParent = hs.menu.docs.list(end);
+      end
+      docName = fpb;
+      if(isempty(lastParent))
+        hs.menu.docs.list = [hs.menu.docs.list; ...
+                              uimenu(hs.menu.docs.root, 'Label', docName, 'Enable', 'on', ...
+                                     'Checked', 'off', 'Callback', {@menuTutorialOpen, docsList(i).name})];
+      else
+        hs.menu.docs.list = [hs.menu.docs.list; ...
+                              uimenu(lastParent, 'Label', docName, 'Enable', 'on', ...
+                                     'Checked', 'off', 'Callback', {@menuTutorialOpen, docsList(i).name})];
+      end
+    end
+  end
+end
+
+%--------------------------------------------------------------------------
+function menuTutorialOpen(~, ~, tutorialFile)
+  [fpa, fpb, fpc] = fileparts(tutorialFile);
+  hFig = figure('name', ['Tutorial: ' fpb], 'NumberTitle', 'off',...
+    'toolbar','none','menubar','none');
+  hFig.Position = setFigurePosition(gcbf, 'width', 600, 'height', 700);
+  tutFile = fileread(tutorialFile);
+  gap = 0.025;
+  hFigPanel = MarkdownPanel('Parent', hFig, 'Position',  [gap, gap, 1-2*gap, 1-2*gap]);
+  set(hFigPanel, 'Content', tutFile);
+
+ % Setup a timer to refresh the MarkdownPanel periodically
+  timerFcnB = @(s,e)set(hFigPanel, 'Content', char(hFigPanel.Content));
+  doctimer = timer( ...
+      'Period',        1, ...
+      'BusyMode',      'drop', ...
+      'TimerFcn',      timerFcnB, ...
+      'ExecutionMode', 'fixedRate');
+
+  % Destroy the timer when the panel is destroyed
+
+  L = addlistener(hFigPanel, 'ObjectBeingDestroyed', @timerCallbackB);
+  setappdata(hFig, 'Timer', L);
+
+  % Start the refresh timer
+  start(doctimer)
+  function timerCallbackB(~, ~)
+    stop(doctimer);
+    delete(doctimer);
+  end
+end
+
 %--------------------------------------------------------------------------     
 function optionsChecker()
   % Reset the list
@@ -3657,6 +3744,8 @@ function menu = initializeMenu(~, ~)
   menu.options.root = uimenu(netcalMainWindow, 'Label', 'Options');
   menu.options.list = [];
   
+  menu.docs.root = uimenu(netcalMainWindow, 'Label', 'Tutorials');
+  menu.docs.list = [];
   % Now help
   menu.help.root = uimenu(netcalMainWindow, 'Label', 'Help');
   menu.help.about = uimenu(menu.help.root, 'Label', 'About', 'Callback', @menuAbout);
@@ -5598,8 +5687,9 @@ function modules = loadModules()
         {'Supervised detection', 'manualBursts', 'bursts', {@menuNewGuiWindow, @viewBursts}, 'rawTraces', 'traceBursts', false, 'single'}, ...
         {'Automatic detection', 'automaticBursts', 'bursts', {@menuExperimentGlobalAnalysis, @burstDetection, burstDetectionOptions}, 'rawTraces', 'traceBursts'}, ...
       {'Export Recording', 'recording', 'fluorescence', {@menuExperimentGlobalAnalysis, @exportRecording, exportMovieOptions}, 'handle', []}, ...
-      {'Cut traces', 'cut', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisCutTraces []}, 'rawTraces', [], true}, ...
-      {'Rebase time', 'rebase', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisRebaseTime []}, 'rawTraces', []}, ...
+      {'Cut traces', 'cut', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisCutTraces, []}, 'rawTraces', [], true}, ...
+      {'Rebase time', 'rebase', 'fluorescence', {@menuExperimentGlobalAnalysis, @menufluorescenceAnalysisRebaseTime, []}, 'rawTraces', []}, ...
+      {'Change Active Image', 'activeImg', 'fluorescence', {@menuExperimentGlobalAnalysis, @setActiveImage, setActiveImageOptions}, 'width', []}, ...
     {'Spike inference', 'spikeInference', 'analysis', [], 'rawTraces', []}, ...
       {'Training', 'spikeInferenceTraining', 'spikeInference', {@menuNewGuiWindow, @viewInferenceTraining}, 'rawTraces', 'spikes', false, 'single'}, ...
       {'Run', 'spikeInferenceRun', 'spikeInference', [], 'rawTraces', []}, ...

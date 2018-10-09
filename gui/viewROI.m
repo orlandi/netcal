@@ -135,7 +135,7 @@ uicontrol('Parent', b, 'Style','text',...
           'String','Image:', 'FontSize', textFontSize, 'HorizontalAlignment', 'left');
 imageStr = {};
 if(isfield(experiment, 'avgImg'))
-  imageStr{end+1} = 'average';
+  imageStr{end+1} = 'default';
 end
 if(isfield(experiment, 'percentileImg'))
   imageStr{end+1} = 'percentile';
@@ -392,7 +392,7 @@ function setCurrentImage(hObject, ~)
   
   currentSelection = hObject.String{hObject.Value};
   switch currentSelection
-    case 'average'
+    case 'default'
       avgImg = experiment.avgImg;
       currFrame = avgImg;
       bpp = experiment.bpp;

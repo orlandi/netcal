@@ -359,8 +359,8 @@ switch params.automaticType
 
     filteredImg(isnan(filteredImg))=0;
     bw2 = imfill(filteredImg,'holes'); 
-    bw3 = imopen(bw2, ones(2,2)); 
-    bw4 = bwareaopen(bw3, 4); 
+    bw3 = imopen(bw2, ones(2,2));
+    bw4 = bwareaopen(bw3, 4);
     bw4_perim = bwperim(bw4); 
 
     B = bwconncomp(bw4);
@@ -374,6 +374,22 @@ switch params.automaticType
       ROI{i}.ID = i;
       ROI{i}.pixels = B.PixelIdxList{i}';
       [y, x] = ind2sub(size(normalizedStillImage), ROI{i}.pixels);
+      ROI{i}.center = [mean(x), mean(y)];
+      ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
+    end
+  case 'binaryContour'
+    if(params.pbar > 0)
+      ncbar.setAutomaticBar();
+    end
+    B = bwconncomp(stillImage);
+    ROI = cell(B.NumObjects, 1);
+    for i = 1:length(ROI)
+      if(params.pbar > 0)
+        ncbar.update(i/length(ROI));
+      end
+      ROI{i}.ID = i;
+      ROI{i}.pixels = B.PixelIdxList{i}';
+      [y, x] = ind2sub(size(stillImage), ROI{i}.pixels);
       ROI{i}.center = [mean(x), mean(y)];
       ROI{i}.maxDistance = max(sqrt((ROI{i}.center(1)-x).^2+(ROI{i}.center(2)-y).^2));
     end

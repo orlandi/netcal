@@ -50,6 +50,7 @@ classdef MarkdownPanel < hgsetget & dynamicprops
     % Copyright (c) <2016> [Jonathan Suever][2].
     % All rights reserved
     %
+    % Modified by Javier G. Orlandi (2018): fix \r on windows
     % This software is licensed under the [BSD license][3]
     %
     % [1]: https://github.com/showdownjs/showdown
@@ -176,7 +177,7 @@ classdef MarkdownPanel < hgsetget & dynamicprops
 
             % Replace "true" newlines with "\n"
             content = regexprep(content, '\n', '\\n');
-
+            
             % Javascript to run to update the HTML and make all hyperlinks
             % external
             jscript = [...
@@ -259,6 +260,8 @@ classdef MarkdownPanel < hgsetget & dynamicprops
     methods
         function set.Content(self, val)
             % Look and see if this is a cell array
+            % Change windows carriage returns by \n
+            val = strrep(val,  sprintf('\r'), sprintf('\n'));
             self.Content = val;
             self.refresh();
         end

@@ -173,10 +173,10 @@ switch params.movieToPreprocess
   case 'standard'
     closeVideoStream(fID);
     experiment.avgImg = avgImg;
+    experiment.avgImgOriginal = avgImg;
   case 'denoised'
     experiment.avgImgDenoised = avgImg;
 end
-
 
 experiment.intensityRange = intensityRange;
 experiment.avgT = t;
