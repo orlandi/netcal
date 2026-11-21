@@ -1,0 +1,426 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Brick Highlights</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="Highlights1.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Brick Highlights</h1><!--introduction--><p>You will find below demos for a few <i>Brick</i> functions, from basic operations to GUI programs. There are many more to discover in the <a href="helpfuncbycat.html">Function Reference</a> !</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Basic operations</a></li><li><a href="#2">Array manipulations</a></li><li><a href="#11">Programming</a></li><li><a href="#14">Graphic functions</a></li><li><a href="#17">GUI basic tools</a></li><li><a href="#20">GUI elaborate tools</a></li><li><a href="#24">GUI programs</a></li><li><a href="#30">Miscellaneous</a></li></ul></div><h2>Basic operations<a name="1"></a></h2><p><b><tt><a href="help_fn_coerce.html">fn_coerce</a></tt></b> is a shortcut for <tt>min(max(x,m),M)</tt></p><h2>Array manipulations<a name="2"></a></h2><p><b><tt><a href="help_fn_add.html">fn_add</a></tt></b> and <b><tt><a href="help_fn_mult.html">fn_mult</a></tt></b> can add (or multiply) together two arrays which are not the same size, provided that for any dimension where the size differs, this size is 1 for one of the two arrays. The functions guess how to use <tt>repmat</tt> and make the two inputs the same size.</p><pre class="codeinput">fn_add(10:10:40,(1:3)')
+</pre><pre class="codeoutput">
+ans =
+
+    11    21    31    41
+    12    22    32    42
+    13    23    33    43
+
+</pre><pre class="codeinput">fn_mult(ans,[.01 .1 1 10])
+</pre><pre class="codeoutput">
+ans =
+
+    0.1100    2.1000   31.0000  410.0000
+    0.1200    2.2000   32.0000  420.0000
+    0.1300    2.3000   33.0000  430.0000
+
+</pre><p>This is very useful for many operations that one would like to perform column-wise or row-wise on an array. For example, if one wants to plot some data with some space between the lines.</p><pre class="codeinput">x = rand(1000,5)-.5;
+plot(fn_add(x,1:5))
+</pre><img vspace="5" hspace="5" src="Highlights1_01.png" alt=""> <p><b><tt><a href="help_fn_normalize.html">fn_normalize</a></tt></b> normalizes data in specific dimensions by subtracting (or dividing by) the average in those dimensions. In the following example, a 3D data (space x space x time) is first normalized temporally by dividing by an average frame, then by subtracting an average time course.</p><p>For an illustration, let us generate a example data, made of a reference image, which is perturbated by some relevant signals specific to some pixels, a non-relevant signal common to all pixels, and additional white noise.</p><pre class="codeinput">nx = 11; ny = 11; nt = 12;
+[x y] = ndgrid(-5:5,-5:5);
+t = linspace(0,1,12);
+reference = 1+exp(-(x.^2+y.^2)/3^2);
+signal1 = 1e-2*[0 0 0 1 1 1 0 0 0 0 0 0];
+map1 = zeros(nx,ny); map1(2:5,4:7) = 1;
+signal2 = 1e-2*[1 -1 1 -1 1 -1 1 -1 1 -1 1 -1];
+map2 = zeros(nx,ny); map2(7:9,7:9) = 1;
+relevantsignals = fn_mult(map1,shiftdim(signal1,-1)) <span class="keyword">...</span>
+    + fn_mult(map2,shiftdim(signal2,-1));
+globalsignal = 1e-1*sin(2*pi*t);
+globalsignal = shiftdim(globalsignal,-1);
+allsignals = fn_add(relevantsignals,globalsignal);
+noise = 2e-3*randn(nx,ny,nt);
+data = fn_mult(reference,1+allsignals) + noise;
+</pre><p>We can only guess the global signal in the raw data.</p><pre class="codeinput"><span class="keyword">for</span> k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[1 2]), axis <span class="string">image</span>, <span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Highlights1_02.png" alt=""> <p>We use <tt>fn_normalize</tt> to divide by the average frame: the resulting display is still dominated by the global signal.</p><pre class="codeinput">data = fn_normalize(data,3,<span class="string">'/'</span>);
+<span class="keyword">for</span> k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[.9 1.1]), axis <span class="string">image</span>, <span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Highlights1_03.png" alt=""> <p>We use <tt>fn_normalize</tt> to subtract the average time courses: the relevant signals can now be observed.</p><pre class="codeinput">data = fn_normalize(data,[1 2],<span class="string">'-'</span>);
+<span class="keyword">for</span> k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[-.015 .015]), axis <span class="string">image</span>, <span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Highlights1_04.png" alt=""> <p>Note that the two operations could have been done at once, by doing</p><pre class="language-matlab">data = fn_normalize(data,{3 [1 2]},{<span class="string">'/'</span> <span class="string">'-'</span>});
+</pre><p><b><tt><a href="help_fn_bin.html">fn_bin</a></tt></b> can be used to bin the data above, using spatial bins of size 2x2, and temporal bins of time 3.</p><pre class="codeinput">databin = fn_bin(data,[2 2 3]);
+<span class="keyword">for</span> k=1:4, subplot(2,2,k), imagesc(databin(:,:,k)',[-.006 .006]), axis <span class="string">image</span>, <span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Highlights1_05.png" alt=""> <h2>Programming<a name="11"></a></h2><p><b><tt><a href="help_fn_flags.html">fn_flags</a></tt></b> is a convenient function to check which flags are provided to a function through the <tt>varargin</tt> variable.</p><p>Suppose we have a function to which we can pass the flags <tt>'bin'</tt>, <tt>'txt'</tt>, <tt>'image'</tt> and <tt>'repeat'</tt>, and the user passed only the flags <tt>'bin'</tt> and <tt>'image'</tt>.</p><pre class="codeinput">varargin = {<span class="string">'bin'</span> <span class="string">'image'</span>};
+</pre><p>A quick way to check which flags were passed is:</p><pre class="codeinput">[dobin dotxt doimage dorepeat] = fn_flags(<span class="string">'bin'</span>,<span class="string">'txt'</span>,<span class="string">'image'</span>,<span class="string">'repeat'</span>,varargin)
+</pre><pre class="codeoutput">
+dobin =
+
+     1
+
+
+dotxt =
+
+     0
+
+
+doimage =
+
+     1
+
+
+dorepeat =
+
+     0
+
+</pre><p><b><tt><a href="help_fn_switch.html">fn_switch</a></tt></b> simplifies the writing of code which would necessit a <tt>if</tt> or a <tt>switch</tt> block.</p><p>Instead of</p><pre class="language-matlab"><span class="keyword">if</span> x==0
+    y = 0;
+<span class="keyword">else</span>
+    y = 1/x;
+<span class="keyword">end</span>
+</pre><p>use</p><pre class="language-matlab">y = fn_switch(x==0,0,1/x);
+</pre><p>And instead of</p><pre class="language-matlab"><span class="keyword">switch</span> x
+    <span class="keyword">case</span> <span class="string">'dog'</span>
+        y = <span class="string">'cat'</span>
+    <span class="keyword">case</span> <span class="string">'yellow'</span>
+        y = <span class="string">'blue'</span>
+    <span class="keyword">otherwise</span>
+        y = <span class="string">'void'</span>
+<span class="keyword">end</span>
+</pre><p>use</p><pre class="language-matlab">y = fn_switch(x,<span class="string">'dog'</span>,<span class="string">'cat'</span>,<span class="string">'yellow'</span>,<span class="string">'blue'</span>,<span class="string">'void'</span>);
+</pre><h2>Graphic functions<a name="14"></a></h2><p><b><tt><a href="help_fn_errorbar.html">fn_errorbar</a></tt></b> plots functions +/- error level</p><p>Let us create some data: 10 noisy versions of the same sinusoide.</p><pre class="codeinput">clf
+nt = 30;
+nexp = 10;
+t = linspace(0,2,nt);
+signal = sin(2*pi*t)';
+data = fn_add(signal,randn(nt,nexp));
+plot(t,data,<span class="string">'*'</span>), axis <span class="string">tight</span>
+</pre><img vspace="5" hspace="5" src="Highlights1_06.png" alt=""> <p>We can compute the average time course and the estimated error, and display the estimation result with <tt>fn_errorbar</tt>.</p><pre class="codeinput">avg = mean(data,2);
+err = std(data,0,2)/sqrt(nexp);
+fn_errorbar(t,avg,err,<span class="string">'*'</span>)
+</pre><img vspace="5" hspace="5" src="Highlights1_07.png" alt=""> <p>Note that <tt>fn_errorbar</tt> can also compute by himself average and standard error, and offers also the 'bar' and 'patch' display options.</p><pre class="codeinput">fn_errorbar(t,data,<span class="string">'bar'</span>,<span class="string">'facecolor'</span>,[.5 .5 1])
+</pre><img vspace="5" hspace="5" src="Highlights1_08.png" alt=""> <h2>GUI basic tools<a name="17"></a></h2><p><b><tt><a href="help_fn_buttonmotion.html">fn_buttonmotion</a></tt></b> executes a task while the mouse is moving, and until the mouse button is released. The example below displays the pointer position in the figure whenever the mouse is pressed and moved.</p><pre class="language-matlab">figure(1), clf
+ht = uicontrol(<span class="string">'style'</span>,<span class="string">'text'</span>,<span class="string">'backgroundcolor'</span>,<span class="string">'y'</span>);
+fun = @()set(ht,<span class="string">'string'</span>,num2str(get(1,<span class="string">'CurrentPoint'</span>)));
+set(1,<span class="string">'buttondownfcn'</span>,@(u,e)fn_buttonmotion(fun,<span class="string">'doup'</span>))
+</pre><p>(<a href="matlab:fn_buttonmotion('demo')">execute</a>)</p><h2>GUI elaborate tools<a name="20"></a></h2><p><b><tt><a href="help_fn_control.html">fn_control</a></tt></b> transforms a structure <tt>s</tt> into a <tt>fn_control</tt> object <tt>X</tt> based on <tt>s</tt> and displays controls in a figure or a uipanel. The control actions are to modify the values in <tt>X</tt>, and inversely, modifying the values in <tt>X</tt> changes the control displays. Below is a simple usage example. See <tt><a href="help_fn_movie.html">fn_movie</a></tt> function for a more elaborate usage.</p><pre class="language-matlab">s = struct(<span class="string">'a'</span>,false,<span class="string">'b'</span>,1,<span class="string">'c'</span>,2,<span class="string">'d'</span>,<span class="string">'hello'</span>,<span class="string">'e'</span>,[0 1],<span class="string">'f'</span>,pwd,<span class="string">'g'</span>,<span class="string">'red'</span>,<span class="string">'h'</span>,[0 1]);
+spec = struct(<span class="string">'c'</span>,<span class="string">'xslider 0 10 1'</span>,<span class="string">'d'</span>,{{<span class="string">'hello'</span>,<span class="string">'yo'</span>}},<span class="string">'e'</span>,<span class="string">'clip'</span>,<span class="string">'f'</span>,<span class="string">'dir'</span>,<span class="string">'g'</span>,<span class="string">'color'</span>,<span class="string">'h'</span>,{{<span class="string">'multcheck'</span> <span class="string">'mom'</span> <span class="string">'dad'</span>}});
+myfun = @disp;
+fn_control(s,spec,myfun);
+</pre><p>(<a href="matlab:fn_control('demo')">execute</a>)</p><p><img vspace="5" hspace="5" src="fn_control.png" alt=""> </p><h2>GUI programs<a name="24"></a></h2><p><b><tt><a href="help_fn_imvalue.html">fn_imvalue</a></tt></b>, when executed, automatically links together the image and plot displays (existing one, and any one which will be created later), so that one can zoom in, zoom out, select a point in an image and get its value, and this simultaneously in all the axes containing data of the same dimensions. Try the following lines to get an idea.</p><pre class="language-matlab">fn_imvalue <span class="string">image</span>
+figure(1), clf, colormap <span class="string">gray</span>
+load <span class="string">trees</span>
+subplot(221), imagesc(X)
+subplot(222), imagesc(-X)
+nt = 100;
+t = linspace(0,3,nt);
+signal = sin(2*pi*t);
+subplot(223), plot(t,signal)
+subplot(224), plot(t,signal+rand(1,nt))
+</pre><p>(<a href="matlab:fn_imvalue('demo')">execute</a>)</p><p><img vspace="5" hspace="5" src="fn_imvalue.png" alt=""> </p><p><b><tt><a href="help_fn_figmenu.html">fn_figmenu</a></tt></b> creates a new menu in all figures opened, and in all figures which are going to be created later, which offers a set of actions. <a href="matlab:fn_dispandexec({'fn_figmenu','figure(1)'})">Try it</a>!</p><p><img vspace="5" hspace="5" src="fn_figmenu.png" alt=""> </p><h2>Miscellaneous<a name="30"></a></h2><p><b><tt><a href="help_fn_email.html">fn_email</a></tt></b> allows to send emails from Matlab without leaving the Command window. It can send figures (saved in both the PNG and EPS formats), m-files or any file located on the path, and of course text. Just <a href="matlab:fn_dispandexec('fn_email')">try it</a>!</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Brick Highlights
+% You will find below demos for a few _Brick_ functions, from basic
+% operations to GUI programs. There are many more to discover in the
+% <helpfuncbycat.html Function Reference> !
+
+%% Basic operations
+%
+% *|<help_fn_coerce.html fn_coerce>|* is a shortcut for |min(max(x,m),M)|
+
+%% Array manipulations
+%
+% *|<help_fn_add.html fn_add>|* and *|<help_fn_mult.html fn_mult>|* can add (or multiply) together two arrays
+% which are not the same size, provided that for any dimension where the
+% size differs, this size is 1 for one of the two arrays. The functions
+% guess how to use |repmat| and make the two inputs the same size.
+
+fn_add(10:10:40,(1:3)')
+
+%%
+
+fn_mult(ans,[.01 .1 1 10])
+
+%%
+% This is very useful for many operations that one would like to perform
+% column-wise or row-wise on an array. For example, if one wants to plot
+% some data with some space between the lines.
+
+x = rand(1000,5)-.5;
+plot(fn_add(x,1:5))
+
+%%
+% *|<help_fn_normalize.html fn_normalize>|* normalizes data in specific dimensions by subtracting
+% (or dividing by) the average in those dimensions.
+% In the following example, a 3D data (space x space x time) is first
+% normalized temporally by dividing by an average frame, then by
+% subtracting an average time course.
+% 
+% For an illustration, let us generate a example data, made of a reference
+% image, which is perturbated by some relevant signals specific to some
+% pixels, a non-relevant signal common to all pixels, and additional white
+% noise. 
+
+nx = 11; ny = 11; nt = 12;
+[x y] = ndgrid(-5:5,-5:5);
+t = linspace(0,1,12);
+reference = 1+exp(-(x.^2+y.^2)/3^2);
+signal1 = 1e-2*[0 0 0 1 1 1 0 0 0 0 0 0];
+map1 = zeros(nx,ny); map1(2:5,4:7) = 1;
+signal2 = 1e-2*[1 -1 1 -1 1 -1 1 -1 1 -1 1 -1];
+map2 = zeros(nx,ny); map2(7:9,7:9) = 1;
+relevantsignals = fn_mult(map1,shiftdim(signal1,-1)) ...
+    + fn_mult(map2,shiftdim(signal2,-1));
+globalsignal = 1e-1*sin(2*pi*t);
+globalsignal = shiftdim(globalsignal,-1);
+allsignals = fn_add(relevantsignals,globalsignal);
+noise = 2e-3*randn(nx,ny,nt);
+data = fn_mult(reference,1+allsignals) + noise;
+
+%%
+% We can only guess the global signal in the raw data.
+
+for k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[1 2]), axis image, end
+
+%%
+% We use |fn_normalize| to divide by the average frame: the resulting
+% display is still dominated by the global signal.
+
+data = fn_normalize(data,3,'/');
+for k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[.9 1.1]), axis image, end
+
+%%
+% We use |fn_normalize| to subtract the average time courses: the relevant
+% signals can now be observed.
+
+data = fn_normalize(data,[1 2],'-');
+for k=1:nt, subplot(3,4,k), imagesc(data(:,:,k)',[-.015 .015]), axis image, end
+
+%%
+% Note that the two operations could have been done at once, by doing
+%
+%   data = fn_normalize(data,{3 [1 2]},{'/' '-'});
+
+%%
+% *|<help_fn_bin.html fn_bin>|* can be used to bin the data above, using spatial bins of size
+% 2x2, and temporal bins of time 3.
+
+databin = fn_bin(data,[2 2 3]);
+for k=1:4, subplot(2,2,k), imagesc(databin(:,:,k)',[-.006 .006]), axis image, end
+
+
+%% Programming
+%
+% *|<help_fn_flags.html fn_flags>|* is a convenient function to check which flags are provided to
+% a function through the |varargin| variable. 
+%
+% Suppose we have a function to which we can pass the flags |'bin'|,
+% |'txt'|, |'image'| and |'repeat'|, and the user passed only the flags
+% |'bin'| and |'image'|. 
+
+varargin = {'bin' 'image'};
+
+%%
+% A quick way to check which flags were passed is:
+ 
+[dobin dotxt doimage dorepeat] = fn_flags('bin','txt','image','repeat',varargin)
+
+%%
+% *|<help_fn_switch.html fn_switch>|* simplifies the writing of code which would necessit a |if|
+% or a |switch| block.
+% 
+% Instead of
+%
+%   if x==0
+%       y = 0;
+%   else 
+%       y = 1/x;
+%   end
+%
+% use
+%
+%   y = fn_switch(x==0,0,1/x);
+% 
+% And instead of
+%
+%   switch x
+%       case 'dog'
+%           y = 'cat'
+%       case 'yellow'
+%           y = 'blue'
+%       otherwise
+%           y = 'void'
+%   end
+%
+% use
+% 
+%   y = fn_switch(x,'dog','cat','yellow','blue','void');
+
+
+%% Graphic functions
+%
+% *|<help_fn_errorbar.html fn_errorbar>|* plots functions +/- error level
+%
+% Let us create some data: 10 noisy versions of the same sinusoide.
+
+clf
+nt = 30;
+nexp = 10;
+t = linspace(0,2,nt); 
+signal = sin(2*pi*t)';
+data = fn_add(signal,randn(nt,nexp));
+plot(t,data,'*'), axis tight
+
+%%
+% We can compute the average time course and the estimated error, and
+% display the estimation result with |fn_errorbar|.
+
+avg = mean(data,2);
+err = std(data,0,2)/sqrt(nexp);
+fn_errorbar(t,avg,err,'*')
+
+%%
+% Note that |fn_errorbar| can also compute by
+% himself average and standard error, and offers also the 'bar' and 'patch'
+% display options.
+
+fn_errorbar(t,data,'bar','facecolor',[.5 .5 1])
+
+
+%% GUI basic tools
+%
+% *|<help_fn_buttonmotion.html fn_buttonmotion>|* executes a task while the mouse is moving, and until
+% the mouse button is released. The example below displays the pointer
+% position in the figure whenever the mouse is pressed and moved. 
+
+%%
+%   figure(1), clf
+% ht = uicontrol('style','text','backgroundcolor','y');
+% fun = @()set(ht,'string',num2str(get(1,'CurrentPoint')));
+% set(1,'buttondownfcn',@(u,e)fn_buttonmotion(fun,'doup'))
+
+%%
+% (<matlab:fn_buttonmotion('demo') execute>)
+
+%% GUI elaborate tools
+%
+% *|<help_fn_control.html fn_control>|* transforms a structure |s| into a |fn_control| object |X|
+% based on |s| and displays controls in a figure or a uipanel. The control
+% actions are to modify the values in |X|, and inversely, modifying the
+% values in |X| changes the control displays. Below is a simple usage
+% example. See |<help_fn_movie.html fn_movie>| function
+% for a more elaborate usage.
+
+%%
+%   s = struct('a',false,'b',1,'c',2,'d','hello','e',[0 1],'f',pwd,'g','red','h',[0 1]);
+% spec = struct('c','xslider 0 10 1','d',{{'hello','yo'}},'e','clip','f','dir','g','color','h',{{'multcheck' 'mom' 'dad'}});
+% myfun = @disp;
+% fn_control(s,spec,myfun);
+
+%%
+% (<matlab:fn_control('demo') execute>)
+
+%%
+% <<fn_control.png>>
+
+%% GUI programs
+%
+% *|<help_fn_imvalue.html fn_imvalue>|*, when executed, automatically links together the image and
+% plot displays (existing one, and any one which will be created later), so
+% that one can zoom in, zoom out, select a point in an image and get its
+% value, and this simultaneously in all the axes containing data of the
+% same dimensions. Try the following lines to get an idea.
+
+%%
+%   fn_imvalue image
+%   figure(1), clf, colormap gray
+%   load trees
+%   subplot(221), imagesc(X)
+%   subplot(222), imagesc(-X)
+%   nt = 100;
+%   t = linspace(0,3,nt);
+%   signal = sin(2*pi*t);
+%   subplot(223), plot(t,signal)
+%   subplot(224), plot(t,signal+rand(1,nt))
+
+%%
+% (<matlab:fn_imvalue('demo') execute>)
+
+%%
+% <<fn_imvalue.png>>
+
+%%
+% *|<help_fn_figmenu.html fn_figmenu>|* creates a new menu in all figures opened, and in all
+% figures which are going to be created later, which offers a set of
+% actions. <matlab:fn_dispandexec({'fn_figmenu','figure(1)'}) Try it>!
+
+%%
+% <<fn_figmenu.png>>
+
+%% Miscellaneous
+%
+% *|<help_fn_email.html fn_email>|* allows to send emails from Matlab without leaving the
+% Command window. It can send figures (saved in both the PNG and EPS
+% formats), m-files or any file located on the path, and of course text.
+% Just <matlab:fn_dispandexec('fn_email') try it>!
+
+ 
+
+##### SOURCE END #####
+--></body></html>

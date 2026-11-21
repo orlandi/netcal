@@ -16,7 +16,7 @@ function experiment = networkInferenceGTEfast(experiment, varargin)
 % EXAMPLE:
 %   experiment = networkInferenceGTEfast(experiment, networkInferenceGTEfastOptions)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2026, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 %
 % See also peelingOptions
 
@@ -79,9 +79,9 @@ end
 
 % Get ALL subgroups in case of parents
 if(strcmpi(mainGroup, 'all'))
-  groupList = getExperimentGroupsNames(experiment);
+  [groupList, experiment] = getExperimentGroupsNames(experiment);
 else
-  groupList = getExperimentGroupsNames(experiment, mainGroup);
+  [groupList, experiment] = getExperimentGroupsNames(experiment, mainGroup);
 end
 
 % Empty check
@@ -115,7 +115,7 @@ for git = 1:length(groupList)
   totalFrames = ceil(maxT/binSize);
 
   maxI = length(members);
-  D = zeros(totalFrames, maxI);
+  D = zeros(totalFrames, maxI, 'uint8');
   for it = 1:maxI
     curIdx = members(it);
     curTimes = ceil(experiment.spikes{curIdx}/binSize)+1;
@@ -125,6 +125,7 @@ for git = 1:length(groupList)
     % We can do it this way since we are binarizing the activity
     D(curTimes, it) = 1;
   end
+
   % Now binarize D - no need anymore
   %D(D > 1) = 1;
   % Now calculate G and use 1 as threshold
@@ -134,8 +135,8 @@ for git = 1:length(groupList)
   else
     Gthreshold = inf;
   end
+  
   if(params.plotGlobalFluorescence)
-
     origFigName = sprintf('Global Fluorescence %s', experiment.name);
     if(params.saveOptions.onlySaveFigure)
       figVisible = 'off';
@@ -160,7 +161,6 @@ for git = 1:length(groupList)
     if(params.applyConditioning)
       plot([1, 1]*log10(Gthreshold), yl, 'b--');
     end
-    
     box on;
     
     ui = uimenu(figureHandle, 'Label', 'Export');
@@ -183,16 +183,30 @@ for git = 1:length(groupList)
       mtit(params.styleOptions.figureTitle);
     end
   end
-  
-  % The actual inference
-  G(G <= Gthreshold) = 0;
-  G(G > Gthreshold) = 1;
+  switch params.conditioningSignal
+    case 'avg activity'
+      % The actual inference
+      G(G <= Gthreshold) = 0;
+      G(G > Gthreshold) = 1;
+    case 'movement'
+      G = experiment.movementBinned(:);
+      if(length(G) < totalFrames)
+        logMsg(sprintf('Mismatch between number of movement and spiking datapoints (%d) vs (%d). Using only movement selection', length(G), totalFrames),'w');
+        D = D(experiment.movementFrames, :);
+      elseif(length(G) > totalFrames)
+        logMsg('Too many movement frames to continue.', 'e');
+        barCleanup(params);
+        return;
+      end
+  end
   % Weird
   G = G + 1;
   D = D + 1; % So the values are also 1,2
 
-  [GTE, ~, ~, ~] = calculateGTEultra(D, G, 'IFT', params.instantFeedbackTerm, 'verbose', false, 'MarkovOrder', params.markovOrder, 'returnFull', true, ...
-                                                    'surrogateType', 'none', 'debug', false, 'computeBias', false, 'pbar', params.pbar);
+  [GTE, surrogatesGTE, biasGTE, ~] = calculateGTEultra(D, G, 'IFT', params.instantFeedbackTerm, 'verbose', false, 'MarkovOrder', params.markovOrder, 'returnFull', true, ...
+                                                    'surrogateType', params.surrogateType, 'debug', false, 'computeBias', params.computeBias, 'pbar', params.pbar, 'numBiasShuffles', params.numBiasShuffles, 'maxJitter', params.maxJitter, 'numSurrogates', params.numSurrogates);
+  % The part below overrides the 2nd (high) conditioning value. So keep
+  % that in mind!
   preMeanGTE = repmat(mean(GTE(:,:,1)), [size(GTE,1) 1]);
   preStdGTE = repmat(std(GTE(:,:,1)), [size(GTE,1) 1]);
   postMeanGTE = repmat(mean(GTE(:,:,1),2), [1, size(GTE,1)]);
@@ -218,6 +232,8 @@ for git = 1:length(groupList)
   else
     experiment.GTEunconditioned.(groupName){groupIdx} = GTE;
   end
+  experiment.GTEsurrogates.(groupName){groupIdx} = surrogatesGTE;
+  experiment.GTEbias.(groupName){groupIdx} = biasGTE;
 end
 
 %--------------------------------------------------------------------------

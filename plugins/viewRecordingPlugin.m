@@ -41,11 +41,15 @@ end
 
 %%% Java includes
 javaaddpath({fullfile(appFolder, 'internal', 'java'), ...
-            fullfile(appFolder, 'external', 'JavaTreeWrapper', '+uiextras', '+jTree', 'UIExtrasTree.jar')});
+            fullfile(appFolder, 'external', 'guiManagement', 'JavaTreeWrapper', '+uiextras', '+jTree', 'UIExtrasTree.jar')});
 import('uiextras.jTree.*');
 warning('on', 'MATLAB:dispatcher:nameConflict');
 
-experiment = loadExperiment('defaultFolder', defaultFolder);
+if(nargin > 2 && ~isempty(experiment) && ischar(experiment))
+  experiment = loadExperiment(experiment);  
+else
+  experiment = loadExperiment('defaultFolder', defaultFolder);
+end
 if(isempty(experiment))
 return;
 end

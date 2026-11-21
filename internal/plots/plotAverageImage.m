@@ -16,7 +16,7 @@ function experiment = plotAverageImage(experiment, varargin)
 % EXAMPLE:
 %    experiment = plotAverageImage(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 
 % EXPERIMENT PIPELINE
 % name: plot average image

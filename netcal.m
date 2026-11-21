@@ -13,7 +13,7 @@ function netcal(varargin)
 % EXAMPLE:
 %    netcal
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 
 %#ok<*AGROW>
 %#ok<*ASGLU>
@@ -30,36 +30,45 @@ else
   DEVELOPMENT = false;
 end
 
+guiImprovements = true;
+
 if(~DEVELOPMENT)
-  appName = [appName, ' Open Beta'];
+  appName = [appName, ' pre-release'];
 else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '8.6.0';
+currVersion = '10.0.1';
 appFolder = fileparts(mfilename('fullpath'));
+
 if(~DEVELOPMENT)
-  updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
+  updaterSource = strrep(fileread(fullfile(appFolder, 'internal', 'guiManagement', 'updatePath.txt')), sprintf('\n'), '');
 else
   try
-    updaterSource = strrep(fileread(fullfile(pwd, 'development', 'updatePath.txt')), sprintf('\n'), '');
+    updaterSource = strrep(fileread(fullfile(appFolder, 'development', 'guiManagement', 'updatePath.txt')), sprintf('\n'), '');
   catch
-    updaterSource = strrep(fileread(fullfile(pwd, 'internal', 'updatePath.txt')), sprintf('\n'), '');
+    updaterSource = strrep(fileread(fullfile(appFolder, 'internal', 'guiManagement', 'updatePath.txt')), sprintf('\n'), '');
   end
 end
 
 recentProjectsList = {};
-activeNode = cell(2, 1);
+activeNode = [];
+projectTree = [];
 experimentSelectionMode = 'single'; % Single / multiple / pipeline
 
 warning('off', 'MATLAB:dispatcher:nameConflict');
 warning('off', 'MATLAB:Java:DuplicateClass');
 warning('off', 'MATLAB:load:variableNotFound');
+warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
+warning('off', 'MATLAB:ui:javacomponent:FunctionToBeRemoved');
+warning('off', 'MATLAB:class:PropUsingAtSyntax');
+warning('off', 'MATLAB:deprecated:FunctionWithDeprecatedSyntax');
+warning('off', 'export_fig:exportgraphics');
 
 %%% Java includes
 javaaddpath({fullfile(appFolder, 'internal', 'java'), ...
-             fullfile(appFolder, 'external', 'dndcontrol'), ...
-             fullfile(appFolder, 'external', 'JavaTreeWrapper', '+uiextras', '+jTree', 'UIExtrasTree.jar')});
+             fullfile(appFolder, 'external', 'guiManagement', 'dndcontrol'), ...
+             fullfile(appFolder, 'external', 'guiManagement', 'JavaTreeWrapper', '+uiextras', '+jTree', 'UIExtrasTree.jar')});
 
 import('uiextras.jTree.*');
 
@@ -67,8 +76,7 @@ addpath(genpath(appFolder));
 rmpath(genpath([appFolder filesep '.git'])) % But exclude .git/
 rmpath(genpath([appFolder filesep 'old'])) % And old
 rmpath(genpath([appFolder filesep 'external' filesep 'cvx'])) % And CVX for now
-rmpath(genpath(fullfile(appFolder, 'external', 'OASIS_matlab', 'optimization', 'cvx'))); % And cvx
-rmpath(genpath(fullfile(appFolder, 'external', 'JavaTreeWrapper', 'java_src'))); % And tree wrapper sources
+rmpath(genpath(fullfile(appFolder, 'external', 'guiManagement', 'JavaTreeWrapper', 'java_src'))); % And tree wrapper sources
 subFolderList = dir(appFolder);
 for i = 1:length(subFolderList)
   if(subFolderList(i).isdir && any(strfind(subFolderList(i).name, 'netcal')))
@@ -145,7 +153,7 @@ hs.singleExperimentPanelHBox = uix.HBox('Parent', hs.expCardPanel);
 
 hs.singleExperimentPanel = uix.Panel('Parent', hs.singleExperimentPanelHBox, ...
                                'BorderType', 'none', 'FontSize', headerFontSize,...
-                               'Title', 'Experiment list');
+                               'Title', 'Experiment list', 'Hittest', 'off');
   
 % Prepare the info editbox
 hs.infoPanelParent = uix.Panel('Parent', hs.singleExperimentPanelHBox, ...
@@ -162,7 +170,8 @@ hs.multipleExperimentPanelHBox = uix.HBox('Parent', hs.expCardPanel);
 
 hs.multipleExperimentPanel = uix.Panel('Parent', hs.multipleExperimentPanelHBox, ...
                                'BorderType', 'none', 'FontSize', headerFontSize,...
-                               'Title', 'Experiment list');
+                               'Title', 'Experiment list', 'ButtonDownFcn', @testCallback);
+
 % Prepare the info editbox
 hs.multipleInfoPanelParent = uix.Panel('Parent', hs.multipleExperimentPanelHBox, ...
                                'BorderType', 'none', 'FontSize', headerFontSize,...
@@ -224,6 +233,7 @@ set(hs.pipelineExperimentPanelHBox, 'Widths', [-1 -1 -1 -1], 'Spacing', 10, 'Pad
 
 % Prepare the pipeline panels
 pipelineTree = [];
+pipelineTreeListener = [];
 pipelineFunctionsTree = [];
 
 
@@ -244,6 +254,11 @@ hs.logPanel = uicontrol('Parent', hs.logPanelParent, ...
 
 set(hs.mainWindowVbox, 'Heights', [40 -7 -4], 'Spacing', 25, 'Padding', 15);
 
+setappdata(netcalMainWindow, 'hs', hs);
+if(guiImprovements)
+  netcalMainWindow.WindowButtonMotionFcn = @testHack;
+end
+%addlistener(netcalMainWindow, 'KeyPress', @testHack);
 %% Declare menus
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -295,7 +310,12 @@ end
 logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
 
 % Set initial log messages
-logMessage(hs.infoPanelEditBox, 'No experiment selected');
+logMessage(hs.infoPanelEditBox, 'No active project', 'w');
+logMessage(hs.infoPanelEditBox, '', 'w');
+logMessage(hs.infoPanelEditBox, 'Please load a project or create a new one to get started', 'w');
+logMessage(hs.infoPanelEditBox, '', 'w');
+logMessage(hs.infoPanelEditBox, 'You can also drag and drop a recording to automatically create a new project', 'w');
+
 logMessage(hs.logPanelEditBox, [appName ' v' currVersion]);
 
 % Set the log message handle as app data
@@ -330,10 +350,10 @@ pause(1);
 delete(splash);
 needsUpdating = updateChecker();
 if(needsUpdating)
-    return;
+  return;
 end
-pluginChecker();
-docChecker();
+hs.menu = pluginChecker(appFolder, hs.menu);
+hs.menu = docChecker(appFolder, hs.menu);
 optionsChecker();
 %releaseNotesChecker();
 
@@ -342,6 +362,16 @@ optionsChecker();
 %% Callbacks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+  function testHack(hObject, eData)
+    %hObject
+    %eData
+  %  ar = hittest(hObject);
+    %ar == hs.pipelinePanel
+    %ar.Children
+    %ar
+    %findjobj(ar)
+    %3
+  end
 %--------------------------------------------------------------------------
 function closeCallback(hObject, ~, ~)
   project = getappdata(netcalMainWindow, 'project');
@@ -400,13 +430,18 @@ function closeCallback(hObject, ~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuProjectNew(~, ~, ~)
-  nProject = newProject();
+function menuProjectNew(~, ~, varargin)
+  
+  if(nargin > 2)
+    nProject = newProject(varargin{:});
+  else
+    nProject = newProject();
+  end
 
   if(~isempty(nProject))
     project = nProject;
     % If the project is valid, clear app data
-    clearAppData();
+    clearAppData(netcalMainWindow);
     setappdata(netcalMainWindow, 'project', project);
 
     netcalMainWindow.Name = [appName, ' - ' project.name];
@@ -473,7 +508,7 @@ end
       end
     end
 
-    clearAppData();
+    clearAppData(netcalMainWindow);
     nProject = loadProject('folder', nProject.folder, 'name', nProject.name, 'gui', netcalMainWindow);
     
     ncbar.automatic('Please wait...');
@@ -513,249 +548,37 @@ end
       logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
     end
     printProjectInfo(project);
+    if(~isempty(projectTree.Root.Children))
+      projectTree.SelectedNodes = projectTree.Root.Children(1);
+      printSavedExperimentInfo();
+    end
     ncbar.close();
   end
 end
 
-%--------------------------------------------------------------------------
-function menuProjectSave(~, ~)
-  ncbar.automatic('Saving project...');
-
-  project = getappdata(netcalMainWindow, 'project');
-  if(~isempty(project))
-    saveProject(project);
-  end
-  % Save the project pipeline
-  try
-    savePipeline([], [], [project.folder filesep 'pipeline.json']);
-  catch ME
-    logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-  end
-  ncbar.close();
-end
-
-%--------------------------------------------------------------------------
-function menuProjectExport(~, ~)
-  project = getappdata(netcalMainWindow, 'project');
-  
-  defOptions = exportProjectOptions;
-  defOptions.exportFolder = project.folder;
-  defOptions.newProjectName = [project.name '_exported'];
-  [success, projectExportOptionsCurrent] = preloadOptions([], defOptions, gcbf, true, false);
-  if(~success)
-    return;
-  end
-  
-  if(~projectExportOptionsCurrent.exportFolder | ~exist(projectExportOptionsCurrent.exportFolder, 'dir')) %#ok<BDSCI,OR2,BDLGI>
-    logMsg('Invalid export folder. Are you sure the folder exists?', 'e');
-    return;
-  end
-  fileList = rdir([projectExportOptionsCurrent.exportFolder filesep, '**']);
-  if(~isempty(fileList))
-    choice = questdlg(sprintf('Found: %d files in the export directory. It should be empty. Do you want to continue?', length(fileList)), ...
-    'Export project', ...
-    'Yes', 'No', 'Cancel', 'Cancel');
-
-    switch choice
-      case 'Yes'
-      case 'No'
+function checkedHack(hObject, ~)
+  if(guiImprovements)
+    if(isa(hObject, 'experimentTree'))
+      project = getappdata(netcalMainWindow, 'project');
+      if(isempty(project))
         return;
-      case 'Cancel'
-        return;
-    end
-  end
-  
-  onlyChecked = projectExportOptionsCurrent.exportOnlyCheckedExperiments;
-  project = getappdata(netcalMainWindow, 'project');
-  bigFields = getBigFields();
-  validFields = [];
-  validFieldsText = {};
-  validFieldsSize = [];
-  fileList = {};
-  fileListFolder = {}; % For compatibility before matlab 2016b
-  ncbar.automatic('Checking for existing files');
-  if(onlyChecked)
-    validExperiments = find(project.checkedExperiments);
-  else
-    validExperiments = 1:length(project.checkedExperiments);
-  end
-  for it1 = 1:length(bigFields)
-    curField = bigFields{it1};
-    extension = '.DAT';
-    fileList{it1} = [];
-    fileListFolder{it1} = {};
-    for it2 = 1:length(validExperiments)
-      newFile = dir([project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep, project.experiments{validExperiments(it2)}, '_', curField, lower(extension)]);
-      if(~isempty(newFile))
-        fileList{it1} = [fileList{it1}; newFile];
-        fileListFolder{it1}{end+1} = [project.folder, project.experiments{validExperiments(it2)}, filesep, 'data', filesep];
       end
-    end
-    curSize = 0;
-    if(numel(fileList{it1}) == 0)
-      continue;
-    end
-    for it2 = 1:length(fileList{it1})
-      curSize = curSize+fileList{it1}(it2).bytes;
-    end
-    if(curSize/1e6 > 1e3)
-      curSizeText = sprintf('%s: %.2f GB', curField, curSize/1e9);
-    else
-      curSizeText = sprintf('%s: %.2f MB', curField, curSize/1e6);
-    end
-    validFields  = [validFields; it1];
-    validFieldsText{end+1} = curSizeText;
-    validFieldsSize = [validFieldsSize; curSize];
-  end
-  fileList = fileList(validFields);
-  fileListFolder = fileListFolder(validFields);
-  extension = '.EXP';
-  fileListExp = [];
-  fileListExpFolder = {};
-  sizeExp = 0;
-  for it2 = 1:length(validExperiments)
-    %fileList{it1} = [fileList{it1}; rdir([project.folder, project.experiments{validExperiments(it2)}, filesep, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' upper(curField) extension '$'')'])];
-    newFile = dir([project.folderFiles, project.experiments{validExperiments(it2)}, lower(extension)]);
-    if(~isempty(newFile))
-      fileListExp = [fileListExp; newFile];
-      fileListExpFolder{end+1} = project.folderFiles;
-      sizeExp = sizeExp +fileListExp(it2).bytes;
+      prevChecked = project.checkedExperiments;
+      project.checkedExperiments = arrayfun(@(x)x.Checked, hObject.Root.Children);
+      for it = 1:length(hObject.Root.Children)
+        hObject.Root.Children(it).UserData{3} = logical(project.checkedExperiments(it));
+      end
+      %hObject.Root.Children(5).UserData
+      %arrayfun(@(x)x.Checked, hObject.Root.Children)
+      % Only update screen if there is a change
+      if(any(prevChecked ~= project.checkedExperiments))
+        printProjectInfo(project);
+        setappdata(netcalMainWindow, 'project', project);
+      end
+    elseif(isa(hObject, 'CheckboxTreePipeline'))
+      % Here do nothing, because we do not care
     end
   end
-  %fileListExp = rdir([project.folder, '**', filesep, '*.*'], ['regexp(upper(name), ''.*\' extension '$'')']);
- 
-  ncbar.close();
-  
-  if(~isempty(validFieldsText))
-    [fieldsToExport, success] = listdlg('PromptString', 'Select additional data files to export', 'SelectionMode', 'multiple', 'ListString', validFieldsText, 'ListSize', [500 300]);
-    if(~success)
-      fieldsToExport = [];
-    end
-    fullFileList = fileListExp;
-    fullFileListFolder = fileListExpFolder;
-    totalSize = sizeExp;
-    for it1 = 1:numel(fieldsToExport)
-      curList = fileList{fieldsToExport(it1)};
-      curListFolder = fileListFolder{fieldsToExport(it1)};
-      fullFileList = [fullFileList; curList];
-      fullFileListFolder = [fullFileListFolder, curListFolder];
-      totalSize = totalSize + validFieldsSize(fieldsToExport(it1));
-    end
-  else
-    totalSize = sizeExp;
-    fullFileList = fileListExp;
-    fullFileListFolder = fileListExpFolder;
-  end
-  logMsg(sprintf('We will be exporting %d files with a total size of %.3f GB\n', length(fullFileList), totalSize/1e9));
-
-  % Need to redo:
-  % checkedExperiments
-  % experiments
-  % labels
-  % name
-  % folder
-  % folderFiles
-  newProject = project;
-  newProject.checkedExperiments = newProject.checkedExperiments(validExperiments);
-  newProject.experiments = newProject.experiments(validExperiments);
-  newProject.labels = newProject.labels(validExperiments);
-  newProject.name = projectExportOptionsCurrent.newProjectName;
-  newProject.folder = fullfile([projectExportOptionsCurrent.exportFolder filesep]);
-  newProject.folderFiles = [newProject.folder 'projectFiles' filesep];
-  if(~exist(newProject.folderFiles, 'dir'))
-    mkdir(newProject.folderFiles);
-  end
-  % Let's copy all the files first
-  curFolder = project.folder;
-  newFolder = newProject.folder;
-  ncbar.automatic(sprintf('Copying files to the new folder (%d/%d)', 0, length(fullFileList)));
-  for it1 = 1:length(fullFileList)
-    %oldFile = [fullFileList(it1).folder filesep fullFileList(it1).name];
-    oldFile = [fullFileListFolder{it1} filesep fullFileList(it1).name];
-    newFile = strrep(oldFile, curFolder, newFolder);
-    %fprintf('%s to %s\n', oldFile, newFile);
-    % Create the new folder
-    [fpa, ~, ~] = fileparts(newFile);
-    if(~exist(fpa, 'dir'))
-      mkdir(fpa);
-    end
-    % Now copy the files
-    [success, msg, msgID] = copyfile(oldFile, newFile, 'f');
-    if(~success)
-      logMsg(sprintf('Something went wrong copy file %s to %s. Msg: %s', oldFile, newFile, msg), 'e');
-      return;
-    end
-    ncbar.setCurrentBarName(sprintf('Copying files to the new folder (%d/%d)', it1, length(fullFileList)));
-  end
-  ncbar.close();
-  saveProject(newProject);
-  if(projectExportOptionsCurrent.createZip)
-    ncbar.automatic('Creating zip file');
-    warning('off','MATLAB:zip:archiveName');
-    zip([newProject.folder newProject.name '_export'], newProject.folder);
-    warning('on','MATLAB:zip:archiveName');
-    ncbar.close();
-  end
-  project.projectExportOptionsCurrent = projectExportOptionsCurrent;
-  setappdata(netcalMainWindow, 'project', project);
-  setappdata(netcalMainWindow, 'projectExportOptionsCurrent', projectExportOptionsCurrent);
-  logMsg('Project succesfully exported');
-end
-
-%--------------------------------------------------------------------------
-function menuProjectRename(~, ~, ~)
-  project = getappdata(netcalMainWindow, 'project');
-  answer = inputdlg('Enter the new project name',...
-                    'Project rename', [1 60], {project.name});
-  if(isempty(answer))
-      return;
-  end
-  answer{1} = strtrim(answer{1});
-  logMsg(['Renaming project file from ' project.name '.proj to ' answer{:} '.proj'], 'w');
-
-  oldProjectFile = [project.folder project.name '.proj'];
-  project.name = answer{:};
-  newProjectFile = [project.folder project.name '.proj'];
-  % Move the .proj file
-  try
-    movefile(oldProjectFile, newProjectFile);
-  catch ME
-    logMsg('Moving failed', 'e');
-    logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
-    return;
-  end
-  netcalMainWindow.Name = [appName, ' - ' project.name];
-	setappdata(netcalMainWindow, 'project', project);
-end
-
-%--------------------------------------------------------------------------
-function menuProjectClose(hObject, ~, ~)
-    project = getappdata(netcalMainWindow, 'project');
-    
-    if(~isempty(project))
-        choice = questdlg('Do you want to save the project?', ...
-        'Close project', ...
-        'Yes', 'No', 'Cancel', 'Cancel');
-
-        switch choice
-            case 'Yes'
-                menuProjectSave(hObject);
-            case 'No'
-            case 'Cancel'
-                return;
-        end
-    end
-    
-    logMsg('');
-    logMsg('----------------------------------');
-    MSG = ['Closing project ' project.name];
-    logMsg([datestr(now, 'HH:MM:SS'), ' ', MSG], 'w');
-    logMsg('----------------------------------');
-    
-    clearAppData();
-    netcalMainWindow.Name = [appName, ' - no project selected'];
-    updateMenu();
-    resetProjectTree();
 end
 
 %--------------------------------------------------------------------------
@@ -887,11 +710,16 @@ function menuExperimentAdd(~, ~, varargin)
     project = addNewExperimentNode(newExperiment, project);
     
     saveExperiment(newExperiment, 'verbose', true);
+    netcalOptionsCurrent = getappdata(netcalMainWindow, 'netcalOptionsCurrent');
+    if(netcalOptionsCurrent.automaticallySaveProject)
+      saveProject(project, 'verbose', true, 'gui', netcalMainWindow);
+    end
     setappdata(netcalMainWindow, 'project', project);
     projectTree.SelectedNodes = projectTree.Root.Children(end);
     printSavedExperimentInfo();
     updateMenu();
     updateProjectTree();
+    
   end
 end
 
@@ -915,6 +743,10 @@ function menuExperimentAddSilent(varargin)
   project = addNewExperimentNode(newExperiment, project);
 
   saveExperiment(newExperiment, 'verbose', false, 'pbar', 0);
+  netcalOptionsCurrent = getappdata(netcalMainWindow, 'netcalOptionsCurrent');
+  if(netcalOptionsCurrent.automaticallySaveProject)
+    saveProject(project, 'verbose', false, 'gui', netcalMainWindow);
+  end
   setappdata(netcalMainWindow, 'project', project);
   projectTree.SelectedNodes = projectTree.Root.Children(end);
   printSavedExperimentInfo();
@@ -924,6 +756,7 @@ end
 
 %--------------------------------------------------------------------------
 function menuExperimentAddBatch(~, ~, ~)
+
   project = getappdata(netcalMainWindow, 'project');
   defOptions = addBatchOptions;
   defOptions.rootFolder = project.folder;
@@ -956,6 +789,9 @@ function menuExperimentAddBatch(~, ~, ~)
     case 'Big TIFF files (*.BTF)'
       extension = '.BTF';
       filterIndex = 10;
+    case 'track2p datasets (*.MAT)'
+      extension = '.MAT';
+      filterIndex = 13;
     otherwise
       filterIndex = 1;
   end
@@ -1052,6 +888,10 @@ function menuExperimentAddBatch(~, ~, ~)
   updateMenu();
   updateProjectTree();
   project.addBatchOptionsCurrent = addBatchOptionsCurrent;
+  netcalOptionsCurrent = getappdata(netcalMainWindow, 'netcalOptionsCurrent');
+  if(netcalOptionsCurrent.automaticallySaveProject)
+    saveProject(project, 'verbose', true, 'gui', netcalMainWindow);
+  end
   setappdata(netcalMainWindow, 'project', project);
   setappdata(netcalMainWindow, 'addBatchOptionsCurrent', addBatchOptionsCurrent);
   projectTree.SelectedNodes = projectTree.Root.Children(end);
@@ -1060,6 +900,7 @@ end
 
 %--------------------------------------------------------------------------
 function keyPressCallback(hObject, eventData)
+
   switch eventData.Key
     case '1'
       if(strcmp(eventData.Modifier, 'control'))
@@ -1601,52 +1442,9 @@ function menuNewProjectGuiWindow(~, ~, windowFunction)
   addFigure(windowFunction(project));
 end
 
-%--------------------------------------------------------------------------
-function experiment = menufluorescenceAnalysisCutTraces(experiment)
-  experiment = loadTraces(experiment, 'all');
-  minT = experiment.rawT(1);
-  maxT = experiment.rawT(end);
-  answer = inputdlg({'Initial time','Final time'},...
-                                  'Cut traces', [1 60], {num2str(minT), num2str(maxT)});
-  if(isempty(answer))
-    return;
-  end
-  minT = str2double(strtrim(answer{1}));
-  maxT = str2double(strtrim(answer{2}));
-  [~,validMinIdx] = min(abs(minT-experiment.rawT));
-  [~,validMaxIdx] = min(abs(maxT-experiment.rawT));
-  experiment.rawT = experiment.rawT(validMinIdx:validMaxIdx);
-  experiment.rawTraces = experiment.rawTraces(validMinIdx:validMaxIdx, :);
-  if(isfield(experiment,'traces'))
-    experiment.t = experiment.t(validMinIdx:validMaxIdx);
-    experiment.traces = experiment.traces(validMinIdx:validMaxIdx, :);
-  end
-  logMsg(sprintf('Cutting performed. New time range: (%.2f, %.2f) s', experiment.rawT(1), experiment.rawT(end)));
-  logMsg('Only traces were cut. Anything else you will need to process again');
-  experiment.saveBigFields = true;
-  % The experiment is saved outside
-end
 
-%--------------------------------------------------------------------------
-function experiment = menufluorescenceAnalysisRebaseTime(experiment)
-  experiment = loadTraces(experiment, 'all');
-  minT = experiment.rawT(1)-1/experiment.fps;
-  answer = inputdlg({'New initial time (in seconds)'},...
-                                  'Cut traces', [1 60], {num2str(minT)});
-  if(isempty(answer))
-    return;
-  end
-  minT = str2double(strtrim(answer{1}));
-  
-  experiment.rawT = ((1:size(experiment.rawTraces, 1))-1)/experiment.fps+minT+1/experiment.fps;
-  
-  if(isfield(experiment,'traces'))
-    experiment.t = ((1:size(experiment.traces, 1))-1)/experiment.fps+minT+1/experiment.fps;
-  end
-  logMsg(sprintf('Rebase performed. New time range: (%.2f, %.2f) s', experiment.rawT(1), experiment.rawT(end)));
-  logMsg('Only traces were rebased. Anything else involving absolute times you will need to process again');
-  % The experiment is saved outside
-end
+
+
 
 %--------------------------------------------------------------------------
 function success = menuExperimentDelete(hObject, ~, ~)
@@ -2050,7 +1848,10 @@ function success = importExperiment(fileName, varargin)
       end
       
       saveExperiment(experiment, 'verbose', false, 'pbar', 0);
-      
+      netcalOptionsCurrent = getappdata(netcalMainWindow, 'netcalOptionsCurrent');
+      if(netcalOptionsCurrent.automaticallySaveProject)
+        saveProject(project, 'verbose', false, 'gui', netcalMainWindow);
+      end
       setappdata(netcalMainWindow, 'project', project);
       updateMenu();
       updateProjectTree();
@@ -2106,6 +1907,15 @@ function menuClearLog(~, ~)
   hs.logPanelEditBox.setText('<html><head></head><body></body></html>');
   logMessage(hs.logPanelEditBox, [appName ' v' currVersion]);
 end
+%--------------------------------------------------------------------------
+function menuCloseFigures(~, ~)
+  figList = findall(0, 'Tag', 'netcalPlot');
+  if(~isempty(figList))
+    for it = 1:length(figList)
+      close(figList(it));
+    end
+  end
+end
 
 %--------------------------------------------------------------------------
 function menuPreferences(~, ~)
@@ -2127,152 +1937,6 @@ function menuPreferences(~, ~)
     saveOptions();
   end
 end
-
-%--------------------------------------------------------------------------
-% function menuAggregatedPopulationStatistics(~, ~, groupType)
-%   project = getappdata(netcalMainWindow, 'project');
-%   fullNames = namesWithLabels();
-%   if(sum(project.checkedExperiments) == 0)
-%     logMsg('No checked experiments found', 'e');
-%     return;
-%   else
-%     checkedExperiments = find(project.checkedExperiments);
-%   end
-% 
-%   % Define the options
-%   optionsClass = aggregatedOptions;
-%   if(~isempty(optionsClass))
-%     [success, optionsClassCurrent] = preloadOptions([], optionsClass, netcalMainWindow, true, false);
-%     if(~success)
-%       return;
-%     end
-%   end
-%   aggregatedOptionsCurrent = optionsClassCurrent;
-%   
-%   % Preload the groups from the first checked experiment and select the appropiate one
-%   experiment = load([project.folderFiles project.experiments{checkedExperiments(1)} '.exp'], '-mat', 'traceGroups', 'traceGroupsNames');
-%   groupNames = getExperimentGroupsNames(experiment);
-%   % Select the population
-%   [selectedPopulations, success] = listdlg('PromptString', 'Select groups', 'SelectionMode', 'multiple', 'ListString', groupNames);
-%   if(~success)
-%     return;
-%   end
-%   selectedPopulations = groupNames(selectedPopulations);
-%   Npopulations = length(selectedPopulations);
-%   Nexperiments = length(checkedExperiments);
-%   % Define required data
-%   populationFractions = zeros(length(selectedPopulations), length(checkedExperiments));
-%   
-%   % Load the data
-%   ncbar('Processing experiments');
-%   for it = 1:length(checkedExperiments)
-%     [experiment, project] = loadExperiment([project.folderFiles project.experiments{checkedExperiments(it)} '.exp'], 'project', project, 'verbose', false, 'pbar', 0);
-%     for it2 = 1:length(selectedPopulations)
-%       try
-%         members = getExperimentGroupMembers(experiment, selectedPopulations{it2});
-%       catch ME
-%         logMsg(sprintf('There was an error getting group members from %s on experiment %s. Are you sure the group exists? Setting it to 0', selectedPopulations{it2}, experiment.name), 'e');
-%         logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
-%         members = [];
-%       end
-%       populationFractions(it2, it) = length(members);
-%     end
-%     if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-%       populationFractions(:, it) = populationFractions(:, it)/sum(populationFractions(:, it));
-%     end
-%     ncbar.update(it/length(checkedExperiments));
-%   end
-%   ncbar.close();
-%   
-%   % Now the plot
-%   S = 0.05;
-%   G = 0.3;
-%   
-%   hfig = figure;
-%   hold on;
-%   currentColormap = eval(['@' aggregatedOptionsCurrent.colormap]);
-% 
-%   h = [];
-%   
-%   switch groupType
-%     case 'experiments'
-%       W = 1/Npopulations*(1-(Npopulations-1)*S-G);
-%       X = (1:Nexperiments) -1/2 + (G+W)/2;
-%       cmap = currentColormap(Npopulations);
-%       iterator1Length = Npopulations;
-%       iterator2Length = Nexperiments;
-%       legendStr = strrep(selectedPopulations,'_','\_');
-%       xlim([0.5 Nexperiments+0.5]);
-%       set(gca, 'XTick', 1:Nexperiments);
-%       set(gca, 'XTickLabel', strrep(fullNames(checkedExperiments),'_','\_'));
-%       exportRows = project.experiments(checkedExperiments);
-%       exportCols = selectedPopulations;
-%     case 'populations'
-%       W = 1/Nexperiments*(1-(Nexperiments-1)*S-G);
-%       X = (1:Npopulations) -1/2 + (G+W)/2;
-%       cmap = currentColormap(Nexperiments);
-%       iterator1Length = Nexperiments;
-%       iterator2Length = Npopulations;
-%       populationFractions = populationFractions';
-%       legendStr = strrep(fullNames(checkedExperiments),'_','\_');
-%       xlim([0.5 Npopulations+0.5]);
-%       set(gca, 'XTick', 1:Npopulations);
-%       set(gca, 'XTickLabel', strrep(selectedPopulations,'_','\_'));
-%       exportRows = selectedPopulations;
-%       exportCols = project.experiments(checkedExperiments);
-%   end
-%   
-%   for j = 1:iterator1Length
-%       h = [h; bar(X+(S+W)*(j-1), populationFractions(j, :), W)];
-%       set(h(j), 'FaceColor', cmap(j, :));
-%       if(aggregatedOptionsCurrent.showNumbersAboveBars)
-%           for k = 1:iterator2Length
-%             if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-%                text(X(k)+(S+W)*(j-1), populationFractions(j, k),[num2str(100*populationFractions(j, k),'%0.1f') '%'],...
-%                          'HorizontalAlignment','center',...
-%                          'VerticalAlignment','bottom', 'FontSize', 12);
-%             else
-%                text(X(k)+(S+W)*(j-1), populationFractions(j, k),num2str(populationFractions(j, k),'%0.0f'),...
-%                          'HorizontalAlignment','center',...
-%                          'VerticalAlignment','bottom', 'FontSize', 12);
-%             end
-%              
-%           end
-%       end
-%   end
-%   legend(legendStr);
-%   legend('Location', 'NW');
-%   
-%   if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-%     ylim([0 1]);
-%   end
-%   set(gca, 'XTickLabelRotation', aggregatedOptionsCurrent.xLabelsRotation);
-% 
-%   if(strcmpi(aggregatedOptionsCurrent.countType, 'relative'))
-%     yt = get(gca, 'ytick');
-%     ytl = strcat(strtrim(cellstr(num2str(yt'*100))), '%');
-%     set(gca, 'yticklabel', ytl);
-%   else
-%     yl = ylim;
-%     ylim([yl(1) yl(2)*1.1]);
-%   end
-%   box on;
-% 
-%   title(['Population statistics - Project : ' project.name]);
-%   ui = uimenu(hfig, 'Label', 'Export');
-%   uimenu(ui, 'Label', 'Image',  'Callback', {@exportFigCallback, {'*.png'; '*.tiff'; '*.pdf'; '*.eps'}, [project.folder 'populationFractionStatisticsExperiment']});
-%   
-%   uimenu(ui, 'Label', 'Data', 'Callback', {@exportDataCallback, {'*.xlsx'}, ...
-%       [project.folder 'populationStatistics'], ...
-%       populationFractions, ...
-%       exportRows, ...
-%       project.name,...
-%       exportCols});
-%     project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-%     setappdata(netcalMainWindow, 'project', project);
-%   setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-% end
-
 
 %--------------------------------------------------------------------------
 function menuAggregatedCompareExperiments(~, ~)
@@ -2326,20 +1990,6 @@ function menuAggregatedCompareExperiments(~, ~)
   setappdata(netcalMainWindow, 'project', project);
 
 end
-
-
-% %--------------------------------------------------------------------------
-% function menuAggregatedPreferences(~, ~, ~)
-%   project = getappdata(netcalMainWindow, 'project');
-%   [success, aggregatedOptionsCurrent] = preloadOptions([], aggregatedOptions, gcbf, true, false);
-%   if(~success)
-%     return;
-%   end
-%   project.aggregatedOptionsCurrent = aggregatedOptionsCurrent;
-%   setappdata(netcalMainWindow, 'project', project);
-%   setappdata(netcalMainWindow, 'aggregatedOptionsCurrent', aggregatedOptionsCurrent);
-%   updateMenu();
-% end
 
 %--------------------------------------------------------------------------
 function menuAggregatedPCA(~, ~, ~)
@@ -2547,114 +2197,41 @@ function menuAggregatedStimulationPCA(~, ~, ~)
 end
 
 %--------------------------------------------------------------------------
-function menuAbout(~, ~)
-  hFig = figure('name', 'About', 'NumberTitle', 'off',...
-    'toolbar','none','menubar','none');
-  hFig.Position = setFigurePosition(gcbf, 'width', 600, 'height', 700);
-  %%% Message starts here
-  
-  netcalLogoSize = round([400 367]/2);
-  netcalLogoURL = ['file://' appFolder '/gui/images/logo_netcal_400.png'];
-  netcalLogoURL = fixURL(netcalLogoURL);
-  logosTogether = round([1800 724]/5);
-  logosURL = ['file://' appFolder '/gui/images/logos_together.jpg'];
-  logosURL = fixURL(logosURL);
-  headerText = ['<center>',...
-    '<img width=' num2str(netcalLogoSize(1)) ' height=' num2str(netcalLogoSize(2)) ' src="' netcalLogoURL '">',...  
-    '</img><br/>', ...
-     '</center>'];
-  license = fileread([appFolder filesep 'LICENSE.md']);
-  license = strrep(license, sprintf('\n\n'), '<br/><br/>');
-  licenseText = ['<b>License</b><p align="justify">',...
-                 license, ...
-                 '</p>'];
-  
-  thanks = '<b>Thanks</b><p>Many people should appear here, but for now you can check the list of people involved in this project <a href="http://www.itsnetcal.com/people/">here</a>.</p>';
-  
-  fundingLogos = round([1257 259]/3.5);
-  fundingLogosURL = ['file://' appFolder '/gui/images/funding_logos.jpg'];
-  fundingLogosURL = fixURL(fundingLogosURL);
-  funding = ['<b>Funding</b><p>This project has been partially funded by</p>',...
-             '<center>',...
-             '<img width=' num2str(logosTogether(1)) ' height=' num2str(logosTogether(2)) ' src="' logosURL '">',...  
-             '</img><br/>', ...
-             '<img width=' num2str(fundingLogos(1)) ' height=' num2str(fundingLogos(2)) ' src="' fundingLogosURL '">',...  
-             '</img>',...
-             '</center>'];
+function menuProjectClose(hObject, ~, appName)
+  project = getappdata(netcalMainWindow, 'project');
 
-  htmlStrings = ['<html><body>',...
-                 headerText,...
-                 '<hr/>', ...
-                 thanks, ...
-                 '<hr/>', ...
-                 funding, ...
-                 '<hr/>', ...
-                 licenseText, ...
-                 '</body></html>',...
-                 ];
+  if(~isempty(project))
+    choice = questdlg('Do you want to save the project?', ...
+    'Close project', ...
+    'Yes', 'No', 'Cancel', 'Cancel');
 
-
-  %%% Message ends here
-  import com.mathworks.mlwidgets.html.*;
-  % For pre-HG2 browsers, specify the default to be HTMLPANEL
-  if verLessThan('matlab', '8.4')
-      HtmlComponentFactory.setDefaultType('HTMLPANEL');
+    switch choice
+      case 'Yes'
+        menuProjectSave(hObject);
+      case 'No'
+      case 'Cancel'
+        return;
+    end
   end
 
-  parent = hFig;
-  % Create the Java browser component
-  self.jbrowser = HTMLBrowserPanel();
-  [self.browser, self.container] = javacomponent(self.jbrowser, ...
-      [0 0 1 1], parent);
-  self.htmlComponent = self.jbrowser.getHtmlComponent();
+  logMsg('');
+  logMsg('----------------------------------');
+  MSG = ['Closing project ' project.name];
+  logMsg([datestr(now, 'HH:MM:SS'), ' ', MSG], 'w');
+  logMsg('----------------------------------');
 
-  gap = 0.025;
-  set(self.container, 'Units', 'norm', 'position', [gap, gap, 1-2*gap, 1-2*gap])
-  
-  self.htmlComponent.setHtmlText(htmlStrings);
-end
-
-%--------------------------------------------------------------------------
-function menuChangelog(~, ~)
-  hFig = figure('name', 'Changelog', 'NumberTitle', 'off',...
-    'toolbar','none','menubar','none');
-  hFig.Position = setFigurePosition(gcbf, 'width', 600, 'height', 700);
-  
-
-  changelogFile = fileread([appFolder filesep 'README.md']);
-  changeLogStart = strfind(changelogFile, '# Change Log');
-  changelogFile = changelogFile(changeLogStart:end);
-  gap = 0.025;
-  hFigPanel = MarkdownPanel('Parent', hFig, 'Position',  [gap, gap, 1-2*gap, 1-2*gap]);
-  set(hFigPanel, 'Content', changelogFile);
-
-
-   % Setup a timer to refresh the MarkdownPanel periodically
-    timerFcn = @(s,e)set(hFigPanel, 'Content', char(hFigPanel.Content));
-    htimer = timer( ...
-        'Period',        1, ...
-        'BusyMode',      'drop', ...
-        'TimerFcn',      timerFcn, ...
-        'ExecutionMode', 'fixedRate');
-
-    % Destroy the timer when the panel is destroyed
-    
-    L = addlistener(hFigPanel, 'ObjectBeingDestroyed', @timerCallback);
-    setappdata(hFig, 'Timer', L);
-
-    % Start the refresh timer
-    start(htimer)
-     function timerCallback(~, ~)
-        stop(htimer);
-        delete(htimer);
-    end
+  clearAppData(netcalMainWindow);
+  netcalMainWindow.Name = [appName, ' - no project selected'];
+  updateMenu();
+  resetProjectTree();
 end
 
 %--------------------------------------------------------------------------
 function hFig = splashScreen(~, ~)
-  hFig = SplashScreen([appName ' v' currVersion], [appFolder filesep 'gui' filesep 'images' filesep 'logo_netcal_400.png']);
+  hFig = SplashScreen([appName ' v' currVersion], [appFolder filesep 'internal' filesep 'gui' filesep 'images' filesep 'logo_netcal_400.png']);
+  % Let's recenter it
   if(~DEVELOPMENT)
-    hFig.addText(18, hFig.Height-10, ['v' currVersion ' Open Beta'] , 'FontSize', 20, 'FontWeight', 'bold', 'Color', 'k', 'Shadow', 'off');
+    hFig.addText(18, hFig.Height-10, ['v' currVersion ' pre-release'] , 'FontSize', 20, 'FontWeight', 'bold', 'Color', 'k', 'Shadow', 'off');
   else
     hFig.addText(18, hFig.Height-10, ['v' currVersion ' DEV'] , 'FontSize', 20, 'FontWeight', 'bold', 'Color', 'k', 'Shadow', 'off');
   end
@@ -2664,19 +2241,7 @@ end
 %% Utility functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%--------------------------------------------------------------------------
-function clearAppData()
-  data = getappdata(netcalMainWindow);
-  names = fieldnames(data);
-  for it = 1:numel(names)
-    % Do not clear relevant handles
-    if(strcmp(names{it}, 'logHandle') || strcmp(names{it}, 'infoHandle') || strcmp(names{it}, 'multipleInfoHandle') || strcmp(names{it}, 'netcalOptionsCurrent'))
-      continue;
-    else
-      rmappdata(netcalMainWindow, names{it});
-    end
-  end
-end
+
 
 %--------------------------------------------------------------------------
 function updateMenu()
@@ -2695,6 +2260,7 @@ function updateMenu()
   hs.menu.project.load.Enable = 'on';
   hs.menu.project.preferences.Enable = 'on';
   hs.menu.project.clearLog.Enable = 'on';
+  hs.menu.project.closeAll.Enable = 'on';
   hs.menu.project.quit.Enable = 'on';
   fields = fieldnames(hs.menu.project.update);
   for i = 1:length(fields)
@@ -2788,7 +2354,7 @@ function updateMenu()
       end
     end
   end
-  % Some overrides might be avilable on batch mode
+  % Some overrides might be available on batch mode
   if(~isempty(project) && ~strcmp(experimentSelectionMode, 'single'))
     hs.menu.experiment.override.root.Enable = 'on';
     if(isfield(project, 'experiments') && ~isempty(project.experiments))
@@ -2812,8 +2378,8 @@ function updateMenu()
   end
 
   % Conditions for plugins menu
-  pluginChecker();
-  docChecker();
+  hs.menu = pluginChecker(appFolder, hs.menu);
+  hs.menu = docChecker(appFolder, hs.menu);
   optionsChecker();
 
   % Conditions for the help menu (all on)
@@ -2971,13 +2537,14 @@ function printSavedExperimentInfo(varargin)
           if(strcmp(fields{it}, 'everything'))
             continue;
           end
-          subfields = experiment.traceGroupsNames.(fields{it});
-          
-          subfieldsCount = cellfun(@length, experiment.traceGroups.(fields{it}));
-          subfieldStr = ['<b>%s:</b> ', repmat('%s (%d), ',1,length(subfields))];
-          subfieldStr = subfieldStr(1:end-2);
-          tmpData = [subfields(:) num2cell(subfieldsCount)]';
-          msgList{end+1} = sprintf(subfieldStr, fields{it}, tmpData{:});
+          try
+            subfields = experiment.traceGroupsNames.(fields{it});
+            subfieldsCount = cellfun(@length, experiment.traceGroups.(fields{it}));
+            subfieldStr = ['<b>%s:</b> ', repmat('%s (%d), ',1,length(subfields))];
+            subfieldStr = subfieldStr(1:end-2);
+            tmpData = [subfields(:) num2cell(subfieldsCount)]';
+            msgList{end+1} = sprintf(subfieldStr, fields{it}, tmpData{:});
+          end
         end
       end
     catch
@@ -3012,7 +2579,15 @@ function printSavedExperimentInfo(varargin)
     %   logMessage(hlog, msgList{it});
     % end
   else
-    logMessage(hlog, 'No experiment selected');
+    if(isempty(project))
+      logMessage(hlog, 'No active project', 'w');
+      logMessage(hlog, '', 'w');
+      logMessage(hlog, 'Please load a project or create a new one to get started', 'w');
+      logMessage(hlog, '', 'w');
+      logMessage(hlog, 'You can also drag and drop a recording to automatically create a new project', 'w');
+    else
+      logMessage(hlog, 'No experiment selected');
+    end
   end
 
  
@@ -3029,63 +2604,66 @@ function printProjectInfo(project)
     case 'single'
       return;
   end
+  
   hlog = getappdata(netcalMainWindow, 'infoHandle');
-  logMessage(hlog, 'clear');
+  
+  msgList = {'clear'};
   if(~isempty(project))
-    logMessage(hlog, sprintf('<b>Name:</b> %s', project.name));
-    logMessage(hlog, sprintf('<b>Folder:</b> %s', project.folder));
+    msgList{end+1} = sprintf('<b>Name:</b> %s', project.name);
+    msgList{end+1} = sprintf('<b>Folder:</b> %s', project.folder);
     if(isfield(project, 'experiments') && ~isempty(project.experiments))
-      logMessage(hlog, sprintf('<b>Experiments:</b> %d', length(project.experiments)));
+      msgList{end+1} = sprintf('<b>Experiments:</b> %d', length(project.experiments));
     else
-      logMessage(hlog, sprintf('<b>Experiments:</b> 0'));
+      msgList{end+1} = sprintf('<b>Experiments:</b> 0');
     end
     if(isfield(project, 'checkedExperiments') && ~isempty(project.checkedExperiments))
-      logMessage(hlog, sprintf('<b>Active experiments:</b> %d', sum(project.checkedExperiments)));
+      msgList{end+1} = sprintf('<b>Active experiments:</b> %d', sum(project.checkedExperiments));
     end
   else
-    logMessage(hlog, '<b>No project selected</b>');
+    msgList{end+1} = '<b>No project selected</b>';
   end
+  logMessage(hlog, msgList, 'i', false);
 end
 
 %%% NOT IN USE
 %--------------------------------------------------------------------------
-function releaseNotesChecker()
-  numberVersionsShow = 3;
-
-  fID = fopen([appFolder filesep 'README.md'], 'r');
-  readingVersion = 0;
-  while(~feof(fID))
-    curLine = fgetl(fID);
-    if(strfind(curLine, ['## [' currVersion ']']))
-      readingVersion = numberVersionsShow;
-      % Here we need to pass the gui handle, since this is never called
-      % from a callback function
-      logMsg('----------------------------------', netcalMainWindow);
-      logMsg('VERSION NOTES', netcalMainWindow, 'w');
-      logMsg('----------------------------------', netcalMainWindow);
-      logMsg(curLine, netcalMainWindow, 'w');
-      continue;
-    end
-    if(readingVersion & strfind(curLine, '## ['))
-      readingVersion = readingVersion - 1;
-      if(readingVersion)
-        logMsg('----------------------------------', netcalMainWindow);
-        logMsg(curLine, netcalMainWindow, 'w');
-        continue;
-      else
-        logMsg('----------------------------------', netcalMainWindow);
-      end
-    end
-    if(readingVersion & strfind(curLine, ['[' currVersion ']']))
-      readingVersion = 0;
-      logMsg('----------------------------------', netcalMainWindow);
-    end
-    if(readingVersion)
-      logMsg(curLine, netcalMainWindow);
-    end
-  end
-  fclose(fID);
-end
+% function releaseNotesChecker()
+%   numberVersionsShow = 3;
+% 
+%   fID = fopen([appFolder filesep 'README.md'], 'r');
+%   readingVersion = 0;
+%   while(~feof(fID))
+%     curLine = fgetl(fID);
+%     if(strfind(curLine, ['## [' currVersion ']']))
+%       readingVersion = numberVersionsShow;
+%       % Here we need to pass the gui handle, since this is never called
+%       % from a callback function
+%       logMsg('----------------------------------', netcalMainWindow);
+%       logMsg('VERSION NOTES', netcalMainWindow, 'w');
+%       logMsg('----------------------------------', netcalMainWindow);
+%       logMsg(curLine, netcalMainWindow, 'w');
+%       continue;
+%     end
+%     if(readingVersion & strfind(curLine, '## ['))
+%       readingVersion = readingVersion - 1;
+%       if(readingVersion)
+%         logMsg('----------------------------------', netcalMainWindow);
+%         logMsg(curLine, netcalMainWindow, 'w');
+%         continue;
+%       else
+%         logMsg('----------------------------------', netcalMainWindow);
+%       end
+%     end
+%     if(readingVersion & strfind(curLine, ['[' currVersion ']']))
+%       readingVersion = 0;
+%       logMsg('----------------------------------', netcalMainWindow);
+%     end
+%     if(readingVersion)
+%       logMsg(curLine, netcalMainWindow);
+%     end
+%   end
+%   fclose(fID);
+% end
 
 %--------------------------------------------------------------------------
 function needsUpdating = updateChecker(varargin)
@@ -3118,12 +2696,16 @@ function needsUpdating = updateChecker(varargin)
   try
     data = webread([updaterSource 'version'], 'host', char(getHostName(java.net.InetAddress.getLocalHost)), options);
   catch ME
-    if(~silent)
-      logMsg('Checking failed', netcalMainWindow, 'e');
-      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
+    try
+      data = webread([updaterSource 'version'], options);
+    catch ME2
+      if(~silent)
+        logMsg('Checking failed', netcalMainWindow, 'e');
+        logMsg(strrep(getReport(ME2),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
+      end
+      updateIsRunning = false;
+      return;
     end
-    updateIsRunning = false;
-    return;
   end
 
   serverVersion = data.version;
@@ -3211,7 +2793,7 @@ function needsUpdating = updateChecker(varargin)
     success = updateFileByFile();
 
     if(success)
-      menuChangelog([], []);
+      menuChangelog([], [], appFolder);
       logMsg([appName ' updated from version: ' currVersion ' to version: ' data.version], netcalMainWindow);
       h = msgbox({[appName ' updated from version: ' currVersion ' to version: ' data.version] 'Please restart the application'});
       uiwait(h);
@@ -3248,6 +2830,18 @@ function timerUpdateError(~, ~)
   stop(updateTimer);
 end
 
+%--------------------------------------------------------------------------
+function updateForceUpdate(~, ~)
+  success = updateFileByFile(true);
+  if(success)
+    logMsg('Force update succeeded. Please restart the application');
+    h = msgbox({'Force update succeeded. Please restart the application'});
+    uiwait(h);
+    close(netcalMainWindow);
+  else
+    logMsg('Force Update failed', 'e');
+  end
+end
 
 %--------------------------------------------------------------------------
 function success = updateFileByFile(varargin)
@@ -3275,8 +2869,12 @@ function success = updateFileByFile(varargin)
     % Now do the comparison
     currFile = dir(splitLine{1});
     % Always update netcal.m - since it might very easily have same byte length as other versions
-    if((force && ~strcmpi(currFile.name, 'netcal.m')) || isempty(currFile) || (currFile.bytes ~= splitLine{2} && ~strcmpi(currFile.name, 'netcal.m')))
-      filesToDownload{end+1} = splitLine{1};
+    try
+      if((force && ~strcmpi(currFile.name, 'netcal.m')) || isempty(currFile) || (currFile.bytes ~= splitLine{2} && ~strcmpi(currFile.name, 'netcal.m')))
+        filesToDownload{end+1} = splitLine{1};
+      end
+    catch
+      logMsg(sprintf('Something went wrong analyzing: %s. Skipping\n', currFile));
     end
   end
   %Always upload netcal.m last
@@ -3319,190 +2917,6 @@ function success = updateFileByFile(varargin)
   pause(1);
   ncbar.close();
   success = true;
-end
-
-%--------------------------------------------------------------------------
-function updateCheckConsistency(~, ~)
-  success = true;
-  fileList = webread([updaterSource 'fileList.txt']);
-  if(ispc)
-    fileList = strrep(fileList, '/', '\');
-  end
-  logMsgHeader('Checking file consistency', 'start');
-  % Turn each line into 2 strings to process and compare
-  fileListLines = strsplit(fileList, '\n');
-  serverFileList = {};
-  for i = 1:length(fileListLines)
-    splitLine = strsplit(fileListLines{i});
-    if(length(splitLine) > 2)
-      splitLine = {strjoin(splitLine(1:end-1)), str2double(splitLine{end})};
-    else
-      splitLine{2} = str2double(splitLine{end});
-    end
-    currFile = dir(splitLine{1});
-    serverFileList{end+1} = splitLine{1};
-    if(isempty(currFile))
-      success = false;
-      logMsg(sprintf('File %s is missing', splitLine{1}));
-    elseif(currFile.bytes ~= splitLine{2})
-      success = false;
-      logMsg(sprintf('File %s appears to be the wrong size (%d vs %d)', splitLine{1}, currFile.bytes, splitLine{2}));
-    end
-  end
-  % Now check for unknown .m files
-  folders = {'*.m', 'internal', 'external', 'gui', 'installDependencies'}; % Not plugins
-  if(DEVELOPMENT)
-    folders{end+1} = 'development';
-  end
-  for i = 1:length(folders)
-    % This is for folders and subfolders
-    if(exist(folders{i}, 'dir'))
-      fileList = getAllFiles(folders{i});
-      for j = 1:length(fileList)
-        if(any(regexp(fileList{j}, '(\.m)$')) && ~any(cellfun(@(x) strcmpi(x, fileList{j}), serverFileList)))
-          logMsg(sprintf('Found file %s that should not be there. Consider deleting it if you do not know what it is', fileList{j}));
-          success = false;
-        end
-      end
-    else
-      fileList = rdir(folders{i});
-      for j = 1:length(fileList)
-        if(any(regexp(fileList(j).name, '(\.m)$')) && ~any(cellfun(@(x) strcmpi(x, fileList(j).name), serverFileList)))
-          logMsg(sprintf('Found file %s that should not be there. Consider deleting it if you do not know what it is', fileList(j).name));
-          success = false;
-        end
-      end
-    end
-  end
-  if(success)
-    logMsgHeader('Everything appears to be ok', 'finish');
-  else
-    logMsgHeader('Some inconsistencies were detected. Please force an update', 'finish');
-  end
-end
-
-%--------------------------------------------------------------------------
-function updateForceUpdate(~, ~)
-  success = updateFileByFile(true);
-  if(success)
-    logMsg('Force update succeeded. Please restart the application');
-    h = msgbox({'Force update succeeded. Please restart the application'});
-    uiwait(h);
-    close(netcalMainWindow);
-  else
-    logMsg('Force Update failed', 'e');
-  end
-end
-
-%--------------------------------------------------------------------------
-function pluginChecker()
-  % Reset the list
-  for it = 1:length(hs.menu.plugins.list)
-    delete(hs.menu.plugins.list(it));
-  end
-  hs.menu.plugins.list = [];
-
-  pluginList = dir([appFolder filesep 'plugins' filesep '*.m']);
-  if(~isempty(pluginList))
-    hs.menu.plugins.root.Enable = 'on';
-    for i = 1:length(pluginList)
-      [fpa, fpb, fpc] = fileparts(pluginList(i).name);
-      if(~strcmpi(fpc, '.m'))
-          continue;
-      elseif(strcmpi(fpb(1), '.'))
-          continue;
-      end
-      pluginName = fpb;
-      hs.menu.plugins.list = [hs.menu.plugins.list; ...
-                              uimenu(hs.menu.plugins.root, 'Label', pluginName, 'Enable', 'on', ...
-                                     'Checked', 'off', 'Callback', eval(['@' pluginName]))];
-    end
-  end
-end
-
-%--------------------------------------------------------------------------
-function docChecker()
-  % Reset the list
-  for it = 1:length(hs.menu.docs.list)
-    delete(hs.menu.docs.list(it));
-  end
-  hs.menu.docs.list = [];
-
-  %docsList = dir([appFolder filesep 'docs' filesep '*.md']);
-  docsList = rdir([appFolder filesep 'docs' filesep 'tutorials' filesep, '**', filesep, '*']);
-  if(~isempty(docsList))
-    hs.menu.docs.root.Enable = 'on';
-    for i = 1:length(docsList)
-      [fpa, fpb, fpc] = fileparts(docsList(i).name);
-      relFolder = strrep(fpa, [appFolder filesep 'docs' filesep 'tutorials' filesep], '');
-      relFolder = strsplit(relFolder, filesep);
-      
-      if(~strcmpi(fpc, '.md'))
-        continue;
-      elseif(strcmpi(fpb(1), 'index.md'))
-        continue;
-      elseif(strcmpi(fpb(1), '.'))
-        continue;
-      end
-      % Get the parent
-      curName = [];
-      lastParent = [];
-      for it = 1:length(relFolder)
-        valid = find(arrayfun(@(x)strcmp(x.Tag, curName), hs.menu.docs.list));
-        curName = [curName, relFolder{it}];
-        if(isempty(valid))
-          hs.menu.docs.list = [hs.menu.docs.list; ...
-                              uimenu(hs.menu.docs.root, 'Label', relFolder{it}, 'Enable', 'on', 'Tag', curName)];
-        else
-          hs.menu.docs.list = [hs.menu.docs.list; ...
-                              uimenu(hs.menu.docs.list(valid), 'Label', relFolder{it}, 'Enable', 'on', 'Tag', curName)];
-        end
-        lastParent = hs.menu.docs.list(end);
-      end
-      docName = fpb;
-      if(isempty(lastParent))
-        hs.menu.docs.list = [hs.menu.docs.list; ...
-                              uimenu(hs.menu.docs.root, 'Label', docName, 'Enable', 'on', ...
-                                     'Checked', 'off', 'Callback', {@menuTutorialOpen, docsList(i).name})];
-      else
-        hs.menu.docs.list = [hs.menu.docs.list; ...
-                              uimenu(lastParent, 'Label', docName, 'Enable', 'on', ...
-                                     'Checked', 'off', 'Callback', {@menuTutorialOpen, docsList(i).name})];
-      end
-    end
-  end
-end
-
-%--------------------------------------------------------------------------
-function menuTutorialOpen(~, ~, tutorialFile)
-  [fpa, fpb, fpc] = fileparts(tutorialFile);
-  hFig = figure('name', ['Tutorial: ' fpb], 'NumberTitle', 'off',...
-    'toolbar','none','menubar','none');
-  hFig.Position = setFigurePosition(gcbf, 'width', 600, 'height', 700);
-  tutFile = fileread(tutorialFile);
-  gap = 0.025;
-  hFigPanel = MarkdownPanel('Parent', hFig, 'Position',  [gap, gap, 1-2*gap, 1-2*gap]);
-  set(hFigPanel, 'Content', tutFile);
-
- % Setup a timer to refresh the MarkdownPanel periodically
-  timerFcnB = @(s,e)set(hFigPanel, 'Content', char(hFigPanel.Content));
-  doctimer = timer( ...
-      'Period',        1, ...
-      'BusyMode',      'drop', ...
-      'TimerFcn',      timerFcnB, ...
-      'ExecutionMode', 'fixedRate');
-
-  % Destroy the timer when the panel is destroyed
-
-  L = addlistener(hFigPanel, 'ObjectBeingDestroyed', @timerCallbackB);
-  setappdata(hFig, 'Timer', L);
-
-  % Start the refresh timer
-  start(doctimer)
-  function timerCallbackB(~, ~)
-    stop(doctimer);
-    delete(doctimer);
-  end
 end
 
 %--------------------------------------------------------------------------     
@@ -3637,9 +3051,9 @@ function loadOptions()
   end
   % Check for correct options (just in case)
   if(~ischar(optionsData.defaultFolder) && ~isa(optionsData.defaultFolder,'java.io.File'))
-    optionsData.defaultFolder = pwd;
+    optionsData.defaultFolder = appFolder;
   elseif(~exist(optionsData.defaultFolder,'dir'))
-    optionsData.defaultFolder = pwd;
+    optionsData.defaultFolder = appFolder;
   end
   if(isfield(optionsData, 'recentProjectsList'))
     if(~iscell(optionsData.recentProjectsList))
@@ -3710,13 +3124,15 @@ function menu = initializeMenu(~, ~)
   menu.project.loadRecentList = [];
   menu.project.save = uimenu(menu.project.root, 'Label', 'Save project', 'Accelerator', 'S', 'Callback', @menuProjectSave);
   menu.project.export = uimenu(menu.project.root, 'Label', 'Export project', 'Callback', @menuProjectExport);
-  menu.project.rename = uimenu(menu.project.root, 'Label', 'Rename project', 'Callback', @menuProjectRename);
-  menu.project.close = uimenu(menu.project.root, 'Label', 'Close project', 'Callback', @menuProjectClose);
+  menu.project.rename = uimenu(menu.project.root, 'Label', 'Rename project', 'Callback', {@menuProjectRename, appName});
+  menu.project.close = uimenu(menu.project.root, 'Label', 'Close project', 'Callback', {@menuProjectClose, appName});
   menu.project.update.root = uimenu(menu.project.root, 'Label', 'Update', 'Separator', 'on');
-  menu.project.update.check = uimenu(menu.project.update.root, 'Label', 'Check consistency', 'Callback', @updateCheckConsistency);
+  menu.project.update.check = uimenu(menu.project.update.root, 'Label', 'Check consistency', 'Callback', {@updateCheckConsistency, updaterSource, DEVELOPMENT});
   menu.project.update.force = uimenu(menu.project.update.root, 'Label', 'Force update', 'Callback', @updateForceUpdate);
   menu.project.preferences = uimenu(menu.project.root, 'Label', 'Preferences', 'Separator', 'on', 'Callback', @menuPreferences);
   menu.project.clearLog = uimenu(menu.project.root, 'Label', 'Clear log', 'Accelerator', 'X', 'Callback', @menuClearLog);
+  menu.project.closeAll = uimenu(menu.project.root, 'Label', 'Close all figures', 'Callback', @menuCloseFigures);
+  
   menu.project.quit = uimenu(menu.project.root, 'Label', 'Exit', 'Accelerator', 'Q', 'Callback', 'close(gcbf)', 'Separator', 'on');
   
   menu.experiment.root = uimenu(netcalMainWindow, 'Label', 'Experiment');
@@ -3748,14 +3164,14 @@ function menu = initializeMenu(~, ~)
   menu.docs.list = [];
   % Now help
   menu.help.root = uimenu(netcalMainWindow, 'Label', 'Help');
-  menu.help.about = uimenu(menu.help.root, 'Label', 'About', 'Callback', @menuAbout);
-  menu.help.changelog = uimenu(menu.help.root, 'Label', 'Changelog', 'Callback', @menuChangelog);
+  menu.help.about = uimenu(menu.help.root, 'Label', 'About', 'Callback', {@menuAbout, appFolder});
+  menu.help.changelog = uimenu(menu.help.root, 'Label', 'Changelog', 'Callback', {@menuChangelog, appFolder});
 end
 
 %--------------------------------------------------------------------------
 function menu = initializeModulesMenu()
   try
-    modules = loadModules();
+    modules = loadModules(DEVELOPMENT);
   catch ME
     logMsg('There was a problem loading the modules', netcalMainWindow, 'e');
     logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
@@ -3826,7 +3242,7 @@ function updateModulesMenu()
     experimentFields = [];
     experimentName = '';
   end
-  modules = loadModules();
+  modules = loadModules(DEVELOPMENT);
 
   menuHandles = findall(netcalMainWindow, 'type', 'uimenu');
   tagList = {menuHandles(:).Tag};
@@ -3843,7 +3259,7 @@ function updateModulesMenu()
       logMsg(['There was a problem with menu ' moduleTag], netcalMainWindow, 'w');
       continue;
     end
-    if(isempty(project) && ~isempty(moduleParent))
+    if(isempty(project) && ~isempty(moduleParent) && isfield(currentMenu.Parent, 'Text') && ~strcmp(currentMenu.Parent.Text, 'Pipeline'))
       continue;
     end
     % Disable development modules
@@ -3857,7 +3273,7 @@ function updateModulesMenu()
         continue;
       end
     end
-    
+
     if(isempty(moduleDepends) || strcmp(experimentSelectionMode, 'multiple'))
       currentMenu.Enable = 'on';
     end
@@ -3912,11 +3328,6 @@ function resetProjectTree(~, ~)
 
   project = getappdata(netcalMainWindow, 'project');
 
-  % Reset current experiment
-  if(~isfield(project, 'currentExperiment'))
-    project.currentExperiment = [];
-  end
-
   %%% Delete tree and menus
   if(~isempty(projectTree))
     if(isprop(projectTree, 'Root') && ~isempty(projectTree.Root))
@@ -3932,7 +3343,21 @@ function resetProjectTree(~, ~)
   end
   hlog = getappdata(netcalMainWindow, 'infoHandle');
   logMessage(hlog, 'clear');
-  logMessage(hlog, 'No experiment selected');
+  
+  if(isempty(project))
+    logMessage(hlog, 'No active project' ,'w');
+    logMessage(hlog, '', 'w');
+    logMessage(hlog, 'Please load a project or create a new one to get started', 'w');
+    logMessage(hlog, '', 'w');
+    logMessage(hlog, 'You can also drag and drop a recording to automatically create a new project', 'w');
+  else
+    logMessage(hlog, 'No experiment selected');
+  end
+  
+  % Reset current experiment
+  if(~isempty(project) && ~isfield(project, 'currentExperiment'))
+    project.currentExperiment = [];
+  end
 
   %%% Recreate the tree
   try
@@ -3943,6 +3368,7 @@ function resetProjectTree(~, ~)
     projectTree.jCellRenderer.setFont(baseTreeFont);
     projectTree.NodeDroppedCallback = @(s,e)experimentTreeDnDCallback(s,e);
     projectTree.SelectionChangeFcn = @selectedMethod;
+    projectTree.ButtonDownFcn = @checkedHack;
   catch ME
     logMsg('Tree creation failed failed', netcalMainWindow, 'e');
     logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), 'e');
@@ -3953,6 +3379,7 @@ function resetProjectTree(~, ~)
     projectTree.Editable = false;
     projectTree.jCellRenderer.setFont(baseTreeFont);
     projectTree.NodeDroppedCallback = @(s,e)experimentTreeDnDCallback(s,e);
+    projectTree.ButtonDownFcn = @checkedHack;
   end
 
   %%% Let's create the menus
@@ -3973,16 +3400,25 @@ function resetProjectTree(~, ~)
   uimenu(projectTreeContextMenuRoot, 'Label', 'Sort by name (inverse)', 'Callback', {@sortMethod, projectTree, 'nameInverse'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Sort by label', 'Callback', {@sortMethod, projectTree, 'label'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Sort by label (inverse)', 'Callback', {@sortMethod, projectTree, 'labelInverse'});
+  uimenu(projectTreeContextMenuRoot, 'Label', 'Sort by matching pairs', 'Callback', {@sortMethod, projectTree, 'pairs'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Check all', 'Separator', 'on', 'Callback', {@selectMethod, projectTree, 'all'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Check none', 'Callback', {@selectMethod, projectTree, 'none'});
   uimenu(projectTreeContextMenuRoot, 'Label', 'Check by label', 'Callback', {@selectMethod, projectTree, 'label'});
   
   %%% If there is no project or experiments we are done
-  if(isempty(project) || ~isfield(project, 'experiments') || isempty(project.experiments))
+%   if(isempty(project) || ~isfield(project, 'experiments') || isempty(project.experiments))
+%     updateProjectTree();
+%     return;
+%   end
+
+  % If there is no project, we are done, else continue
+  if(isempty(project))
     updateProjectTree();
     return;
+  elseif(~isfield(project, 'experiments') || isempty(project.experiments))
+    project.experiments = [];
   end
-  
+
   if(~isfield(project, 'checkedExperiments'))
     project.checkedExperiments = false(length(project.experiments), 1);
     setappdata(netcalMainWindow, 'project', project);
@@ -3996,7 +3432,10 @@ function resetProjectTree(~, ~)
   end
 
   % Check/fix the labels
-  if(~isfield(project, 'labels') || length(project.labels) < length(project.experiments))
+  if(~isfield(project, 'labels'))
+    project.labels = cell(1, length(project.experiments));
+  end
+  if(length(project.labels) < length(project.experiments))
     project.labels{length(project.experiments)} = [];
   end
   
@@ -4023,6 +3462,7 @@ function resetProjectTree(~, ~)
   projectTree.CheckboxClickedCallback = @checkedMethod;
   setappdata(netcalMainWindow, 'project', project);
   updateProjectTree();
+  setappdata(netcalMainWindow, 'projectTree', projectTree);
   %%% Here are all the submethods for the menus
 
   
@@ -4037,6 +3477,18 @@ function resetProjectTree(~, ~)
         if(strcmpi(fpc, '.proj'))
           % It's a project. Let's load it!
           menuProjectLoad([], [], e.files{1});
+          return;
+        end
+      end
+      project = getappdata(netcalMainWindow, 'project');
+      if(isempty(project))
+        % Try to create a new project
+        logMsg('There is no active project, creating a new one', 'w');
+        [fpa, fpb, fpc] = fileparts(e.files{1});
+        menuProjectNew([], [], 'folder', fpa);
+        project = getappdata(netcalMainWindow, 'project');
+        if(isempty(project))
+          logMsg('Can''t add an experiment without an active project. Please create one', 'e');
           return;
         end
       end
@@ -4090,12 +3542,22 @@ function resetProjectTree(~, ~)
     if(isempty(hObject.SelectedNodes))
       return;
     end
+    prevExperiment = project.currentExperiment;
     project.currentExperiment = find(hObject.Root.Children == hObject.SelectedNodes(1));
     experimentName = project.experiments{project.currentExperiment};
     experimentFile = [project.folderFiles experimentName '.exp'];
-    printSavedExperimentInfo(experimentFile);
+    
     setappdata(netcalMainWindow, 'project', project);
-    updateMenu();
+    % Only need to upate the following when we change from selected experiment
+    if(prevExperiment ~= project.currentExperiment)
+      printSavedExperimentInfo(experimentFile);
+      updateMenu();
+    else
+      printProjectInfo(project);
+    end
+    if(guiImprovements)
+      checkedHack(hObject, []);
+    end
   end
   
   %------------------------------------------------------------------------
@@ -4194,15 +3656,40 @@ function resetProjectTree(~, ~)
     
     switch mode
       case 'name'
-        [~, newOrder] = sort(namesList);
+        [~, newOrder] = sort(upper(namesList));
       case 'nameInverse'
-        [~, newOrder] = sort(namesList);
+        [~, newOrder] = sort(upper(namesList));
         newOrder = newOrder(end:-1:1);
       case 'label'
-        [~, newOrder] = sort(labelsList);
+        [~, newOrder] = sort(upper(labelsList));
       case 'labelInverse'
-        [~, newOrder] = sort(labelsList);
+        [~, newOrder] = sort(upper(labelsList));
         newOrder = newOrder(end:-1:1);
+      case 'pairs'
+        %answer = inputdlg('Pairs Keywords (two words)', 'Assign Pairs', [1 60], {'KEYWORD1 KEYWORD2'});
+        answer = inputdlg('Pairs Keywords (two words)', 'Assign Pairs', [1 60], {'BASAL BIC'});
+        words = strsplit(answer{1});
+        if(length(words) ~= 2)
+          logMsg(sprintf('Two words expected. Found %d instead', length(words)), 'e');
+          return;
+        end
+        namesList = strtrim(upper(namesList));
+        uwords = upper(words);
+        newOrder = [];
+        for it1  = 1:length(namesList)
+          if(strfind(namesList{it1}, uwords(1)))
+            % Might have a pair
+            tmpName = strrep(namesList{it1}, uwords(1), uwords(2));
+            pairIdx = find(strcmp(namesList, tmpName));
+            if(~isempty(pairIdx))
+              logMsg(sprintf('Pair found (%s/%s)', namesList{it1}, namesList{pairIdx(1)}));
+              newOrder = [newOrder; it1; pairIdx(1)];
+            end
+          end
+        end
+        logMsg(sprintf('Found %d pairs', length(newOrder)/2));
+        unpaired = setdiff(1:length(namesList), newOrder);
+        newOrder = [newOrder; unpaired(:)];
     end
     
     %%% The actual reorder
@@ -4487,8 +3974,8 @@ function createPipelineFunctions()
   functionList = pipelineFuctionList();
 
   pipelineFunctionsTree = TreeFunctionList('Parent',hs.pipelineFunctionListPanel);
+  setappdata(netcalMainWindow, 'pipelineFunctionsTree', pipelineFunctionsTree);
   pipelineFunctionsTree.jCellRenderer.setFont(baseTreeFont);
-  currentTree = pipelineFunctionsTree;
   
   % The help button - not here, on the nodes
   %set(currentTree, 'UIContextMenu', pipelineTreeContextMenuRoot);
@@ -4502,14 +3989,14 @@ function createPipelineFunctions()
     parentGroups = functionList{it}{6};
     % Look for possible parent group
     if(~isempty(parentGroups))
-      nodeList = getAllChildren(currentTree.Root);
+      nodeList = getAllChildren(pipelineFunctionsTree.Root);
       for it2 = 1:length(parentGroups)
         % Create the parent and assign it
         % If the parent has a colon, it's nested, check for the root and create if needed first
         splitName = strtrim(strsplit(parentGroups{it2}, ':'));
         % Go through all levels
         currentName = splitName{1};
-        previousParent = currentTree.Root;
+        previousParent = pipelineFunctionsTree.Root;
         for it3 = 1:length(splitName)
           % Generate partial name
           if(it3 > 1)
@@ -4519,7 +4006,14 @@ function createPipelineFunctions()
           parentFoundIdx = find(arrayfun(@(x,y) strcmpi(x.TooltipString, currentName), nodeList));
           if(~isempty(parentFoundIdx))
             % If I found a parent, return it
-            previousParent = nodeList(parentFoundIdx);
+            if(length(parentFoundIdx) > 1)
+              for it4 = 1:length(parentFoundIdx)
+                logMsg(sprintf('Warning! Multiple parents found while creating the pipeline function list for: %s', functionList{it}{1}), 'w');
+              end
+              previousParent = nodeList(parentFoundIdx(1));
+            else
+              previousParent = nodeList(parentFoundIdx);
+            end
           else
             % Else, create and attach it to the previous parent
             previousParent = uiextras.jTree.TreeNode('Name', splitName{it3}, ...
@@ -4532,6 +4026,7 @@ function createPipelineFunctions()
                                      'TooltipString', functionList{it}{1}, ...
                                      'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}, functionList{it}{7}, functionList{it}{8}});
         pipelineTreeContextMenuRoot = uicontextmenu('Parent', netcalMainWindow);
+        uimenu(pipelineTreeContextMenuRoot, 'Label', 'Add', 'Callback', {@pipelineFunctionAdd, rr});
         uimenu(pipelineTreeContextMenuRoot, 'Label', 'Help', 'Callback', {@pipelineFunctionHelp, functionList{it}{3}});
         set(rr, 'UIContextMenu', pipelineTreeContextMenuRoot);
         switch functionList{it}{7}
@@ -4557,10 +4052,11 @@ function createPipelineFunctions()
     else
       % If there are no parents (weird case)
       rr = uiextras.jTree.TreeNode('Name', strtrim(functionList{it}{1}), ...
-                                   'Parent', currentTree.Root, ...
+                                   'Parent', pipelineFunctionsTree.Root, ...
                                    'TooltipString', functionList{it}{1}, ...
                                    'UserData', {[], opt, functionList{it}{2}, functionList{it}{4}, functionList{it}{5}, [], functionList{it}{8}});
       pipelineTreeContextMenuRoot = uicontextmenu('Parent', netcalMainWindow);
+      uimenu(pipelineTreeContextMenuRoot, 'Label', 'Add', 'Callback', {@pipelineFunctionAdd, functionList{it}{3}});
       uimenu(pipelineTreeContextMenuRoot, 'Label', 'Help', 'Callback', {@pipelineFunctionHelp, functionList{it}{3}});
       set(rr, 'UIContextMenu', pipelineTreeContextMenuRoot);
       switch functionList{it}{7}
@@ -4585,47 +4081,53 @@ function createPipelineFunctions()
     end
   end
   
-  currentTree.RootVisible = false;
-  currentTree.DndEnabled = true;
+  pipelineFunctionsTree.RootVisible = false;
+  pipelineFunctionsTree.DndEnabled = true;
   %currentTree.SelectionType = 'discontiguous';
-  currentTree.SelectionType = 'single';
+  pipelineFunctionsTree.SelectionType = 'single';
   %currentTree.FontSize = textFontSize;
-  currentTree.SelectionChangeFcn = @selectedMethodAvailableFunction;
+  pipelineFunctionsTree.SelectionChangeFcn = @selectedMethodAvailableFunction;
   
 
   pipelineTree = CheckboxTreePipeline('Parent',hs.pipelinePanel);
+  if(guiImprovements)
+    pipelineTreeListener = addlistener(pipelineTree.getJavaObjects.jTree, 'Keypressed', @clickPipeline);
+  end
   pipelineTree.jCellRenderer.setFont(baseTreeFont);
 
   %pipelineTree.FontName = 'Courier New';
   %pipelineTree.FontSize = textFontSize;
-  currentPipelineTree = pipelineTree;
 
   % Create tree nodes
-  currentPipelineTree.RootVisible = false;
-  currentPipelineTree.DndEnabled = true;
-  currentPipelineTree.SelectionType = 'discontiguous';
+  pipelineTree.RootVisible = false;
+  pipelineTree.DndEnabled = true;
+  pipelineTree.SelectionType = 'discontiguous';
+  if(guiImprovements)
+    pipelineTree.ButtonDownFcn = @checkedHack;
+  end
   
-  currentPipelineTree.CheckboxClickedCallback = @checkedMethodPipeline;
-  currentPipelineTree.UserData = {};  
+  pipelineTree.CheckboxClickedCallback = @checkedMethodPipeline;
+  pipelineTree.UserData = {};  
   %currentPipelineTree.FontSize = textFontSize;
   
   
-  currentPipelineTree.SelectionChangeFcn = @selectedMethodPipeline;
+  pipelineTree.SelectionChangeFcn = @selectedMethodPipeline;
   optionsWindow([], 'parent', hs.pipelineOptionsPanel);
     
-  currentTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
-  currentPipelineTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
+  pipelineFunctionsTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
+  pipelineTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
   
   % Now let's reorder the tree
-  rootNames = arrayfun(@(x)x.Name, currentTree.Root.Children, 'UniformOutput', false);
+  rootNames = arrayfun(@(x)x.Name, pipelineFunctionsTree.Root.Children, 'UniformOutput', false);
   [~, sorted] = sort(rootNames);
-  nodesOrdered = currentTree.Root.Children(sorted);
-  set(nodesOrdered, 'Parent', currentTree.Root);
+  nodesOrdered = pipelineFunctionsTree.Root.Children(sorted);
+  set(nodesOrdered, 'Parent', pipelineFunctionsTree.Root);
   % Now let's reorder the children
   % This bit here sorts children, first those with children and then by name
-  pipelineSortChildren(currentTree.Root);
+  pipelineSortChildren(pipelineFunctionsTree.Root);
   
-  setappdata(netcalMainWindow, 'Tree', currentTree);
+  setappdata(netcalMainWindow, 'Tree', pipelineFunctionsTree);
+  setappdata(netcalMainWindow, 'pipelineTree', pipelineTree);
 end
 
 %--------------------------------------------------------------------------
@@ -4653,8 +4155,51 @@ function parent = pipelineSortChildren(parent)
     pipelineSortChildren(curNode);
   end
 end
+
+%--------------------------------------------------------------------------
+function pipelineFunctionAdd(~, ~, caller)
+  s = pipelineTree;
+  e = struct;
+  e.Source = caller;
+  e.Target = pipelineTree.Root;
+  e.DropAction = 'move';
+  e.dragType = 'functionToPipeline';
+  %pipelineTree.onNodeDND(s, e);
+
+  opt = caller.UserData{2};
+  rr = uiextras.jTree.CheckboxTreeNode('Name', sprintf('%3.d. %s', length(pipelineTree.Root.Children)+1, caller.Name), ...
+                              'Parent', pipelineTree.Root, ...
+                              'TooltipString', caller.Name, ...
+                              'Checked', false, ...
+                              'UserData', caller.UserData);
+      if(~isempty(caller.UserData{6}))
+        switch caller.UserData{6}
+          case 'projexp'
+            colName = 'purple';
+          case 'experiment'
+            colName = 'blue';
+          case 'project'
+            colName = 'orange';
+          case 'projexpDebug'
+            colName = 'red';
+          case 'experimentDebug'
+            colName = 'red';
+          case 'projectDebug'
+            colName = 'red';
+          otherwise
+            colName = 'black';
+        end
+      else
+        colName = 'black';
+      end
+      rr.Name = strrep(rr.Name, ' ', '&nbsp;');
+      set(rr, 'Name', sprintf('<html><font color="%s">%s</font></html>', colName, regexprep(get(rr, 'Name'), '<[^>]*>', '')));
+      rr.Parent.Children; % WEIRD HACK FOR COMPTABILITY REASON IN MATLAB < 2017 - This is the Schroedinger pipeline, if I don't query the children they don't get saved
+end
+
 %--------------------------------------------------------------------------
 function pipelineFunctionHelp(~, ~, caller)
+
   caller = class(caller);
 
   % Firs thing is to know who is selected
@@ -4679,11 +4224,10 @@ function pipelineFunctionHelp(~, ~, caller)
       helpFig.Position = setFigurePosition(netcalMainWindow, 'width', 500, 'height', 500);
     end
 
-    helpPanel = MarkdownPanel('Parent', helpFig);
-
+    %helpPanel = MarkdownPanel('Parent', helpFig);
     helpText = generateAutomaticHelpFile(classFile);
 
-    set(helpPanel, 'Content', helpText);
+    helpPanel = newMarkdownPanel24(helpFig, helpText);
     helpFig.Visible = 'on';
 
    timerFcn = @(s,e)set(helpPanel, 'Content', char(helpPanel.Content));
@@ -4711,6 +4255,8 @@ end
 
 %------------------------------------------------------------------------
 function DropOk = pipelineTreeDnDCallback(s, e)
+  e.Source
+  e.Target
   for it = 1:length(e.Source)
     if(isvalid(e.Source(it)) && isa(e.Source(it).Tree, 'CheckboxTreePipeline'))
       enew.Nodes = e.Source(it).Tree.SelectedNodes;
@@ -4724,21 +4270,43 @@ function DropOk = pipelineTreeDnDCallback(s, e)
   DropOk = true;
 end
 
+
+%--------------------------------------------------------------------------
+function clickPipeline(hObject, eData)
+  if(guiImprovements)
+    if(strcmp(eData.getKeyText(eData.getKeyCode()),'Delete') | strcmp(eData.getKeyText(eData.getKeyCode()),'Backspace'))
+      % Delete the current function
+      if(isempty(pipelineTree.SelectedNodes))
+        return;
+      end
+      prevNode = find(pipelineTree.Root.Children == pipelineTree.SelectedNodes(1))-1;
+      if(~isempty(prevNode) && prevNode > 1)
+        newSelNode = pipelineTree.Root.Children(prevNode);
+      end
+      delete(pipelineTree.SelectedNodes);
+      if(~isempty(prevNode) && prevNode > 1)
+        pipelineTree.SelectedNodes = newSelNode;
+        e.Nodes = newSelNode;
+      end
+
+      selectedMethodPipeline(pipelineTree, e);
+    end
+  end
+end
+
 %------------------------------------------------------------------------
 function selectedMethodPipeline(h, e)
-  
-  currentTree = 1;
   parent = hs.pipelineOptionsPanel;
 
   updateActiveNodeParams(h);
   project = getappdata(netcalMainWindow, 'project');
   if(length(e.Nodes) > 1 || isempty(e.Nodes))
-    if(currentTree == 2)
-      optionsWindow([], 'parent', parent, 'parentType', 'secondary', 'project', project);
-    else
+%     if(currentTree == 2)
+%       optionsWindow([], 'parent', parent, 'parentType', 'secondary', 'project', project);
+%     else
       optionsWindow([], 'parent', parent, 'project', project);
-    end
-    activeNode{currentTree} = [];
+%     end
+    activeNode = [];
     return;
   end
 
@@ -4751,12 +4319,13 @@ function selectedMethodPipeline(h, e)
     optionsWindow(e.Nodes(1).UserData{2}, 'parent', parent, 'project', project);
   end
   
-  activeNode{currentTree} = e.Nodes(1).UserData{1};
+  activeNode = e.Nodes(1).UserData{1};
 end
 
 %------------------------------------------------------------------------
 function checkedMethodPipeline(h, e)
   % For now don't really need to do anything with checked experiments
+
 end
 
 %------------------------------------------------------------------------
@@ -4790,26 +4359,24 @@ function selectedMethodAvailableFunction(h, e)
     logMessage(hs.pipelineFunctionListInfoPanelEditBox, 'No Function selected');
   end
 end
+
 %------------------------------------------------------------------------
 function updateActiveNodeParams(h, selectedNodes)
-  
-  currentTree = 1;
-  
   if(nargin >= 2)
     if(~isempty(selectedNodes))
-      activeNode{currentTree} = selectedNodes(1);
+      activeNode = selectedNodes(1);
     else
-      activeNode{currentTree} = [];
+      activeNode = [];
     end
   end
-  if(~isempty(activeNode{currentTree}))
+  if(~isempty(activeNode))
 
     curClassParams = getappdata(netcalMainWindow, 'curClassParams');
 
     childrenList = h.Root.Children;
     % Update the node options values
     for i = 1:length(childrenList)
-      if(childrenList(i).UserData{1} == activeNode{currentTree})
+      if(childrenList(i).UserData{1} == activeNode)
         if(~isempty(curClassParams))
           childrenList(i).UserData{2} = curClassParams;
         end
@@ -4822,10 +4389,8 @@ end
 %------------------------------------------------------------------------
 function success = pipelineCheck(~, ~, verbose)
   
-  currentTree = pipelineTree;
-  
   % First update the current node
-  updateActiveNodeParams(currentTree);
+  updateActiveNodeParams(pipelineTree);
   
   if(nargin < 4)
     verbose = true;
@@ -4853,19 +4418,19 @@ function success = pipelineCheck(~, ~, verbose)
   availableFields = fieldnames(experiment);
 
   % Now the check
-  if(isempty(currentTree.CheckedNodes))
+  if(isempty(pipelineTree.CheckedNodes))
     logMsg('No checked functions found in the pipeline', 'e');
     logMsgHeader('Done!', 'finish');
     return;
   end
-  if(length(currentTree.CheckedNodes) == 1 && strcmp(currentTree.CheckedNodes(1).Name, 'Root'))
+  if(length(pipelineTree.CheckedNodes) == 1 && strcmp(pipelineTree.CheckedNodes(1).Name, 'Root'))
     fullPipeline = true;
   else
     fullPipeline = false;
   end
-  functionList = currentTree.Root.Children;
+  functionList = pipelineTree.Root.Children;
   for i = 1:length(functionList)
-    if(fullPipeline || any(currentTree.CheckedNodes == functionList(i)))
+    if(fullPipeline || any(pipelineTree.CheckedNodes == functionList(i)))
       requiredFields = functionList(i).UserData{4}';
       newFields = functionList(i).UserData{5}';
       
@@ -4957,10 +4522,8 @@ function pipelineRun(~, ~, parallelMode)
     parallelMode = false;
   end
   
-  currentTree = pipelineTree;
-  
   % First update the current node
-  updateActiveNodeParams(currentTree);
+  updateActiveNodeParams(pipelineTree);
   
   % First check its consistency
   if(~pipelineCheck([], [], false))
@@ -4968,6 +4531,13 @@ function pipelineRun(~, ~, parallelMode)
   end
 
   project = getappdata(netcalMainWindow, 'project');
+  
+  % Update the checked experiment list - to avoi the weird clicking bug
+  project.checkedExperiments = arrayfun(@(x)x.Checked, projectTree.Root.Children);
+  for it = 1:length(projectTree.Root.Children)
+    projectTree.Root.Children(it).UserData{3} = logical(project.checkedExperiments(it));
+  end
+    
   checkedExperiments = find(project.checkedExperiments);
   if(isempty(checkedExperiments))
     logMsg('No checked experiments found', 'e');
@@ -4976,17 +4546,17 @@ function pipelineRun(~, ~, parallelMode)
   end
   
   % Let's get the function list
-  if(isempty(currentTree.CheckedNodes))
+  if(isempty(pipelineTree.CheckedNodes))
     logMsg('No checked functions found in the pipeline', 'e');
     logMsgHeader('Done!', 'finish');
     return;
   end
-  if(length(currentTree.CheckedNodes) == 1 && strcmp(currentTree.CheckedNodes(1).Name, 'Root'))
+  if(length(pipelineTree.CheckedNodes) == 1 && strcmp(pipelineTree.CheckedNodes(1).Name, 'Root'))
     fullPipeline = true;
   else
     fullPipeline = false;
   end
-  functionList = currentTree.Root.Children;
+  functionList = pipelineTree.Root.Children;
   functionHandleList = {};
   optionsList = {};
   nodeList = {};
@@ -5017,7 +4587,7 @@ function pipelineRun(~, ~, parallelMode)
       end
       functionList(i).Name = sprintf('<html><font color="%s">%s</font></html>', colName, regexprep(functionList(i).Name, '<[^>]*>', ''));
     end                   
-    if(fullPipeline || any(currentTree.CheckedNodes == functionList(i)))
+    if(fullPipeline || any(pipelineTree.CheckedNodes == functionList(i)))
       functionHandleList{end+1} = functionList(i).UserData{3};
       optionsList{end+1} = functionList(i).UserData{2};
       nodeList{end+1} = functionList(i);
@@ -5109,7 +4679,12 @@ function pipelineRun(~, ~, parallelMode)
             end
           end
         end
-        optarg = {optionsClassCurrent, 'pbar', 3, 'verbose', false};
+        if(isprop(optionsClassCurrent, 'verbose'))
+          verboseVar = optionsClassCurrent.verbose;
+        else
+          verboseVar = false;
+        end
+        optarg = {optionsClassCurrent, 'pbar', 3, 'verbose', verboseVar};
       else
         optarg = {'pbar', 3, 'verbose', false};
       end
@@ -5327,9 +4902,9 @@ function pipelineRun(~, ~, parallelMode)
             try
               experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project, 'pbar', 3);
               if(strcmp(modeList{f}, 'projANDexp'))
-                futures(it) = parfeval(analysisFunction, 1, experiment, project, optarg{:});
+                futures(it) = parfeval(str2func(analysisFunction), 1, experiment, project, optarg{:});
               else
-                futures(it) = parfeval(analysisFunction, 1, experiment, optarg{:});
+                futures(it) = parfeval(str2func(analysisFunction), 1, experiment, optarg{:});
               end
               
             catch ME
@@ -5360,6 +4935,24 @@ function pipelineRun(~, ~, parallelMode)
     ncbar.close();
   end
   logMsgHeader('Done!', 'finish');
+end
+
+%--------------------------------------------------------------------------
+function menuProjectSave(~, ~)
+%  netcalMainWindow = gcbf;
+  ncbar.automatic('Saving project...');
+
+  project = getappdata(netcalMainWindow, 'project');
+  if(~isempty(project))
+    saveProject(project, 'gui', netcalMainWindow);
+  end
+  % Save the project pipeline
+  try
+    savePipeline([], [], [project.folder filesep 'pipeline.json']);
+  catch ME
+    logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), 'e');
+  end
+  ncbar.close();
 end
 
 %--------------------------------------------------------------------------
@@ -5397,20 +4990,18 @@ function savePipeline(~, ~, pipelineFile)
   end
   completeList = [];
   
-  
-  currentTree = pipelineTree;
 
-  if(length(currentTree.CheckedNodes) == 1 && strcmp(currentTree.CheckedNodes(1).Name, 'Root'))
+  if(length(pipelineTree.CheckedNodes) == 1 && strcmp(pipelineTree.CheckedNodes(1).Name, 'Root'))
     fullPipeline = true;
   else
     fullPipeline = false;
   end
-  functionList = currentTree.Root.Children;
+  functionList = pipelineTree.Root.Children;
 
   fullList(1:length(functionList)) = struct;
   % Create the structure with the current pipeline functions
   for i = 1:length(functionList)
-    if(fullPipeline || any(currentTree.CheckedNodes == functionList(i)))
+    if(fullPipeline || any(pipelineTree.CheckedNodes == functionList(i)))
       functionChecked = true;
     else
       functionChecked = false;
@@ -5446,6 +5037,7 @@ function savePipeline(~, ~, pipelineFile)
     fullnames = fieldnames(fullList(i));
     for j = 1:length(fullnames)
       if(strcmp(fullnames{j}, 'options'))
+        fullList(i).(fullnames{j}) = fullList(i).(fullnames{j}).get();
         fnames = fieldnames(fullList(i).(fullnames{j}));
         for k = 1:length(fnames)
           % STRING is only defined after MATLAB 9.1
@@ -5472,6 +5064,7 @@ function savePipeline(~, ~, pipelineFile)
       if(it == 24)
         %completeList(it).options.backgroundImageCorrection.file = 'bla'
       end
+      
        savejson([], completeList(it), 'ParseLogical', true);
     catch ME
       logMsg(strrep(getReport(ME), sprintf('\n'), '<br/>'), netcalMainWindow, 'e');
@@ -5539,9 +5132,16 @@ function loadPipeline(~, ~, pipelineFile)
   if(~isempty(pipelineTree))
     delete(pipelineTree)
   end
-
+  if(guiImprovements)
+    if(~isempty(pipelineTreeListener))
+      delete(pipelineTreeListener)
+    end
+  end
   % Recreate the trees
   pipelineTree = CheckboxTreePipeline('Parent',hs.pipelinePanel);
+  if(guiImprovements)
+    pipelineTreeListener = addlistener(pipelineTree.getJavaObjects.jTree, 'Keypressed', @clickPipeline);
+  end
   %pipelineTree.FontName = 'Courier New';
   % Create tree nodes
   pipelineTree.RootVisible = false;
@@ -5549,12 +5149,14 @@ function loadPipeline(~, ~, pipelineFile)
   pipelineTree.SelectionType = 'discontiguous';
   pipelineTree.SelectionChangeFcn = @selectedMethodPipeline;
   pipelineTree.CheckboxClickedCallback = @checkedMethodPipeline;
+  if(guiImprovements)
+    pipelineTree.ButtonDownFcn = @checkedHack;
+  end
   pipelineTree.UserData = {};
 %  pipelineTree.FontSize = textFontSize;
   
   pipelineTree.jCellRenderer.setFont(baseTreeFont);
     
-  currentTree = pipelineTree;
   % Ugh
   if(length(fullPipelineData) == 1 && iscell(fullPipelineData))
     pipelineData = cell(1);
@@ -5570,57 +5172,65 @@ function loadPipeline(~, ~, pipelineFile)
     pipelineData = pipelineData{1}.experiment;
     logMsg('Found old pipeline file. Loading just the experiment part', 'w');
   end
-  for i = 1:length(pipelineData)
-    curEntry = pipelineData{i};
-    if(isfield(curEntry, 'optionsClass'))
-      opt = eval(curEntry.optionsClass);
-      opt = opt.set(curEntry.options);
-      opt = fixNestedFields(opt);
-    else
-      opt = [];
-    end
-    if(~iscell(curEntry.required))
-      curEntry.required = num2cell(curEntry.required);
-      curEntry.required = cellfun(@char,curEntry.required,'UniformOutput',false);
-    end
-    if(~iscell(curEntry.produced))
-      curEntry.produced = num2cell(curEntry.produced);
-      curEntry.produced = cellfun(@char,curEntry.produced,'UniformOutput',false);
-    end
-    if(~isfield(curEntry, 'mode'))
-      curEntry.mode = [];
-    end
-    rr = uiextras.jTree.CheckboxTreeNode('Name', sprintf('%3.d. %s', i, curEntry.name), ...
-                            'Parent', currentTree.Root, ...
-                            'TooltipString', curEntry.name, ...
-                            'Checked', curEntry.checked, ...
-                            'UserData', {curEntry.ID, opt, curEntry.handle, curEntry.required, curEntry.produced, curEntry.mode});
-    if(~isempty(curEntry.mode))
-      switch curEntry.mode
-        case 'projexp'
-          colName = 'purple';
-        case 'experiment'
-          colName = 'blue';
-        case 'project'
-          colName = 'orange';
-        case 'projexpDebug'
-          colName = 'red';
-        case 'experimentDebug'
-          colName = 'red';
-        case 'projectDebug'
-          colName = 'red';
-        otherwise
-          colName = 'black';
-      end
-    else
-      colName = 'black';
-    end
-    rr.Name = strrep(rr.Name, ' ', '&nbsp;');
-    set(rr, 'Name', sprintf('<html><font color="%s">%s</font></html>', colName, regexprep(get(rr, 'Name'), '<[^>]*>', '')));
-    rr.Parent.Children; % WEIRD HACK FOR COMPTABILITY REASON IN MATLAB < 2017 - This is the Schroedinger pipeline, if I don't query the children they don't get saved
+  if(iscell(pipelineData) && length(pipelineData) == 1)
+      pipelineData = pipelineData{1};
   end
-  currentTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
-  
+  for i = 1:length(pipelineData)
+    try
+      curEntry = pipelineData(i);
+      if(isfield(curEntry, 'optionsClass'))
+        opt = eval(curEntry.optionsClass);
+        opt = opt.set(curEntry.options);
+        opt = fixNestedFields(opt);
+      else
+        opt = [];
+      end
+      if(~iscell(curEntry.required))
+        curEntry.required = num2cell(curEntry.required);
+        curEntry.required = cellfun(@char,curEntry.required,'UniformOutput',false);
+      end
+      if(~iscell(curEntry.produced))
+        curEntry.produced = num2cell(curEntry.produced);
+        curEntry.produced = cellfun(@char,curEntry.produced,'UniformOutput',false);
+      end
+      if(~isfield(curEntry, 'mode'))
+        curEntry.mode = [];
+      end
+      rr = uiextras.jTree.CheckboxTreeNode('Name', sprintf('%3.d. %s', i, curEntry.name), ...
+                              'Parent', pipelineTree.Root, ...
+                              'TooltipString', curEntry.name, ...
+                              'Checked', curEntry.checked, ...
+                              'UserData', {curEntry.ID, opt, curEntry.handle, curEntry.required, curEntry.produced, curEntry.mode});
+      if(~isempty(curEntry.mode))
+        switch curEntry.mode
+          case 'projexp'
+            colName = 'purple';
+          case 'experiment'
+            colName = 'blue';
+          case 'project'
+            colName = 'orange';
+          case 'projexpDebug'
+            colName = 'red';
+          case 'experimentDebug'
+            colName = 'red';
+          case 'projectDebug'
+            colName = 'red';
+          otherwise
+            colName = 'black';
+        end
+      else
+        colName = 'black';
+      end
+      rr.Name = strrep(rr.Name, ' ', '&nbsp;');
+      set(rr, 'Name', sprintf('<html><font color="%s">%s</font></html>', colName, regexprep(get(rr, 'Name'), '<[^>]*>', '')));
+      rr.Parent.Children; % WEIRD HACK FOR COMPTABILITY REASON IN MATLAB < 2017 - This is the Schroedinger pipeline, if I don't query the children they don't get saved
+    catch ME
+      logMsg(strrep(getReport(ME),  sprintf('\n'), '<br/>'), netcalMainWindow, 'w');
+      logMsg(sprintf('Something went loading entry %d (%s) from the pipeline file', i, curEntry.name), 'w');
+    end
+  end
+  pipelineTree.NodeDroppedCallback = @(s,e)pipelineTreeDnDCallback(s,e);
+  setappdata(netcalMainWindow, 'pipelineTree', pipelineTree);
   if(verbose)
     logMsgHeader('Done!', 'finish');
   end
@@ -5639,7 +5249,11 @@ function curStruct = fixNestedFields(curStruct)
      curField = fixNestedFields(curField);
    elseif(iscell(curField) && size(curField, 2) ~= 1 && size(curField, 1) == 1)
      if(~verLessThan('matlab', '9.2'))
-       curField = curField';
+       if(iscell(curField{1}))
+         curField = [curField{:}]';
+       else
+        curField = curField';
+       end
      else
        if(iscell(curField{1}))
          curField = [curField{:}]';
@@ -5660,7 +5274,10 @@ function curStruct = fixNestedFields(curStruct)
 end
 
 %--------------------------------------------------------------------------
-function modules = loadModules()
+function modules = loadModules(DEVELOPMENT)
+  if(nargin < 1)
+    DEVELOPMENT = false;
+  end
   % Name, Tag (unique), Predecesor Tag, Function callback, Field it depends on, Field on completion, separator  (optional true,false), experiment selection mode (single/multiple), default both
   modules = {...
   ...
@@ -5679,8 +5296,8 @@ function modules = loadModules()
           {'Automatic ROI detection', 'cellSortROIdetection', 'cellSortBase', {@menuExperimentGlobalAnalysis, @automaticROIdetectionCellSort, ROIautomaticCellSortOptions}, 'denoisedData', 'ROI'}, ...
           {'ROI refinement', 'cellSortROIcleaning', 'cellSortBase', {@menuExperimentGlobalAnalysis, @cleanROIfromCellSort, cleanROIfromCellSortOptions}, 'ROI', 'ROI'}, ...
         {'Import ROI', 'importROImenu', 'roiSelection', {@menuExperimentGlobalAnalysis, @importROI, importROIoptions, 'project'}, 'handle', 'ROI'}, ...
-      {'Extract traces', 'extractTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @extractTraces, extractTracesOptions}, 'ROI', 'rawTraces'}, ...
-      {'Smooth traces', 'smoothTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @smoothTraces, smoothTracesOptions}, 'rawTraces', 'traces'}, ...
+      {'Traces extraction', 'extractTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @extractTraces, extractTracesOptions}, 'ROI', 'rawTraces'}, ...
+      {'Traces correction', 'correctTraces', 'fluorescence', {@menuExperimentGlobalAnalysis, @correctTraces, correctTracesOptions}, 'rawTraces', 'traces'}, ...
       {'Similarity', 'similarity', 'fluorescence', {@menuExperimentGlobalAnalysis, @fluorescenceAnalysisSimilarity, similarityOptions}, 'traces', 'similarityOrder'}, ...
       {'q-Complexity-entropy', 'qcec', 'fluorescence', {@menuExperimentGlobalAnalysis, @measureTracesQCEC, measureTracesQCECoptions}, 'traces', 'qCEC'}, ...
       {'Bursts', 'bursts', 'fluorescence', [], 'rawTraces', []}, ...
@@ -5728,8 +5345,8 @@ function modules = loadModules()
       {'Exponents', 'avalancheExponents', 'avalancheAnalysis', {@menuExperimentGlobalAnalysis, @avalancheAnalysisExponents, avalancheOptions}, 'avalanches', []}, ...
     {'Network inference', 'networkInference', 'analysis', [], 'traces', []}, ...
       {'Partial correlation (incompatible)', 'networkInferenceXcorr', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceXcorr, networkInferenceXcorrOptions}, 'spikes', []}, ...
-      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTEfast, networkInferenceGTEfastOptions}, 'GTE', 'spikes', []}, ...
-      {'Set active network', 'networkInferenceActive', 'networkInference', {@menuExperimentGlobalAnalysis, @setActiveNetwork, setActiveNetworkOptions}, 'RS', [], true}, ...
+      {'Generalized Transfer Entropy', 'networkInferenceGTE', 'networkInference', {@menuExperimentGlobalAnalysis, @networkInferenceGTEfast, networkInferenceGTEfastOptions}, 'spikes', 'GTE', []}, ...
+      {'Set active network', 'networkInferenceActive', 'networkInference', {@menuExperimentGlobalAnalysis, @setActiveNetwork, setActiveNetworkOptions}, [], 'RS', true}, ...
       {'Export active network to GEPHI', 'networkInferenceExport', 'networkInference', {@menuExperimentGlobalAnalysis, @exportActiveNetworkToGephi, exportActiveNetworkToGephiOptions}, 'RS', []}};
 %     if(DEVELOPMENT)
 %       modules = {modules{:}, ...
@@ -5746,7 +5363,7 @@ function modules = loadModules()
     {'Recording', 'viewRecording', 'view', {@menuNewGuiWindow, @viewRecording}, 'handle', []}, ...
     {'ROI', 'viewROI', 'view', {@menuNewGuiWindow, @viewROI}, 'avgImg', 'ROI'}, ...
     {'Traces', 'viewTraces', 'view', {@menuNewGuiWindow, @viewTraces}, 'rawTraces', []}, ...
-    {'Bursts', 'viewBursts', 'view', {@menuNewGuiWindow, @burstAnalysis}, 'rawTraces', 'traceBursts'}, ...
+    {'Bursts', 'viewBursts', 'view', {@menuNewGuiWindow, @viewBursts}, 'rawTraces', 'traceBursts'}, ...
     {'Spikes (raster)', 'viewSpikes', 'view', {@menuNewGuiWindow, @viewSpikes}, 'spikes', []}, ...
     {'Groups', 'viewGroups', 'view', {@menuNewGuiWindow, @viewGroups}, 'ROI', []}, ...
     {'Glia', 'viewGlia', 'view', {@menuNewGuiWindow, @viewGlia}, 'gliaAverageFrame', []}, ...
@@ -5756,24 +5373,22 @@ function modules = loadModules()
   {'View', 'viewMultiple', [], [], [], [], false, 'multiple'}, ...
     {'Traces', 'viewMultipleTraces', 'viewMultiple', {@menuNewProjectGuiWindow, @viewTracesMultiExperiment}, 'rawTraces', []}, ...
   ...
-  {'Statistics', 'statistics', [], [], [], [], false}, ...
-    {'Populations', 'populationStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotPopulationsStatistics, plotPopulationsStatisticsOptions}, 'ROI', [], false, 'multiple'}, ...
+  {'Statistics', 'statistics', [], [], [], [], false, 'multiple'}, ...
+    {'Groups', 'groupStatistics', 'statistics', {@menuExperimentGlobalAnalysis, @plotGroupStatistics, plotGroupStatisticsOptions}, 'ROI', []}, ...
     {'Fluorescence', 'fluorescenceStatistics', 'statistics', [], 'rawTraces', []}, ...
       {'Bursts', 'fluorescenceBurstStatistics', 'fluorescenceStatistics', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatistics, plotFluorescenceBurstStatisticsOptions}, 'traceBursts', []}, ...
-      {'KCl Statistics', 'KClStatistics', 'fluorescenceStatistics', {@menuExperimentGlobalAnalysis, @plotKClStatistics, plotKClStatisticsOptions}, 'KClProtocolData', []}, ...
+      {'KCl Statistics', 'KClStatistics', 'fluorescenceStatistics', {@menuExperimentGlobalAnalysis, @plotAcuteKClStatistics, plotAcuteKClStatisticsOptions}, 'KClProtocolData', []}, ...
     {'Spikes', 'spikeStatisticsBase', 'statistics', [], 'spikes', []}, ...
       {'Spike features', 'spikeStatistics', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikeFeatures', []}, ...
-      {'Spike features (schmitt)', 'spikeStatisticsSchmitt', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSchmittSpikesStatistics, plotSchmittSpikesStatisticsOptions}, 'schmittSpikesData', []}, ...
+      {'Spike features (schmitt)', 'spikeStatisticsSchmitt', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSchmittSpikeStatistics, plotSchmittSpikeStatisticsOptions}, 'schmittSpikesData', []}, ...
       {'Bursts', 'spikeBurstStatistics', 'spikeStatisticsBase', {@menuExperimentGlobalAnalysis, @plotSpikeStatistics, plotSpikeStatisticsOptions}, 'spikeBursts', []}, ...
     {'Network', 'networkStatisticsBase', 'statistics', [], 'RS', []}, ...
       {'Network statistics', 'networkStatistics', 'networkStatisticsBase', {@menuExperimentGlobalAnalysis, @plotNetworkStatistics, plotNetworkStatisticsOptions}, 'RS', []}, ...
-    {'Misc', 'miscStatisticsBase', 'statistics', [], [], []}, ...
-      {'q-Complexity-entropy', 'wCECstatistics', 'miscStatisticsBase', {@menuExperimentGlobalAnalysis, @plotPermutationEntropyComplexity, plotPermutationEntropyComplexityOptions}, 'qCEC', []}, ...
     {'Treatments', 'statisticsTreatments', 'statistics', [], [], [], true, 'multiple'}, ...
-      {'Populations', 'populationStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotPopulationsStatisticsTreatment, plotPopulationsStatisticsTreatmentOptions}, 'ROI', []}, ...
+      {'Groups', 'groupStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotGroupStatisticsTreatment, plotGroupStatisticsTreatmentOptions}, 'ROI', []}, ...
       {'Fluorescence bursts', 'burstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotFluorescenceBurstStatisticsTreatment, plotFluorescenceBurstStatisticsTreatmentOptions}, 'traceBursts', []}, ...
       {'Spike features', 'spikeStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikeStatisticsTreatment, plotSpikeStatisticsTreatmentOptions}, 'spikeFeatures', []}, ...
-      {'Spike bursts', 'spikeBurstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikesBurstStatisticsTreatment, plotSpikesBurstStatisticsTreatmentOptions}, 'spikeBursts', []}, ...
+      {'Spike bursts', 'spikeBurstStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotSpikeBurstStatisticsTreatment, plotSpikeBurstStatisticsTreatmentOptions}, 'spikeBursts', []}, ...
       {'Network statistics', 'networkStatisticsTreatment', 'statisticsTreatments', {@menuExperimentGlobalAnalysis, @plotNetworkStatisticsTreatment, plotNetworkStatisticsTreatmentOptions}, 'RS', []}, ...
     {'Principal Component Analysis', 'PCA', 'statistics', [], [], [], true}, ...
       {'Spikes features', 'spikesPCA', 'PCA', @menuAggregatedPCA, [], []}, ...
@@ -5789,7 +5404,5 @@ function modules = loadModules()
     {'Save', 'savePipeline', 'pipeline', @savePipeline, [], []}, ...
   };
 end
-%{'Preferences', 'statisticsPreferences', 'statistics', {@menuAggregatedPreferences, 'mean'}, [], [], true}, ...
-
-
+     
 end

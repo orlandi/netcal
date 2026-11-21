@@ -19,7 +19,7 @@ function experiment = exportActiveNetworkToGephi(experiment, varargin)
 % EXAMPLE:
 %    experiment = exportActiveNetworkToGephi(experiment)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 
 % EXPERIMENT PIPELINE
 % name: export active network to Gephi
@@ -74,7 +74,9 @@ if(isempty(groupList))
   logMsg(sprintf('Group %s not found on experiment %s', mainGroup, experiment.name), 'w');
   return;
 end
-
+if(isfield(experiment, 'RS'))
+    experiment = loadBigFields(experiment, {'RS'});
+end
 % Time to iterate through all the groups
 for git = 1:length(groupList)
   if(params.pbar > 0)

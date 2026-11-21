@@ -193,7 +193,7 @@ end
 hFig.Visible = visible;
 
 xlabel('time (s)');
-ylabel('ordered ROI index');
+ylabel('ROI index');
 ylim([0.5, (maxY + 0.5)]);
 xlim([min(experiment.t) max(experiment.t)]);
 box on;
@@ -208,9 +208,15 @@ ui = uimenu(hFig, 'Label', 'Export');
 
 if(params.saveOptions.saveFigure)
   %[figFolder, baseFigName, '_raster', params.saveFigureTag, '.', params.saveFigureType]
+  try
   export_fig([figFolder, baseFigName, '_raster', params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], ...
               sprintf('-r%d', params.saveOptions.saveFigureResolution), ...
-              sprintf('-q%d', params.saveOptions.saveFigureQuality), hFig);
+              sprintf('-q%d', params.saveOptions.saveFigureQuality), ...
+              '-despc','-opengl', ...
+              hFig);
+  catch
+      exportgraphics(hFig,[figFolder, baseFigName, '_raster', params.saveOptions.saveFigureTag, '.', params.saveOptions.saveFigureType], '-despc','-opengl')
+  end
 end
 
 % Execute additional figure commands

@@ -3,7 +3,7 @@ classdef baseOptions
 %   Base class used to define user-changeable parameters for most NETCAL
 %   GUI functions. Usually changed through an optionsWindow
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2026, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 %
 % See also baseOptions, optionsWindow
 
@@ -75,20 +75,30 @@ classdef baseOptions
       end
     end
 
-    function self = set(self, other)
+    function self = set(self, other, otherNames)
+      if(nargin < 3)
+        otherNames = [];
+      end
       % Sets all properties from an structure or class with the
       % same field names
       %names = fieldnames(self);
-      otherNames = fieldnames(other);
+      if(isempty(otherNames))
+        otherNames = fieldnames(other);
+      end
       for i = 1:numel(otherNames)
         if(isprop(self, otherNames{i}))
-          self.(otherNames{i}) = other.(otherNames{i});
+          try
+            self.(otherNames{i}) = other.(otherNames{i});
+          catch ME
+            disp(ME.message)
+          end
         end
       end
     end
     %function helpText = getHelp(self)
     %  helpText = self.help;
     %end
+    
     function self = setDefaults(self)
       % For multioption dialogs will take the first value
       names = fieldnames(self);
@@ -110,6 +120,29 @@ classdef baseOptions
         end
       end
     end
+    %%% 2025 fix to reset the dropdown
+    function  self = initDropdown(self, ~)
+      % For multioption dialogs will take the first value
+      mainClass = class(self);
+      originalClassObject = eval(mainClass);
+      names = fieldnames(originalClassObject);
+      for i = 1:numel(names)
+        if(isstruct(originalClassObject.(names{i})))
+          self.(names{i}) = setInnerValues(originalClassObject.(names{i}));
+        elseif(iscell(originalClassObject.(names{i})) && size(originalClassObject.(names{i}), 1) == 1 && size(originalClassObject.(names{i}), 2) > 1)
+          self.(names{i}) = originalClassObject.(names{i});
+        end
+      end
+      function obj = setInnerValues(obj)
+        namesb = fieldnames(obj);
+        for j = 1:numel(namesb)
+          if(isstruct(obj.(namesb{j})))
+            obj.(namesb{j}) = setInnerValues(obj.(namesb{j}));
+          elseif(iscell(obj.(namesb{j})) && size(obj.(namesb{j}), 1) == 1 && size(obj.(namesb{j}), 2) > 1)
+            obj.(namesb{j}) = obj.(namesb{j});
+          end
+        end
+      end    end
     function  self = setExperimentDefaults(self, ~)
     end
     function  self = setProjectDefaults(self, ~)

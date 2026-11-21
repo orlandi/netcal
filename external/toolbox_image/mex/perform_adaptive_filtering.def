@@ -1,3 +1,0 @@
-LIBRARY perform_adaptive_filtering.dll
-EXPORTS
-	mexFunction

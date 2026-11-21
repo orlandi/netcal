@@ -1,4 +1,4 @@
-![logo](gui/images/logo_netcal.png)
+fo![logo](internal/gui/images/logo_netcal.png)
 
 NETCAL: An interactive platform for large-scale, NETwork and population dynamics analysis of CALcium imaging recordings
 
@@ -12,7 +12,7 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 - To be able to use any of the python modules you need python installed and available to MATLAB
 
 # Requeriments
-- Matlab 9.1+ (2015a or higher) - 2017a or higher recommended. Seriouslly, upgrade.
+- Matlab R2024x  (24.x). Older versions are no longer supported.
 
 ## MATLAB Tolboxes
 - Bioinformatics Toolbox (4.5.1) [bioinfo]
@@ -26,6 +26,105 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 - Computer Vision System Toolbox (6.2) [vision]
 
 # Change Log
+
+Starting November 2026, Claude Code is being used to update this repository.
+
+## [10.0.1] - 2026-11-20
+
+### Modified
+- The upload package now only ships `README.md`, `LICENSE.md` and `netcal.m` from the root folder
+
+### Fixed
+- The upload package no longer includes the machine-specific `export_fig` ghostscript configuration files (`.ignore` folder), which could overwrite a user's own settings
+
+### Removed
+- Demo data, demo movies, examples, tests, generated documentation and `.fig` GUI layout files of bundled third-party libraries are no longer part of the upload package (the package shrinks from about 29 MB to about 8 MB)
+
+## [10.0.0] - 2026-11-20
+
+### Attention
+- Only MATLAB R2024 is supported from this version on. Compatibility with older releases has been dropped
+
+### Added
+- Track2p/suite2p import: `.MAT` files from Track2p can be opened as new experiments (traces, neuropil, spikes, ROI pixels and motion energy)
+- Neuropil support: new "Neuropil" and "Spike Probability" trace views, and a `neuropil` type in `loadTraces`. Neuropil, spike probability, `rawSpikes`, `volume`, `ROImask`, `FC`, `RS`, `FCfull` and `RSfull` are now stored as big fields
+- Trace correction: neuropil correction (`F-mult*Fneu`), moving percentile F0 estimation (causal, configurable window) and new `fixed` data normalizations (`(F-F0)/F0 fixed` and `100x(F-F0)/F0 fixed`)
+- Network inference: traces can be used instead of spikes (`inferenceSignal`), new `randperm` surrogate, and inference threshold/conditioning figures are saved to the `figures` folder
+- GTE (fast): conditioning on `avg activity` or `movement`, surrogates (`full`, `partial`, `jitter`, `partialJitter`, `MI`) and an experimental bias estimation
+- Cross-correlation inference: new `lag` mode. Results are stored separately for `xcorr`, `xcorrMax` and `xcorrLag`
+- Network inference: `FC` can now be used as an inference measure when setting the active network
+- Network statistics: `computeNetworkStatistic` is now a standalone function with many new measures (undirected degree, clustering and assortativity, diffusion and routing efficiency, modularity statistic, average connection length 3D and Lnorm)
+- Group statistics: `parentRelative`, `relativePercent` and `parentRelativePercent`
+- Rise burst detection: new `timeRange` and `minSpikes` options
+- `experimentToAsdf2`: new `timeSubset` option
+- `integerLogBinning`: new `partialNormalization` option
+- Movement-based conditioning: new `processMovementSignal` (binary up/down movement signal from movement data)
+- `exportCompactData`: exports a compact subset of the essential data in a format other software can open
+- `exportActiveNetwork`: exports the active network to a `.mat` file
+- `networkInferenceGTEmeso`: GTE network inference for mesoscale data
+- `detectInvalidCells`: detects cells with NaNs and creates a new group without them
+- `transposeROI`: transposes the coordinates of all ROI (for unintended imports)
+- `importCascadePredictions`: imports spike predictions from Cascade
+- New helper functions: `movquant`, `rand_index`, `networkComponents` and `recordingDriftCorrection`
+
+### Modified
+- Figure exports now default to 300 dpi (`-despc -opengl -q10`) and `plotRaster` falls back to `exportgraphics` if `export_fig` fails
+- Plot statistics legends are now placed automatically without a box, and figures are exported with `-nocrop`
+- Raster plots use `ROI index` as the y label
+- Default surrogate threshold for the conditioning signal on network inference is now `median+2*std`
+- Spike statistics now take their list of statistics from `computeSpikeStatistic`
+- Markdown help/changelog panels now use `newMarkdownPanel24`, and the About window uses `LightweightHelpPanel`
+- `export_fig` and `helperTools` are now submodules instead of vendored copies
+
+### Fixed
+- Rise burst detection: wrong participating neurons were reported (`members(spkSubset)` instead of `intersect`)
+- Gephi export used the wrong ROI coordinate (`center(11)` instead of `center(1)`)
+- `exportSpikes` and `checkGroups` no longer fail on empty or missing groups
+- `efficiency_wei` now uses the correct mode in the network statistics
+- Options windows: dropdown (multi-option) fields are now correctly reset to their first value when restoring defaults (`initDropdown`), and `baseOptions.set` accepts a list of field names
+- Colormap list no longer depends on the MATLAB documentation folder (`getHtmlColormapNames`)
+- Automatic help generation fixes for R2024b
+
+## [9.1.0] - 2024-11-09
+
+# Added
+- Matlab R2024b support
+
+### Fixed
+- Plenty of small fixed for 2024 compatibility
+- Support for headless start (VS code)
+
+### Removed
+- File duplicates
+
+## [9.0.2] - 2020-10-17
+
+# Added
+- A couple new burst-detection methods. Merge is the preferred one now.
+
+### Fixed
+- Minor bug fixes for compatibility issues
+
+## [9.0.1] - 2020-08-19
+
+### Fixed
+- Updating everything for MATLAB r2020 compatibility
+
+## [9.0.0] - 2018-10-15
+
+### Added
+- Complete redesign of file/folder structure
+- Redesign of Statistics-based class (statistics, treatments and exports)
+- Option to automatically create a new project when drag and dropping an experiment to an empty project window
+- Warning message when no project exists
+- Several new options to import a set of ROI from an existing experiment
+- Keypress registration on trees
+
+### Modified
+- Spike statistics now do not require previous feature extraction. Spike Feature list is deprecated
+
+### Fixed
+- Bug when a new experiment was created from scratch and the Active Experiments list was not being updated
 
 ## [8.6.0] - 2018-10-08
 

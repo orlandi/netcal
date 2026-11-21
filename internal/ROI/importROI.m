@@ -44,6 +44,64 @@ switch params.origin
   case 'experiment'
     %params.experiment
     experimentFile = [project.folderFiles params.experiment '.exp'];
+    importROIfromRefExperiment(experimentFile);
+  case 'external file'
+    if(~exist(params.file, 'file')) %#ok<BDSCI,OR2,BDLGI>
+        logMsg('Invalid ROI or experiment file', 'e');
+        barCleanup(params);
+        return;
+    end
+    [fpa, fpb, fpc] = fileparts(params.file);
+    if(strcmpi(fpc, '.exp'))
+      experimentFile = params.file;
+      importROIfromRefExperiment(experimentFile);
+    else
+      valid = find(project.checkedExperiments);
+      for it0 = 1:length(valid)
+        if(params.pbar > 0)
+          ncbar.setCurrentBarName(sprintf('Updating ROI on experiment: %s', project.experiments{valid(it0)}));
+          ncbar.update(it0/length(valid));
+        end
+        experimentFile = [project.folderFiles project.experiments{valid(it0)} '.exp'];
+        newExperiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
+
+        ROI = loadROI(newExperiment, params.file, 'overwriteMode', 'rawNew', 'verbose', false);
+
+
+        switch params.importType
+          case 'overwrite'
+            lastID = 0;
+            if(params.reassignIDs)
+              for it1 = 1:length(ROI)
+                ROI{it1}.ID = lastID+it1;
+              end
+            end
+            %ROI = tmpROI;
+          case 'append'
+            IDlist = getROIid(newExperiment.ROI);
+            lastID = max(IDlist);
+            if(params.reassignIDs)
+              for it1 = 1:length(ROI)
+                ROI{it1}.ID = lastID+it1;
+              end
+            end
+            ROI = [newExperiment.ROI; ROI];
+        end
+        newExperiment.ROI = ROI;
+
+        if(params.verbose || params.pbar > 0)
+          logMsg(sprintf('%d  ROI imported to experiment %s',length(newExperiment.ROI), newExperiment.name));
+        end
+        saveExperiment(newExperiment, 'pbar', 0, 'verbose', false);
+      end
+    end
+end
+
+%--------------------------------------------------------------------------
+barCleanup(params);
+%--------------------------------------------------------------------------
+
+  function importROIfromRefExperiment(experimentFile)
     refExperiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
   
     if(~isfield(refExperiment, 'ROI') || isempty(refExperiment.ROI))
@@ -51,7 +109,21 @@ switch params.origin
       barCleanup(params);
       return;
     end
-    ROI = refExperiment.ROI;
+    switch params.group
+      case 'none'
+        tmpROI = refExperiment.ROI;
+      case 'ask'
+        groupList = getExperimentGroupsNames(refExperiment);
+        [selection, ok] = listdlg('PromptString', 'Select groups to use', 'ListString', groupList, 'SelectionMode', 'single');
+        if(~ok)
+          logMsg('No group selected. Quitting', 'w');
+          return;
+        end
+        groupList = groupList{selection};
+        members = getExperimentGroupMembers(refExperiment, groupList);
+        tmpROI = refExperiment.ROI(members);
+    end
+    ROI = tmpROI;
     logMsg([num2str(length(ROI)) ' ROI imported']);
     valid = find(project.checkedExperiments);
     for it = 1:length(valid)
@@ -88,43 +160,40 @@ switch params.origin
           end
         end
         tmpROI(invalidROI) = [];
-        newExperiment.ROI = tmpROI;
+        ROI = tmpROI;
         logMsg(sprintf('Had to remove %d pixels from the ROI list', fullInvalid), 'w');
       else
-        newExperiment.ROI = ROI;
+      %  ROI = ROI;
       end
       
       if(params.verbose || params.pbar > 0)
-        logMsg(sprintf('%d  ROI assigned to experiment %s',length(newExperiment.ROI), newExperiment.name));
+        logMsg(sprintf('%d new ROI to be assigned to experiment %s',length(ROI), newExperiment.name));
       end
-      saveExperiment(newExperiment, 'pbar', 0, 'verbose', false);
-    end
-    
-  case 'external file'
-    if(~exist(params.file, 'file')) %#ok<BDSCI,OR2,BDLGI>
-        logMsg('Invalid ROI file', 'e');
-        barCleanup(params);
-        return;
-    end
-    valid = find(project.checkedExperiments);
-    for it = 1:length(valid)
-      if(params.pbar > 0)
-        ncbar.setCurrentBarName(sprintf('Updating ROI on experiment: %s', project.experiments{valid(it)}));
-        ncbar.update(it/length(valid));
+      
+      switch params.importType
+        case 'overwrite'
+          lastID = 0;
+          if(params.reassignIDs)
+            for it1 = 1:length(ROI)
+              ROI{it1}.ID = lastID+it1;
+            end
+          end
+          %ROI = tmpROI;
+        case 'append'
+          IDlist = getROIid(newExperiment.ROI);
+          lastID = max(IDlist);
+          if(params.reassignIDs)
+            for it1 = 1:length(ROI)
+              ROI{it1}.ID = lastID+it1;
+            end
+          end
+          ROI = [newExperiment.ROI; ROI];
       end
-      experimentFile = [project.folderFiles project.experiments{valid(it)} '.exp'];
-      newExperiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
-
-      newExperiment.ROI = loadROI(newExperiment, params.file, 'overwriteMode', 'rawNew', 'verbose', false);
+      newExperiment.ROI = ROI;
       if(params.verbose || params.pbar > 0)
-        logMsg(sprintf('%d  ROI imported to experiment %s',length(newExperiment.ROI), newExperiment.name));
+        logMsg(sprintf('Experiment %s now has %d ROI',newExperiment.name, length(newExperiment.ROI)));
       end
       saveExperiment(newExperiment, 'pbar', 0, 'verbose', false);
     end
-end
-
-
-%--------------------------------------------------------------------------
-barCleanup(params);
-%--------------------------------------------------------------------------
+  end
 end

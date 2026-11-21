@@ -1,0 +1,806 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Functions by Categories</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="helpfuncbycat.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Functions by Categories</h1><!--introduction--><p>Brick Toolbox, Version 2.0   06-Jan-2017</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">ARRAY MANIPULATION</a></li><li><a href="#2">MATLAB TYPES</a></li><li><a href="#3">PROGRAMMING</a></li><li><a href="#4">FILES</a></li><li><a href="#5">IMPORT/EXPORT</a></li><li><a href="#6">MATHEMATICS</a></li><li><a href="#7">IMAGE PROCESSING</a></li><li><a href="#8">DATA DISPLAY</a></li><li><a href="#9">GUI PROGRAMMING</a></li><li><a href="#10">MISCELLANEOUS</a></li></ul></div><h2>ARRAY MANIPULATION<a name="1"></a></h2><p>
+<b>manipulate dimensions and shape</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_column.html">column</a>, <a href="help_row.html">row</a>, <a href="help_third.html">third</a>, <a href="help_fourth.html">fourth</a></td><td>Reshape ND array to column vector, row vector, or vector in the 3rd or 4th dimension </td></tr>
+<tr valign="top"><td width="150"><a href="help_matrix.html">matrix</a>, <a href="help_threed.html">threed</a></td><td>Reshape ND array to 2D or 3D array</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_reshapepermute.html">fn_reshapepermute</a></td><td>Full capability for dimensions and shape manipulation</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_add.html">fn_add</a>, <a href="help_fn_mult.html">fn_mult</a>, <a href="help_fn_subtract.html">fn_subtract</a>, <a href="help_fn_div.html">fn_div</a>, <a href="help_fn_eq.html">fn_eq</a></td><td>Operations between arrays whose dimensions only partially match</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_indices.html">fn_indices</a></td><td>Convert between global and per-dimension indices </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_interleave.html">fn_interleave</a></td><td>Interleave data </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_sizecompare.html">fn_sizecompare</a></td><td>Check whether two size vectors are equivalent</td></tr>
+</table>
+<b>apply function to elements of array or cell array</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_map.html">fn_map</a></td><td>Apply a given function to the elements, columns or rows of an array (more versatile than Matlab arrayfun)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_find.html">fn_find</a></td><td>Look for non-empty elements, or which evaluate to true when applying a certain function</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_isemptyc.html">fn_isemptyc</a></td><td>Which elements of a cell array are empty</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_itemlengths.html">fn_itemlengths</a></td><td>Return lengths of all elements inside a cell array</td></tr>
+</table>
+<b>simple processing</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_bin.html">fn_bin</a>, <a href="help_fn_enlarge.html">fn_enlarge</a></td><td>Data binning and enlarging</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_round.html">fn_round</a></td><td>Round x to the closest multiple of y</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_coerce.html">fn_coerce</a></td><td>Restrict data to a specific range</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_clip.html">fn_clip</a></td><td>Rescale data, restrict the range, color</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_normalize.html">fn_normalize</a></td><td>Normalize data based on averages in some specific dimension</td></tr>
+</table>
+<b>min, max, mean,...</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_min.html">fn_min</a>, <a href="help_fn_max.html">fn_max</a></td><td>Global minimum or maximum of an array and its coordinates</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_minmax.html">fn_minmax</a></td><td>Basic min/max operations (e.g. intersection or union of 2 ranges)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_localmax.html">fn_localmax</a></td><td>Find local maxima in a vector </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_mean.html">fn_mean</a>, <a href="help_fn_means.html">fn_means</a></td><td>Average over several dimensions, average successive argumments</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_meanc.html">fn_meanc</a></td><td>Return mean and confidence interval</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_meanangle.html">fn_meanangle</a></td><td>Average of angles (result in [-pi pi])</td></tr>
+<tr valign="top"><td width="150"><a href="help_nmean.html">nmean</a>, <a href="help_nmedian.html">nmedian</a>, <a href="help_nstd.html">nstd</a>, <a href="help_nste.html">nste</a>, <a href="help_nrms.html">nrms</a>, <a href="help_nsum.html">nsum</a></td><td>Treat NaNs as missing values for mean/median/std/ste/rms/sum computations </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_triggeravg.html">fn_triggeravg</a></td><td>Local average of data around specific indices in a given dimension</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_arrangepergroup.html">fn_arrangepergroup</a>, <a href="help_fn_avgpergroup.html">fn_avgpergroup</a></td><td>Reorganize an array according to labels describing a specific dimension, or average accross different repetitions of the same label</td></tr>
+</table>
+<b>other</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_sym.html">fn_sym</a></td><td>Convert a symmetric matrix to a vector and vice-versa</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_timevector.html">fn_timevector</a></td><td>Convert set of times to vector of counts and vice-versa</td></tr>
+</table>
+</p><h2>MATLAB TYPES<a name="2"></a></h2><p>
+<b>string</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_strcut.html">fn_strcut</a></td><td>Cut string into pieces according to specified separator</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_strrep.html">fn_strrep</a></td><td>Replace several text sequences in string</td></tr>
+</table>
+<b>structures</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_structdisp.html">fn_structdisp</a></td><td>Recursive display of a structure content</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_structmerge.html">fn_structmerge</a>, <a href="help_fn_structcat.html">fn_structcat</a></td><td>Merge and concatenate structures </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_structinit.html">fn_structinit</a></td><td>Initialize a structure with no field, or with same fields as a model</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_structedit.html">fn_structedit</a></td><td>Edit a structure with a GUI interface; this is a wrapper of fn_control</td></tr>
+</table>
+<b>conversions</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_num2str.html">fn_num2str</a></td><td>Convert numeric to char, unless input is already char!, can return a cell array</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_idx2str.html">fn_idx2str</a></td><td>Convert indices to a compact string representation, e.g. '1:2 5:8' for [1 2 5 6 7 8] </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_str2double.html">fn_str2double</a></td><td>Convert to numeric if not already numeric</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_strcat.html">fn_strcat</a></td><td>Concatenate strings and numbers into a single string, with optional separator sequence </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_float.html">fn_float</a></td><td>Convert integer to single, keep single or double as such </td></tr>
+</table>
+</p><h2>PROGRAMMING<a name="3"></a></h2><p>
+<b>handy shortcuts</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_switch.html">fn_switch</a>, <a href="help_fn_cast.html">fn_cast</a></td><td>Shortcut for avoiding using if/else and switch </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_disp.html">fn_disp</a>, <a href="help_fn_display.html">fn_display</a></td><td>Display multiple arguments at once, display a variable name and value in a single line</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_dispandexec.html">fn_dispandexec</a></td><td>Display commands in Matlab and executes them </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_subsref.html">fn_subsref</a></td><td>Shortcut for calling Matlab subsref function</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_ismemberstr.html">fn_ismemberstr</a></td><td>Check whether string is part of a set of strings (faster than Matlab ismember)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_flags.html">fn_flags</a></td><td>Detect flags in the arguments of a function </td></tr>
+<tr valign="top"><td width="150"><a href="help_dealc.html">dealc</a></td><td>Assign elements of an array to multiple outputs</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_mod.html">fn_mod</a></td><td>Return modulus between 1 and n instead of between 0 and n-1</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_regexptokens.html">fn_regexptokens</a></td><td>Get the tokens of a regexp as a simple cell array</td></tr>
+</table>
+<b>tools</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_progress.html">fn_progress</a>, <a href="help_pg.html">pg</a></td><td>Print the state of a calculation </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_hash.html">fn_hash</a></td><td>Unique hash number for an array/cell/structure (Copyright M Kleder)</td></tr>
+</table>
+<b>debugging</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_dbstack.html">fn_dbstack</a></td><td>Display current function name, with indent according to stack length </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_basevars.html">fn_basevars</a></td><td>Load base workspace variables in caller workspace and vice-versa </td></tr>
+</table>
+</p><h2>FILES<a name="4"></a></h2><p>
+<b>shortcuts</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_cd.html">fn_cd</a></td><td>User definition of shortcut to fast access directories</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_fileparts.html">fn_fileparts</a>, <a href="help_fn_fileext.html">fn_fileext</a></td><td>Get specific file parts, replace file extension </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_ls.html">fn_ls</a></td><td>Return folder content</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_mkdir.html">fn_mkdir</a></td><td>Create a directory if it does not exist</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_movefile.html">fn_movefile</a></td><td>Rename files in current directory using regular expression</td></tr>
+</table>
+<b>user selection</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_getfile.html">fn_getfile</a></td><td>Select file and remember the containing folder of the last selected file </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_savefile.html">fn_savefile</a></td><td>User select file for saving and remember last containing folder </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_getdir.html">fn_getdir</a></td><td>Select directory and remember last containing folder </td></tr>
+</table>
+<b>handy</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_locate.html">locate</a></td><td>Reveal file in Explorer (Windows only)</td></tr>
+</table>
+</p><h2>IMPORT/EXPORT<a name="5"></a></h2><p>
+<b>read/save file</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_readtext.html">fn_readtext</a>, <a href="help_fn_savetext.html">fn_savetext</a></td><td>Read/save text file</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_readasciimatrix.html">fn_readasciimatrix</a>, <a href="help_fn_saveasciimatrix.html">fn_saveasciimatrix</a></td><td>Read/save 2D array from/to text file</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_readimg.html">fn_readimg</a>, <a href="help_fn_saveimg.html">fn_saveimg</a></td><td>Read/save image or stack thereof, (read:) detects if color or grayscale, (save:) options for clipping, color map...</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_readmovie.html">fn_readmovie</a>, <a href="help_fn_savemovie.html">fn_savemovie</a></td><td>Read AVI movie</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_readxml.html">fn_readxml</a>, <a href="help_fn_savexml.html">fn_savexml</a></td><td>Read/save XML file (Copyright Jarek Tuszynski)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_loadvar.html">fn_loadvar</a>, <a href="help_fn_savevar.html">fn_savevar</a></td><td>Load/save in MAT file in a more convenient way</td></tr>
+</table>
+<b>read file</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_readbin.html">fn_readbin</a></td><td>Read binary file containing some header followed by numerical data</td></tr>
+</table>
+<b>save figure</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_savefig.html">fn_savefig</a></td><td>Save figure with a number of options</td></tr>
+</table>
+<b>Matlab workspaces</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_exportvar.html">fn_exportvar</a></td><td>Export data to a Matlab variable in base workspace</td></tr>
+</table>
+</p><h2>MATHEMATICS<a name="6"></a></h2><p>
+<b>filtering</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_filt.html">fn_filt</a></td><td>Gaussian low-, high- or band-pass filtering using fft</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_smooth.html">fn_smooth</a>, <a href="help_fn_smooth3.html">fn_smooth3</a></td><td>1D, 2D and 3D smoothing using Gaussian convolution</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_detrend.html">fn_detrend</a></td><td>Remove a linear trend estimated only from specific indices </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_spectrogram.html">fn_spectrogram</a></td><td>Compute spectrogram</td></tr>
+</table>
+<b>optimization</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_fit.html">fn_fit</a></td><td>Fit the parameters of a given function</td></tr>
+<tr valign="top"><td width="150"><a href="help_dichotomy.html">dichotomy</a></td><td>Uses dichotomy method for one-dimensional optimization</td></tr>
+</table>
+<b>statistics</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_GLMtest.html">fn_GLMtest</a></td><td>Perform F-test and T-test in a GLM framework</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_bootstrap.html">fn_bootstrap</a></td><td>Compare the mean or median of two ensembles using bootstrap method </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_chi2indenpendencetest.html">fn_chi2indenpendencetest</a></td><td>Chi2 independence test</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_pcorrect.html">fn_pcorrect</a></td><td>Perform correction for multiple testing</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_sample.html">fn_sample</a></td><td>Draw samples from distribution</td></tr>
+</table>
+<b>statistics + display</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_regression.html">fn_regression</a></td><td>Perform linear regression and display data points and result</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_comparedistrib.html">fn_comparedistrib</a></td><td>Perform a nonparametric test and display data points and results</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_markpvalue.html">fn_markpvalue</a></td><td>Draw stars to mark significancy of results</td></tr>
+</table>
+<b>machine learning</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_clustering.html">fn_clustering</a></td><td>Performs correlation-based clustering of data x</td></tr>
+</table>
+<b>tools</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_fftfrequencies.html">fn_fftfrequencies</a></td><td>Frequencies corresponding to the output of Matlab fft function</td></tr>
+</table>
+</p><h2>IMAGE PROCESSING<a name="7"></a></h2><p>
+<b>basic operations</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_imageop.html">fn_imageop</a></td><td>Apply a series of transformations to an image </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_printnumber.html">fn_printnumber</a></td><td>Add small numbers and text to images or movies</td></tr>
+</table>
+<b>regions of interest</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_maskselect.html">fn_maskselect</a></td><td>Manual selection of a mask inside an image</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_subrect.html">fn_subrect</a></td><td>Manual selection of a rectangular mask inside an image</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_poly2mask.html">fn_poly2mask</a></td><td>Get the mask of a polygon interior</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_imvect.html">fn_imvect</a></td><td>Convert an image to a vector of pixels inside a mask, and vice-versa </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_roiavg.html">fn_roiavg</a></td><td>Compute average signal from a region of interest</td></tr>
+</table>
+<b>coregistration</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_register.html">fn_register</a></td><td>Coregister images or movie</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_xregister.html">fn_xregister</a></td><td>Fast fft-based coregistration at pixel (but not sub-pixel) resolution</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_translate.html">fn_translate</a>, <a href="help_fn_affinity.html">fn_affinity</a></td><td>Interpolate an image or movie after translation or affinity</td></tr>
+</table>
+<b>GUI programs</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_alignimage.html">fn_alignimage</a></td><td>Manual alignment of 2 images</td></tr>
+<tr valign="top"><td width="150"><a href="help_montage.html">montage</a></td><td>Manual alignment of a large set of images</td></tr>
+</table>
+</p><h2>DATA DISPLAY<a name="8"></a></h2><p>
+<b>shortcuts</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_drawpoly.html">fn_drawpoly</a></td><td>Shortcut for line(poly(:,1),poly(:,2))</td></tr>
+</table>
+<b>figure</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_figure.html">fn_figure</a></td><td>Raise figures by name rather than by number (shortcut: ff)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_isfigurehandle.html">fn_isfigurehandle</a></td><td>Is handle a plausible figure handle</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_subplot.html">fn_subplot</a></td><td>Subplots cover the figure without leaving any space</td></tr>
+</table>
+<b>drawings</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_arrow.html">fn_arrow</a></td><td>Draw an arrow</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_circle.html">fn_circle</a></td><td>Draw a circle</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_lines.html">fn_lines</a></td><td>Draw a series of vertical and/or horizontal lines</td></tr>
+</table>
+<b>time courses displays</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_stairs.html">fn_stairs</a></td><td>Display stairs in an intuitive way</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_errorbar.html">fn_errorbar</a></td><td>Display nice error bars </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_regression.html">fn_regression</a></td><td>Display of data points together with linear regression</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_spikedisplay.html">fn_spikedisplay</a>, <a href="help_fn_rasterplot.html">fn_rasterplot</a></td><td>Raster plot display (display of punctual events as small bars)</td></tr>
+</table>
+<b>time courses tools</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_axis.html">fn_axis</a></td><td>Set axis range for a better visual aspect than 'axis tight' </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_nicegraph.html">fn_nicegraph</a></td><td>Improve aspect of graph display</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_plotscale.html">fn_plotscale</a></td><td>Add horizontal and vertical scale bars to graph</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_linespecs.html">fn_linespecs</a></td><td>Handle abbreviated plot options (e.g. 'r.') </td></tr>
+</table>
+<b>special 2D displays</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_displayarrows.html">fn_displayarrows</a></td><td>Display an image and a velocity field on top of it </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_tensordisplay.html">fn_tensordisplay</a></td><td>Display of a field of 2x2 symmetric matrices using ellipses</td></tr>
+</table>
+<b>2D tools</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_imdistline.html">fn_imdistline</a></td><td>Show the distance between two points (enhanced version of Matlab imdistline)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_scale.html">fn_scale</a></td><td>Scale bar for image display</td></tr>
+</table>
+<b>color tools</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_colorset.html">fn_colorset</a>, <a href="help_fn_colorbyname.html">fn_colorbyname</a></td><td>Different sets of colors, conversion between color numerical value and name</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_showcolormap.html">fn_showcolormap</a></td><td>Display a color map in a given axes or in a separate figure</td></tr>
+<tr valign="top"><td width="150"><a href="help_hsl2rgb.html">hsl2rgb</a></td><td>Convert from Hue/Saturation/Luminance coordinates to RGB </td></tr>
+</table>
+<b>movie displays</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_playmovie.html">fn_playmovie</a></td><td>Simple showing of a movie</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_movie.html">fn_movie</a></td><td>Show a movie, large number of options</td></tr>
+</table>
+<b>mesh computations and displays</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_meshplot.html">fn_meshplot</a></td><td>Display a mesh</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_meshselectpoint.html">fn_meshselectpoint</a></td><td>Display a mesh and let user select a point with mouse</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_cubemesh.html">fn_cubemesh</a>, <a href="help_fn_cubeview.html">fn_cubeview</a></td><td>Render the "faces" of a 3D data (creates a mesh and texture, or an image) </td></tr>
+</table>
+<b>display ND data</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_eegplot.html">fn_eegplot</a>, <a href="help_fn_gridplot.html">fn_gridplot</a></td><td>Display multiple time courses dispatched vertically or arranged as a grid</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_framedisplay.html">fn_framedisplay</a></td><td>Display images arranged as a grid</td></tr>
+</table>
+<b>interactive displays</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_imvalue.html">fn_imvalue</a></td><td>Automatic link graphs and images for point selection and zooming</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_review.html">fn_review</a></td><td>Navigate with arrow keys inside a set of data</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_4Dview.html">fn_4Dview</a></td><td>Navigation inside 3D, 4D or 5D imaging data</td></tr>
+</table>
+</p><h2>GUI PROGRAMMING<a name="9"></a></h2><p>
+<b>shortcuts</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_evalcallback.html">fn_evalcallback</a></td><td>Evaluate a callback, i.e. a char array, function handle or cell array </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_get.html">fn_get</a>, <a href="help_fn_set.html">fn_set</a></td><td>Get and set mutiple properties of multiple objects at once </td></tr>
+</table>
+<b>figure</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_watch.html">fn_watch</a></td><td>Change the pointer to a watch during long computations</td></tr>
+<tr valign="top"><td width="150"><a href="help_panelorganizer.html">panelorganizer</a></td><td>Divide a figure into resizeable panels</td></tr>
+</table>
+<b>object positions</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_parentfigure.html">fn_parentfigure</a></td><td>Get parent figure</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_pixelpos.html">fn_pixelpos</a>, <a href="help_fn_pixelsize.html">fn_pixelsize</a></td><td>Position or size of an object in pixel units </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_pixelposlistener.html">fn_pixelposlistener</a>, <a href="help_fn_pixelsizelistener.html">fn_pixelsizelistener</a></td><td>Create a listnener detecting change in object position or size</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_getpos.html">fn_getpos</a></td><td>Get object position in a specific unit</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_coordinates.html">fn_coordinates</a></td><td>Conversion of screen/figure/axes, normalized/pixel coordinates</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_controlpositions.html">fn_controlpositions</a></td><td>Set an object position using a combination of absolute and relative (to any other object) coordinates </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_setfigsize.html">fn_setfigsize</a></td><td>Change the size of a figure, while keeping it within screen </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_framedesign.html">fn_framedesign</a></td><td>Utility to let user reposition graphic objects inside a figure </td></tr>
+</table>
+<b>mouse actions</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_buttonmotion.html">fn_buttonmotion</a></td><td>Execute a task while mouse pointer is movedaround </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_moveobject.html">fn_moveobject</a>, <a href="help_fn_pan.html">fn_pan</a></td><td>Move a graphic object or navigate in graph with mouse</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_mouse.html">fn_mouse</a>, <a href="help_interactivePolygon.html">interactivePolygon</a></td><td>Manual selection of a variety of shapes</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_scrollwheelregister.html">fn_scrollwheelregister</a></td><td>Define scrollwheel actions specific to which object the mouse is hovering over </td></tr>
+</table>
+<b>pre-defined arrangements of controls</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_okbutton.html">fn_okbutton</a></td><td>Small 'ok' button waits to be pressed</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_menu.html">fn_menu</a></td><td>Utility to create a basic GUI made of a line of buttons</td></tr>
+</table>
+<b>special controls</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_multcheck.html">fn_multcheck</a></td><td>Special control made of multiple check boxes</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_buttongroup.html">fn_buttongroup</a></td><td>Set of radio buttons or toggle buttons</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_slider.html">fn_slider</a></td><td>Special control that improves the functionality of Matlab slider</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_sliderenhance.html">fn_sliderenhance</a></td><td>Allow a slider uicontrol to evaluate its callback during scrolling</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_stepper.html">fn_stepper</a></td><td>Edit a numeric value, includes increment/decrement buttons</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_sensor.html">fn_sensor</a></td><td>Special control whose value is changed by clicking and dragging</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_clipcontrol.html">fn_clipcontrol</a></td><td>A wrapper of fn_sensor that controls the clipping range applied to an image </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_filecontrol.html">fn_filecontrol</a></td><td>Select a file</td></tr>
+</table>
+<b>elaborate controls</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_control.html">fn_control</a></td><td>Arrangement of control that reflect the state of a set of parameters </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_supercontrol.html">fn_supercontrol</a></td><td>Super arrangement of control </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_listorganize.html">fn_listorganize</a></td><td>Edit a list of strings or of structured data</td></tr>
+</table>
+<b>dialogs</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_reallydlg.html">fn_reallydlg</a></td><td>Ask for confirmtaion</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_dialog_questandmem.html">fn_dialog_questandmem</a></td><td>Confirmation question with an option for not asking again </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_input.html">fn_input</a></td><td>Prompt user for a single value. Function based on fn_structedit </td></tr>
+</table>
+<b>GUI oriented-object programming</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_interface.html">interface</a></td><td>Parent class to create cool graphic interfaces</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_propcontrol.html">fn_propcontrol</a></td><td>Create controls automatically linked to an object property</td></tr>
+<tr valign="top"><td width="150"><a href="help_deleteValid.html">deleteValid</a></td><td>Delete valid objects among the list of objects obj (particularly useful for Matlab graphic handles) </td></tr>
+<tr valign="top"><td width="150"><a href="help_disableListener.html">disableListener</a></td><td>Momentarily disable a listener (returns an onCleanup oject that reenable it when being garbage collected)</td></tr>
+</table>
+</p><h2>MISCELLANEOUS<a name="10"></a></h2><p>
+<b>shortcuts</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_alias.html">alias</a></td><td>Create command shortcuts </td></tr>
+</table>
+<b>system</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_lmstat.html">fn_lmstat</a></td><td>Get information about how many Matlab floating licenses are used on the network </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_hostname.html">fn_hostname</a></td><td>Return an identifiant specific to the computer in use</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_email.html">fn_email</a></td><td>Send e-mails from Matlab! Automatically attach figures, M-files and more</td></tr>
+</table>
+<b>memory and pointers</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_whoisbig.html">whoisbig</a></td><td>Get information about large variables</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_getPr.html">fn_getPr</a></td><td>Get the address of the data stored in a variable: usefull to understand when two variables share the same data in memory </td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_pointer.html">fn_pointer</a></td><td>A structure that can be modified when being passed to functions </td></tr>
+<tr valign="top"><td width="150"><a href="help_pointer.html">pointer</a></td><td>Implement a pointer to any Matlab object</td></tr>
+</table>
+<b>graphics</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_figmenu.html">fn_figmenu</a></td><td>An automatic custom menu for figures: save figure, distance tool, ... </td></tr>
+</table>
+<b>figure edition</b>
+<table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+<tr valign="top"><td width="150"><a href="help_fn_extractsvgdata.html">fn_extractsvgdata</a></td><td>Extract data from SVG file! (PDFs can be converted to SVG with InkScape free software)</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_getcolorindices.html">fn_getcolorindices</a></td><td>Extract from image displays by checking the color bar</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_color2bw.html">fn_color2bw</a></td><td>GUI to let user choose the best conversion to convert color image to grayscale</td></tr>
+<tr valign="top"><td width="150"><a href="help_fn_editsignal.html">fn_editsignal</a></td><td>Manually edit your signals data points!</td></tr>
+</table>
+</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Functions by Categories
+% Brick Toolbox, Version 2.0   06-Jan-2017
+
+%% ARRAY MANIPULATION
+% <html>
+% <b>manipulate dimensions and shape</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_column.html">column</a>, <a href="help_row.html">row</a>, <a href="help_third.html">third</a>, <a href="help_fourth.html">fourth</a></td><td>Reshape ND array to column vector, row vector, or vector in the 3rd or 4th dimension </td></tr>
+% <tr valign="top"><td width="150"><a href="help_matrix.html">matrix</a>, <a href="help_threed.html">threed</a></td><td>Reshape ND array to 2D or 3D array</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_reshapepermute.html">fn_reshapepermute</a></td><td>Full capability for dimensions and shape manipulation</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_add.html">fn_add</a>, <a href="help_fn_mult.html">fn_mult</a>, <a href="help_fn_subtract.html">fn_subtract</a>, <a href="help_fn_div.html">fn_div</a>, <a href="help_fn_eq.html">fn_eq</a></td><td>Operations between arrays whose dimensions only partially match</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_indices.html">fn_indices</a></td><td>Convert between global and per-dimension indices </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_interleave.html">fn_interleave</a></td><td>Interleave data </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_sizecompare.html">fn_sizecompare</a></td><td>Check whether two size vectors are equivalent</td></tr>
+% </table>
+% <b>apply function to elements of array or cell array</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_map.html">fn_map</a></td><td>Apply a given function to the elements, columns or rows of an array (more versatile than Matlab arrayfun)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_find.html">fn_find</a></td><td>Look for non-empty elements, or which evaluate to true when applying a certain function</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_isemptyc.html">fn_isemptyc</a></td><td>Which elements of a cell array are empty</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_itemlengths.html">fn_itemlengths</a></td><td>Return lengths of all elements inside a cell array</td></tr>
+% </table>
+% <b>simple processing</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_bin.html">fn_bin</a>, <a href="help_fn_enlarge.html">fn_enlarge</a></td><td>Data binning and enlarging</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_round.html">fn_round</a></td><td>Round x to the closest multiple of y</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_coerce.html">fn_coerce</a></td><td>Restrict data to a specific range</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_clip.html">fn_clip</a></td><td>Rescale data, restrict the range, color</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_normalize.html">fn_normalize</a></td><td>Normalize data based on averages in some specific dimension</td></tr>
+% </table>
+% <b>min, max, mean,...</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_min.html">fn_min</a>, <a href="help_fn_max.html">fn_max</a></td><td>Global minimum or maximum of an array and its coordinates</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_minmax.html">fn_minmax</a></td><td>Basic min/max operations (e.g. intersection or union of 2 ranges)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_localmax.html">fn_localmax</a></td><td>Find local maxima in a vector </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_mean.html">fn_mean</a>, <a href="help_fn_means.html">fn_means</a></td><td>Average over several dimensions, average successive argumments</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_meanc.html">fn_meanc</a></td><td>Return mean and confidence interval</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_meanangle.html">fn_meanangle</a></td><td>Average of angles (result in [-pi pi])</td></tr>
+% <tr valign="top"><td width="150"><a href="help_nmean.html">nmean</a>, <a href="help_nmedian.html">nmedian</a>, <a href="help_nstd.html">nstd</a>, <a href="help_nste.html">nste</a>, <a href="help_nrms.html">nrms</a>, <a href="help_nsum.html">nsum</a></td><td>Treat NaNs as missing values for mean/median/std/ste/rms/sum computations </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_triggeravg.html">fn_triggeravg</a></td><td>Local average of data around specific indices in a given dimension</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_arrangepergroup.html">fn_arrangepergroup</a>, <a href="help_fn_avgpergroup.html">fn_avgpergroup</a></td><td>Reorganize an array according to labels describing a specific dimension, or average accross different repetitions of the same label</td></tr>
+% </table>
+% <b>other</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_sym.html">fn_sym</a></td><td>Convert a symmetric matrix to a vector and vice-versa</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_timevector.html">fn_timevector</a></td><td>Convert set of times to vector of counts and vice-versa</td></tr>
+% </table>
+% </html>
+
+%% MATLAB TYPES
+% <html>
+% <b>string</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_strcut.html">fn_strcut</a></td><td>Cut string into pieces according to specified separator</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_strrep.html">fn_strrep</a></td><td>Replace several text sequences in string</td></tr>
+% </table>
+% <b>structures</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_structdisp.html">fn_structdisp</a></td><td>Recursive display of a structure content</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_structmerge.html">fn_structmerge</a>, <a href="help_fn_structcat.html">fn_structcat</a></td><td>Merge and concatenate structures </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_structinit.html">fn_structinit</a></td><td>Initialize a structure with no field, or with same fields as a model</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_structedit.html">fn_structedit</a></td><td>Edit a structure with a GUI interface; this is a wrapper of fn_control</td></tr>
+% </table>
+% <b>conversions</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_num2str.html">fn_num2str</a></td><td>Convert numeric to char, unless input is already char!, can return a cell array</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_idx2str.html">fn_idx2str</a></td><td>Convert indices to a compact string representation, e.g. '1:2 5:8' for [1 2 5 6 7 8] </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_str2double.html">fn_str2double</a></td><td>Convert to numeric if not already numeric</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_strcat.html">fn_strcat</a></td><td>Concatenate strings and numbers into a single string, with optional separator sequence </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_float.html">fn_float</a></td><td>Convert integer to single, keep single or double as such </td></tr>
+% </table>
+% </html>
+
+%% PROGRAMMING
+% <html>
+% <b>handy shortcuts</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_switch.html">fn_switch</a>, <a href="help_fn_cast.html">fn_cast</a></td><td>Shortcut for avoiding using if/else and switch </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_disp.html">fn_disp</a>, <a href="help_fn_display.html">fn_display</a></td><td>Display multiple arguments at once, display a variable name and value in a single line</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_dispandexec.html">fn_dispandexec</a></td><td>Display commands in Matlab and executes them </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_subsref.html">fn_subsref</a></td><td>Shortcut for calling Matlab subsref function</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_ismemberstr.html">fn_ismemberstr</a></td><td>Check whether string is part of a set of strings (faster than Matlab ismember)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_flags.html">fn_flags</a></td><td>Detect flags in the arguments of a function </td></tr>
+% <tr valign="top"><td width="150"><a href="help_dealc.html">dealc</a></td><td>Assign elements of an array to multiple outputs</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_mod.html">fn_mod</a></td><td>Return modulus between 1 and n instead of between 0 and n-1</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_regexptokens.html">fn_regexptokens</a></td><td>Get the tokens of a regexp as a simple cell array</td></tr>
+% </table>
+% <b>tools</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_progress.html">fn_progress</a>, <a href="help_pg.html">pg</a></td><td>Print the state of a calculation </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_hash.html">fn_hash</a></td><td>Unique hash number for an array/cell/structure (Copyright M Kleder)</td></tr>
+% </table>
+% <b>debugging</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_dbstack.html">fn_dbstack</a></td><td>Display current function name, with indent according to stack length </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_basevars.html">fn_basevars</a></td><td>Load base workspace variables in caller workspace and vice-versa </td></tr>
+% </table>
+% </html>
+
+%% FILES
+% <html>
+% <b>shortcuts</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_cd.html">fn_cd</a></td><td>User definition of shortcut to fast access directories</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_fileparts.html">fn_fileparts</a>, <a href="help_fn_fileext.html">fn_fileext</a></td><td>Get specific file parts, replace file extension </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_ls.html">fn_ls</a></td><td>Return folder content</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_mkdir.html">fn_mkdir</a></td><td>Create a directory if it does not exist</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_movefile.html">fn_movefile</a></td><td>Rename files in current directory using regular expression</td></tr>
+% </table>
+% <b>user selection</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_getfile.html">fn_getfile</a></td><td>Select file and remember the containing folder of the last selected file </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_savefile.html">fn_savefile</a></td><td>User select file for saving and remember last containing folder </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_getdir.html">fn_getdir</a></td><td>Select directory and remember last containing folder </td></tr>
+% </table>
+% <b>handy</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_locate.html">locate</a></td><td>Reveal file in Explorer (Windows only)</td></tr>
+% </table>
+% </html>
+
+%% IMPORT/EXPORT
+% <html>
+% <b>read/save file</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_readtext.html">fn_readtext</a>, <a href="help_fn_savetext.html">fn_savetext</a></td><td>Read/save text file</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_readasciimatrix.html">fn_readasciimatrix</a>, <a href="help_fn_saveasciimatrix.html">fn_saveasciimatrix</a></td><td>Read/save 2D array from/to text file</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_readimg.html">fn_readimg</a>, <a href="help_fn_saveimg.html">fn_saveimg</a></td><td>Read/save image or stack thereof, (read:) detects if color or grayscale, (save:) options for clipping, color map...</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_readmovie.html">fn_readmovie</a>, <a href="help_fn_savemovie.html">fn_savemovie</a></td><td>Read AVI movie</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_readxml.html">fn_readxml</a>, <a href="help_fn_savexml.html">fn_savexml</a></td><td>Read/save XML file (Copyright Jarek Tuszynski)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_loadvar.html">fn_loadvar</a>, <a href="help_fn_savevar.html">fn_savevar</a></td><td>Load/save in MAT file in a more convenient way</td></tr>
+% </table>
+% <b>read file</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_readbin.html">fn_readbin</a></td><td>Read binary file containing some header followed by numerical data</td></tr>
+% </table>
+% <b>save figure</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_savefig.html">fn_savefig</a></td><td>Save figure with a number of options</td></tr>
+% </table>
+% <b>Matlab workspaces</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_exportvar.html">fn_exportvar</a></td><td>Export data to a Matlab variable in base workspace</td></tr>
+% </table>
+% </html>
+
+%% MATHEMATICS
+% <html>
+% <b>filtering</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_filt.html">fn_filt</a></td><td>Gaussian low-, high- or band-pass filtering using fft</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_smooth.html">fn_smooth</a>, <a href="help_fn_smooth3.html">fn_smooth3</a></td><td>1D, 2D and 3D smoothing using Gaussian convolution</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_detrend.html">fn_detrend</a></td><td>Remove a linear trend estimated only from specific indices </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_spectrogram.html">fn_spectrogram</a></td><td>Compute spectrogram</td></tr>
+% </table>
+% <b>optimization</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_fit.html">fn_fit</a></td><td>Fit the parameters of a given function</td></tr>
+% <tr valign="top"><td width="150"><a href="help_dichotomy.html">dichotomy</a></td><td>Uses dichotomy method for one-dimensional optimization</td></tr>
+% </table>
+% <b>statistics</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_GLMtest.html">fn_GLMtest</a></td><td>Perform F-test and T-test in a GLM framework</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_bootstrap.html">fn_bootstrap</a></td><td>Compare the mean or median of two ensembles using bootstrap method </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_chi2indenpendencetest.html">fn_chi2indenpendencetest</a></td><td>Chi2 independence test</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_pcorrect.html">fn_pcorrect</a></td><td>Perform correction for multiple testing</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_sample.html">fn_sample</a></td><td>Draw samples from distribution</td></tr>
+% </table>
+% <b>statistics + display</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_regression.html">fn_regression</a></td><td>Perform linear regression and display data points and result</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_comparedistrib.html">fn_comparedistrib</a></td><td>Perform a nonparametric test and display data points and results</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_markpvalue.html">fn_markpvalue</a></td><td>Draw stars to mark significancy of results</td></tr>
+% </table>
+% <b>machine learning</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_clustering.html">fn_clustering</a></td><td>Performs correlation-based clustering of data x</td></tr>
+% </table>
+% <b>tools</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_fftfrequencies.html">fn_fftfrequencies</a></td><td>Frequencies corresponding to the output of Matlab fft function</td></tr>
+% </table>
+% </html>
+
+%% IMAGE PROCESSING
+% <html>
+% <b>basic operations</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_imageop.html">fn_imageop</a></td><td>Apply a series of transformations to an image </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_printnumber.html">fn_printnumber</a></td><td>Add small numbers and text to images or movies</td></tr>
+% </table>
+% <b>regions of interest</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_maskselect.html">fn_maskselect</a></td><td>Manual selection of a mask inside an image</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_subrect.html">fn_subrect</a></td><td>Manual selection of a rectangular mask inside an image</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_poly2mask.html">fn_poly2mask</a></td><td>Get the mask of a polygon interior</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_imvect.html">fn_imvect</a></td><td>Convert an image to a vector of pixels inside a mask, and vice-versa </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_roiavg.html">fn_roiavg</a></td><td>Compute average signal from a region of interest</td></tr>
+% </table>
+% <b>coregistration</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_register.html">fn_register</a></td><td>Coregister images or movie</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_xregister.html">fn_xregister</a></td><td>Fast fft-based coregistration at pixel (but not sub-pixel) resolution</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_translate.html">fn_translate</a>, <a href="help_fn_affinity.html">fn_affinity</a></td><td>Interpolate an image or movie after translation or affinity</td></tr>
+% </table>
+% <b>GUI programs</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_alignimage.html">fn_alignimage</a></td><td>Manual alignment of 2 images</td></tr>
+% <tr valign="top"><td width="150"><a href="help_montage.html">montage</a></td><td>Manual alignment of a large set of images</td></tr>
+% </table>
+% </html>
+
+%% DATA DISPLAY
+% <html>
+% <b>shortcuts</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_drawpoly.html">fn_drawpoly</a></td><td>Shortcut for line(poly(:,1),poly(:,2))</td></tr>
+% </table>
+% <b>figure</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_figure.html">fn_figure</a></td><td>Raise figures by name rather than by number (shortcut: ff)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_isfigurehandle.html">fn_isfigurehandle</a></td><td>Is handle a plausible figure handle</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_subplot.html">fn_subplot</a></td><td>Subplots cover the figure without leaving any space</td></tr>
+% </table>
+% <b>drawings</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_arrow.html">fn_arrow</a></td><td>Draw an arrow</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_circle.html">fn_circle</a></td><td>Draw a circle</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_lines.html">fn_lines</a></td><td>Draw a series of vertical and/or horizontal lines</td></tr>
+% </table>
+% <b>time courses displays</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_stairs.html">fn_stairs</a></td><td>Display stairs in an intuitive way</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_errorbar.html">fn_errorbar</a></td><td>Display nice error bars </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_regression.html">fn_regression</a></td><td>Display of data points together with linear regression</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_spikedisplay.html">fn_spikedisplay</a>, <a href="help_fn_rasterplot.html">fn_rasterplot</a></td><td>Raster plot display (display of punctual events as small bars)</td></tr>
+% </table>
+% <b>time courses tools</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_axis.html">fn_axis</a></td><td>Set axis range for a better visual aspect than 'axis tight' </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_nicegraph.html">fn_nicegraph</a></td><td>Improve aspect of graph display</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_plotscale.html">fn_plotscale</a></td><td>Add horizontal and vertical scale bars to graph</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_linespecs.html">fn_linespecs</a></td><td>Handle abbreviated plot options (e.g. 'r.') </td></tr>
+% </table>
+% <b>special 2D displays</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_displayarrows.html">fn_displayarrows</a></td><td>Display an image and a velocity field on top of it </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_tensordisplay.html">fn_tensordisplay</a></td><td>Display of a field of 2x2 symmetric matrices using ellipses</td></tr>
+% </table>
+% <b>2D tools</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_imdistline.html">fn_imdistline</a></td><td>Show the distance between two points (enhanced version of Matlab imdistline)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_scale.html">fn_scale</a></td><td>Scale bar for image display</td></tr>
+% </table>
+% <b>color tools</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_colorset.html">fn_colorset</a>, <a href="help_fn_colorbyname.html">fn_colorbyname</a></td><td>Different sets of colors, conversion between color numerical value and name</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_showcolormap.html">fn_showcolormap</a></td><td>Display a color map in a given axes or in a separate figure</td></tr>
+% <tr valign="top"><td width="150"><a href="help_hsl2rgb.html">hsl2rgb</a></td><td>Convert from Hue/Saturation/Luminance coordinates to RGB </td></tr>
+% </table>
+% <b>movie displays</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_playmovie.html">fn_playmovie</a></td><td>Simple showing of a movie</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_movie.html">fn_movie</a></td><td>Show a movie, large number of options</td></tr>
+% </table>
+% <b>mesh computations and displays</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_meshplot.html">fn_meshplot</a></td><td>Display a mesh</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_meshselectpoint.html">fn_meshselectpoint</a></td><td>Display a mesh and let user select a point with mouse</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_cubemesh.html">fn_cubemesh</a>, <a href="help_fn_cubeview.html">fn_cubeview</a></td><td>Render the "faces" of a 3D data (creates a mesh and texture, or an image) </td></tr>
+% </table>
+% <b>display ND data</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_eegplot.html">fn_eegplot</a>, <a href="help_fn_gridplot.html">fn_gridplot</a></td><td>Display multiple time courses dispatched vertically or arranged as a grid</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_framedisplay.html">fn_framedisplay</a></td><td>Display images arranged as a grid</td></tr>
+% </table>
+% <b>interactive displays</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_imvalue.html">fn_imvalue</a></td><td>Automatic link graphs and images for point selection and zooming</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_review.html">fn_review</a></td><td>Navigate with arrow keys inside a set of data</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_4Dview.html">fn_4Dview</a></td><td>Navigation inside 3D, 4D or 5D imaging data</td></tr>
+% </table>
+% </html>
+
+%% GUI PROGRAMMING
+% <html>
+% <b>shortcuts</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_evalcallback.html">fn_evalcallback</a></td><td>Evaluate a callback, i.e. a char array, function handle or cell array </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_get.html">fn_get</a>, <a href="help_fn_set.html">fn_set</a></td><td>Get and set mutiple properties of multiple objects at once </td></tr>
+% </table>
+% <b>figure</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_watch.html">fn_watch</a></td><td>Change the pointer to a watch during long computations</td></tr>
+% <tr valign="top"><td width="150"><a href="help_panelorganizer.html">panelorganizer</a></td><td>Divide a figure into resizeable panels</td></tr>
+% </table>
+% <b>object positions</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_parentfigure.html">fn_parentfigure</a></td><td>Get parent figure</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_pixelpos.html">fn_pixelpos</a>, <a href="help_fn_pixelsize.html">fn_pixelsize</a></td><td>Position or size of an object in pixel units </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_pixelposlistener.html">fn_pixelposlistener</a>, <a href="help_fn_pixelsizelistener.html">fn_pixelsizelistener</a></td><td>Create a listnener detecting change in object position or size</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_getpos.html">fn_getpos</a></td><td>Get object position in a specific unit</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_coordinates.html">fn_coordinates</a></td><td>Conversion of screen/figure/axes, normalized/pixel coordinates</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_controlpositions.html">fn_controlpositions</a></td><td>Set an object position using a combination of absolute and relative (to any other object) coordinates </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_setfigsize.html">fn_setfigsize</a></td><td>Change the size of a figure, while keeping it within screen </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_framedesign.html">fn_framedesign</a></td><td>Utility to let user reposition graphic objects inside a figure </td></tr>
+% </table>
+% <b>mouse actions</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_buttonmotion.html">fn_buttonmotion</a></td><td>Execute a task while mouse pointer is movedaround </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_moveobject.html">fn_moveobject</a>, <a href="help_fn_pan.html">fn_pan</a></td><td>Move a graphic object or navigate in graph with mouse</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_mouse.html">fn_mouse</a>, <a href="help_interactivePolygon.html">interactivePolygon</a></td><td>Manual selection of a variety of shapes</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_scrollwheelregister.html">fn_scrollwheelregister</a></td><td>Define scrollwheel actions specific to which object the mouse is hovering over </td></tr>
+% </table>
+% <b>pre-defined arrangements of controls</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_okbutton.html">fn_okbutton</a></td><td>Small 'ok' button waits to be pressed</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_menu.html">fn_menu</a></td><td>Utility to create a basic GUI made of a line of buttons</td></tr>
+% </table>
+% <b>special controls</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_multcheck.html">fn_multcheck</a></td><td>Special control made of multiple check boxes</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_buttongroup.html">fn_buttongroup</a></td><td>Set of radio buttons or toggle buttons</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_slider.html">fn_slider</a></td><td>Special control that improves the functionality of Matlab slider</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_sliderenhance.html">fn_sliderenhance</a></td><td>Allow a slider uicontrol to evaluate its callback during scrolling</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_stepper.html">fn_stepper</a></td><td>Edit a numeric value, includes increment/decrement buttons</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_sensor.html">fn_sensor</a></td><td>Special control whose value is changed by clicking and dragging</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_clipcontrol.html">fn_clipcontrol</a></td><td>A wrapper of fn_sensor that controls the clipping range applied to an image </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_filecontrol.html">fn_filecontrol</a></td><td>Select a file</td></tr>
+% </table>
+% <b>elaborate controls</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_control.html">fn_control</a></td><td>Arrangement of control that reflect the state of a set of parameters </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_supercontrol.html">fn_supercontrol</a></td><td>Super arrangement of control </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_listorganize.html">fn_listorganize</a></td><td>Edit a list of strings or of structured data</td></tr>
+% </table>
+% <b>dialogs</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_reallydlg.html">fn_reallydlg</a></td><td>Ask for confirmtaion</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_dialog_questandmem.html">fn_dialog_questandmem</a></td><td>Confirmation question with an option for not asking again </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_input.html">fn_input</a></td><td>Prompt user for a single value. Function based on fn_structedit </td></tr>
+% </table>
+% <b>GUI oriented-object programming</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_interface.html">interface</a></td><td>Parent class to create cool graphic interfaces</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_propcontrol.html">fn_propcontrol</a></td><td>Create controls automatically linked to an object property</td></tr>
+% <tr valign="top"><td width="150"><a href="help_deleteValid.html">deleteValid</a></td><td>Delete valid objects among the list of objects obj (particularly useful for Matlab graphic handles) </td></tr>
+% <tr valign="top"><td width="150"><a href="help_disableListener.html">disableListener</a></td><td>Momentarily disable a listener (returns an onCleanup oject that reenable it when being garbage collected)</td></tr>
+% </table>
+% </html>
+
+%% MISCELLANEOUS
+% <html>
+% <b>shortcuts</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_alias.html">alias</a></td><td>Create command shortcuts </td></tr>
+% </table>
+% <b>system</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_lmstat.html">fn_lmstat</a></td><td>Get information about how many Matlab floating licenses are used on the network </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_hostname.html">fn_hostname</a></td><td>Return an identifiant specific to the computer in use</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_email.html">fn_email</a></td><td>Send e-mails from Matlab! Automatically attach figures, M-files and more</td></tr>
+% </table>
+% <b>memory and pointers</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_whoisbig.html">whoisbig</a></td><td>Get information about large variables</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_getPr.html">fn_getPr</a></td><td>Get the address of the data stored in a variable: usefull to understand when two variables share the same data in memory </td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_pointer.html">fn_pointer</a></td><td>A structure that can be modified when being passed to functions </td></tr>
+% <tr valign="top"><td width="150"><a href="help_pointer.html">pointer</a></td><td>Implement a pointer to any Matlab object</td></tr>
+% </table>
+% <b>graphics</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_figmenu.html">fn_figmenu</a></td><td>An automatic custom menu for figures: save figure, distance tool, ... </td></tr>
+% </table>
+% <b>figure edition</b>
+% <table cellspacing="0" width="100%" border="0" cellpadding="2" style="margin-top:5px;margin-bottom:30px;">
+% <tr valign="top"><td width="150"><a href="help_fn_extractsvgdata.html">fn_extractsvgdata</a></td><td>Extract data from SVG file! (PDFs can be converted to SVG with InkScape free software)</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_getcolorindices.html">fn_getcolorindices</a></td><td>Extract from image displays by checking the color bar</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_color2bw.html">fn_color2bw</a></td><td>GUI to let user choose the best conversion to convert color image to grayscale</td></tr>
+% <tr valign="top"><td width="150"><a href="help_fn_editsignal.html">fn_editsignal</a></td><td>Manually edit your signals data points!</td></tr>
+% </table>
+% </html>
+
+
+##### SOURCE END #####
+--></body></html>

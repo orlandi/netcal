@@ -245,22 +245,50 @@ switch mode
         end
         legend(hList, project.experiments{experimentsPlotted});
       case 'label'
-        hList = [];
-        rmseCfull = [];
-        rmseHfull = [];
-        meanCfull = [];
-        meanHfull = [];
+        labelsToUse = params.labelGroups;
+        try
+          [labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments), labelsToUse);
+          %[labelList, uniqueLabels, labelsCombinations, labelsCombinationsNames, experimentsPerCombinedLabel] = getLabelList(project, find(project.checkedExperiments));
+        catch
+        end
+        labelsToUse = params.labelGroups;
+        labelsToUseJoined = cell(length(labelsToUse), 1);
+        try
+          if(isempty([params.labelGroups{:}]))
+            labelsToUseJoined = uniqueLabels;
+          else
+            for it = 1:length(params.labelGroups)
+              labelsToUseJoined{it} = strjoin(sort(strtrim(strsplit(params.labelGroups{it}, ','))), ', ');
+            end
+          end
+        catch
+          labelsToUseJoined = uniqueLabels;
+        end
+        validCombinations = cellfun(@(x)find(strcmp(labelsCombinationsNames, x)), labelsToUseJoined, 'UniformOutput', false);
+        valid = find(cellfun(@(x)~isempty(x), validCombinations));
+        if(length(valid) ~= length(validCombinations))
+          logMsg('Some label sets had no representative experiments', 'w');
+        end
+        validCombinations = cell2mat(validCombinations(valid));
+        labelsToUseJoined = labelsToUseJoined(valid);
+
+        
         % Let's group by order together
-        labels = project.labels(checkedExperiments);
-        uniqueLabels = unique(labels);
-        cmap = eval([params.colormap '(' num2str(length(uniqueLabels)) ')']);
+        hList = [];
+        cmap = eval([params.colormap '(' num2str(length(validCombinations)) ')']);
         for i = 1:length(uniqueLabels)
-          validExperiments = find(strcmp(labels, uniqueLabels{i}));
+          rmseCfull = [];
+          rmseHfull = [];
+          meanCfull = [];
+          meanHfull = [];
+          validExperiments = [experimentsPerCombinedLabel{validCombinations(i)}{:}];
+          %validExperiments = find(strcmp(labels, uniqueLabels{i}));
           %qCEClist = cell(length(validExperiments), 1);
           for j = 1:length(validExperiments)
-            curExp = checkedExperiments(validExperiments(j));
+            curExp = validExperiments(j);
             % Now that we have the experiment, load the qCEC data
             experimentName = project.experiments{curExp};
+            logMsg(sprintf('Merging exp %s on label group %s', experimentName, uniqueLabels{i}));
             experimentFile = [project.folderFiles experimentName '.exp'];
             try
               experiment = loadExperiment(experimentFile, 'verbose', false, 'project', project);
@@ -327,7 +355,7 @@ switch mode
           plot3(meanHfullCombined, meanCfullCombined, qCEC.qList, '-', 'Color', cmap(i, :));
           plot3(meanHfullCombined(q1), meanCfullCombined(q1), 1, 'o', 'MarkerFaceColor', cmap(i, :), 'MarkerEdgeColor', cmap(i, :));
         end
-        legend(hList, uniqueLabels, 'Location', 'SW');
+        legend(hList, labelsToUseJoined, 'Location', 'SW');
     end
 end
 xlabel(ax, 'q-Entropy Hq');

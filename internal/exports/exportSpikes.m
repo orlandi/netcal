@@ -207,6 +207,10 @@ function exportData = getExportData(experiment)
     else
       mat = double([N, T]);
     end
+    if(isempty(mat))
+        logMsg(sprintf('No spikes founds in %s in experiment %s', subpop, experiment.name), 'w');
+        return;
+    end
     switch params.exportOrder
       case 'time'
         mat = sortrows(mat, 2);

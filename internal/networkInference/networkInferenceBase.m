@@ -48,7 +48,11 @@ classdef networkInferenceBase < handle
         if(strcmpi(obj.groupList{git}, 'none'))
           obj.groupList{git} = 'everything';
         end
-        members = [members, getExperimentGroupMembers(experiment, obj.groupList{git})];
+        try
+          members = [members, getExperimentGroupMembers(experiment, obj.groupList{git})];
+        catch
+          members = [members; getExperimentGroupMembers(experiment, obj.groupList{git})];
+        end
       end
       members = unique(members);
       
@@ -60,23 +64,34 @@ classdef networkInferenceBase < handle
         Nsurrogates = 0;
         inferenceDataSurrogates = zeros(length(members), length(members));
       end
-      % Create the asdf2 structure
-      asdf2 = experimentToAsdf2(experiment);
-      % Let's turn all rasters into a 2D array for slicing
-      raster = zeros(asdf2.nbins, length(members));
-      for i = 1:length(members)
-        raster(asdf2.raster{members(i)}, i) = 1;
+      switch obj.params.inferenceSignal
+        case 'spikes'
+          % Create the asdf2 structure
+          asdf2 = experimentToAsdf2(experiment);
+          % Let's turn all rasters into a 2D array for slicing
+          raster = zeros(asdf2.nbins, length(members));
+          for i = 1:length(members)
+            raster(asdf2.raster{members(i)}, i) = 1;
+          end
+        case 'traces'
+          experiment = loadTraces(experiment, 'smoothed');
+          raster = experiment.traces;
+          asdf2 = struct;
+          asdf2.raster = raster;
+          asdf2.nbins = size(experiment.traces, 1);
       end
       % Now the global conditioning
       % Easy peasie
       G = nanmean(raster, 2);
+      origG = G;
       if(obj.params.globalConditioning.enable)
         
         % Check kind of estimation
         if(ischar(obj.params.globalConditioning.levelEstimation) && strcmpi(obj.params.globalConditioning.levelEstimation, 'auto'))
-          Grange = [0, median(G)+4*std(G)];
+          Grange = [-inf, median(G)+2*std(G)];
         else
-          Grange = eval(obj.params.globalConditioning.levelEstimation);
+          %Grange = eval(obj.params.globalConditioning.levelEstimation);
+          Grange = obj.params.globalConditioning.levelEstimation;
         end
         figure;
         hist(G, 100);
@@ -87,15 +102,38 @@ classdef networkInferenceBase < handle
         legend([h1 h2], 'Lower conditioning threshold', 'Upper conditioning threshold');
         xlabel('Global signal G');
         ylabel('PDF(G)');
-        
+        try
+          fpa = [experiment.folder filesep 'figures'];
+          if(~exist(fpa, 'dir'))
+              mkdir(fpa);
+          end
+          outputfilename = [experiment.folder filesep 'figures' filesep experiment.name '_inferenceThreshold.png'];
+          export_fig(gcf, outputfilename, '-nocrop', '-r150');
+        end
+
         G(G > Grange(end)) = 0;
         G(G < Grange(1)) = 0;
+        G(~~G) = 1;
+        %G = ~G;
+        figure;
+        plot(1:length(G),origG,'-');
+        hold on;
+        plot(find(~G),origG(~G),'rx');
+        title(sprintf('Fraction of frames removed: %.2f', 1-sum(G)/length(G)));
+        try
+          fpa = [experiment.folder filesep 'figures'];
+          if(~exist(fpa, 'dir'))
+              mkdir(fpa);
+          end
+          outputfilename = [experiment.folder filesep 'figures' filesep experiment.name '_inferenceConditioning.png'];
+          export_fig(gcf, outputfilename, '-nocrop', '-r150');
+        end
       else
         G = ones(asdf2.nbins, 1);
       end
       
       % Normalize data
-      raster = feval(normFunc, raster, varargin{:});
+      %raster = feval(normFunc, raster, varargin{:});
       if(obj.params.pbar > 0)
         ncbar.setBarName(sprintf('Performing %s based inference', obj.inferenceName));
       end
@@ -120,8 +158,8 @@ classdef networkInferenceBase < handle
               I = Iorig;
             else
               % Generate the surrogate - still use the spike list
-              I = obj.generateSurrogate(Iorig, asdf2.raster{members(i)}, obj.surrogates.type, obj.surrogates.jitterAmount);
-              I = feval(normFunc, I, varargin{:});
+              I = obj.generateSurrogate(Iorig, raster(:, members(i)), obj.surrogates.type, obj.surrogates.jitterAmount);
+              %I = feval(normFunc, I, varargin{:});
             end
             inferenceDataCol = zeros(1, length(members));
             for j = 1:length(members)
@@ -156,10 +194,10 @@ classdef networkInferenceBase < handle
           fullSurrogates(:, 1) = Iorig;
           % Generate all surrogates
           for s = 1:Nsurrogates
-            fullSurrogates(:, s+1) = obj.generateSurrogate(Iorig, asdf2.raster{members(i)}, obj.surrogates.type, obj.surrogates.jitterAmount);
+            fullSurrogates(:, s+1) = obj.generateSurrogate(Iorig, raster(:, members(i)), obj.surrogates.type, obj.surrogates.jitterAmount);
           end
           % Normalize them
-          fullSurrogates = feval(normFunc, fullSurrogates, varargin{:});
+          %fullSurrogates = feval(normFunc, fullSurrogates, varargin{:});
           % Use them
          for j = 1:length(members)
             if(i == j)
@@ -171,6 +209,7 @@ classdef networkInferenceBase < handle
             end
             
             % The actual computation
+            %varargin
             inferenceDataFullSurrogates = feval(inferFunc, fullSurrogates, J, G, varargin{:});
             inferenceData(i, j) = inferenceDataFullSurrogates(1);
             if(Nsurrogates > 0)
@@ -187,6 +226,7 @@ classdef networkInferenceBase < handle
     end
     
     % The actual function to generate surrogates from a single spike train
+    % - INCOMPLETE
     %----------------------------------------------------------------------
     function surrogateData = generateSurrogate(obj, data, spikes, type, jitterAmount)
       switch type
@@ -213,6 +253,8 @@ classdef networkInferenceBase < handle
           surrogateData = data;
         case 'jitter'
           surrogateData = data;
+        case 'randperm'
+          surrogateData = data(randperm(length(data)));
       end
     end
       

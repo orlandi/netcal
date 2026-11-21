@@ -1,0 +1,269 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>fn_control</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="help_fn_control.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>fn_control</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Source</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>X = fn_control(s[,fun][,spec][,hparent] ...</pre><h2>Description<a name="2"></a></h2><pre>  [,'okbutton|nobutton'][,'ncol',n][,'title',titl])
+function fn_control('demo')
+cluster of controls representing the structure s (changing the
+control changes the values in X, and changing the values in X
+automatically updates the control display)</pre><pre>Input:
+- s           structure to intialize X; s can also be a 2-element
+              structure, standing for [s spec]
+- fun         function with prototype @(s)fun, which will be called
+              by X
+- spec        structure with additional information on the aspect and
+              behavior of the controls (see below); it should have
+              the same fields as s (though some fields can be
+              omitted)
+- hp          parent figure or uipanel where to create the controls
+              (a new figure is created if not specified)
+- 'okbutton' or 'nobutton'
+              specifically specify to have an ok button or no button</pre><pre>Output:
+- X           a fn_control object, which can be manipulated using
+              usual structure syntax</pre><pre>Possible values for the fields of spec:
+[]            automatic guess how to display the control
+'logical'     check box
+'multcheck [n]' array of n check boxes
+{'multcheck|multlist' 'str1' 'str2' ...}
+              array of n check boxes or list display - specify the
+              name of each box/list entry
+{'str1' 'str2' ...}
+              popup menu with specified string values
+{['list|radio|button'] 'str1','str2',...}
+              specification of the type of display [default: list]
+              for a choice between string values
+              if one option is the empty string and style is 'radio'
+              or 'button', this option will correspond to no button
+              pressed
+'char [n [nlin]]'
+              input for string, if n is specified, sets the minimal
+              length of the input in number of characters, otherwise,
+              minimal length is set according to the value in s
+              if nlin is specified, control occupies nlin lines
+              instead of 1
+'double [n]'  input for numerical array
+'single [n]'  input for numerical array
+'slider min max [step] [format]'
+              slider, specify min, max, step (optional) and format of the
+              string representation (optional)
+'logslider min max [step] [format]'
+              logarithmic scale slider (min and max should be the log of
+              the effective min and max)
+'loglogslider min max [step] [format]'
+              logarithmic scale slider, with possibility to select
+              also a negative number
+'stepper [n [min [max [step [format]]]]]'
+              input for n double
+              if n&gt;1, it is possible to define n values for min, max,
+              step, separated by commas, for example: 0,-Inf,-1
+'clip'        input for 2-elements vector (usually, min and max);
+              move the mouse in the control area to change the value
+'color'       a small color table to select most-common color and
+              grayscale values
+'xdouble, xsingle, xchar [n], x[log[log]]slider min max [..],
+xstepper, xclip, xcolor'
+              additional display of a check box: value will be empty
+              if the box is not checked
+              it is possible to specify a starting value inside
+              brackets at the end of the flag, for example:
+              'xchar 12 [yes we can]' (here the brackets do not mean
+              that this starting value is optional, but they must
+              appear in the string)
+'file|dir'    button for selecting file name / directory name</pre><pre>Special specifications in spec:
+'label'       field name will be displayed (usually labels a new
+              section) but does not correspond to any data
+'struct' or full specification sub-structure
+              button to edit the sub-structure
+'hide'        value is not displayed
+'readonly [n]'
+              read-only display of value as a string
+{'push' 'str1','str2',...}
+              create array of push buttons that will cause an action
+              to be launched
+              in this case callback fun will be called with action
+              string as an argument (instead of structure s)</pre><pre>One might want to display small sentences rather than simple names
+when prompting user. For this, the following syntaxes are allowed:
+- the sequence '__' in the field names will be replace by a space in
+  the display
+- alternatively, spec can be a 2-elements structure (or s a
+  3-elements structures), the second element containing the long-name
+  version for each field.</pre><pre>See also fn_structedit, fn_input, fn_propcontrol</pre><h2>Source<a name="3"></a></h2><p>Thomas Deneux</p><p>Copyright 2007-2017</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% fn_control
+
+%% Syntax
+%  X = fn_control(s[,fun][,spec][,hparent] ...
+
+%% Description
+%    [,'okbutton|nobutton'][,'ncol',n][,'title',titl])
+%  function fn_control('demo')
+%  cluster of controls representing the structure s (changing the
+%  control changes the values in X, and changing the values in X
+%  automatically updates the control display)
+% 
+%  Input:
+%  - s           structure to intialize X; s can also be a 2-element
+%                structure, standing for [s spec]
+%  - fun         function with prototype @(s)fun, which will be called
+%                by X
+%  - spec        structure with additional information on the aspect and
+%                behavior of the controls (see below); it should have
+%                the same fields as s (though some fields can be
+%                omitted)
+%  - hp          parent figure or uipanel where to create the controls
+%                (a new figure is created if not specified)
+%  - 'okbutton' or 'nobutton'
+%                specifically specify to have an ok button or no button
+% 
+%  Output:
+%  - X           a fn_control object, which can be manipulated using
+%                usual structure syntax
+%  
+%  Possible values for the fields of spec:
+%  []            automatic guess how to display the control
+%  'logical'     check box
+%  'multcheck [n]' array of n check boxes
+%  {'multcheck|multlist' 'str1' 'str2' ...}
+%                array of n check boxes or list display - specify the
+%                name of each box/list entry
+%  {'str1' 'str2' ...}       
+%                popup menu with specified string values
+%  {['list|radio|button'] 'str1','str2',...}       
+%                specification of the type of display [default: list]
+%                for a choice between string values
+%                if one option is the empty string and style is 'radio'
+%                or 'button', this option will correspond to no button
+%                pressed
+%  'char [n [nlin]]'    
+%                input for string, if n is specified, sets the minimal
+%                length of the input in number of characters, otherwise,
+%                minimal length is set according to the value in s
+%                if nlin is specified, control occupies nlin lines
+%                instead of 1
+%  'double [n]'  input for numerical array
+%  'single [n]'  input for numerical array
+%  'slider min max [step] [format]'
+%                slider, specify min, max, step (optional) and format of the
+%                string representation (optional)
+%  'logslider min max [step] [format]'
+%                logarithmic scale slider (min and max should be the log of
+%                the effective min and max)
+%  'loglogslider min max [step] [format]'
+%                logarithmic scale slider, with possibility to select
+%                also a negative number
+%  'stepper [n [min [max [step [format]]]]]'
+%                input for n double
+%                if n>1, it is possible to define n values for min, max,
+%                step, separated by commas, for example: 0,-Inf,-1
+%  'clip'        input for 2-elements vector (usually, min and max);
+%                move the mouse in the control area to change the value
+%  'color'       a small color table to select most-common color and
+%                grayscale values
+%  'xdouble, xsingle, xchar [n], x[log[log]]slider min max [..],
+%  xstepper, xclip, xcolor'
+%                additional display of a check box: value will be empty
+%                if the box is not checked
+%                it is possible to specify a starting value inside
+%                brackets at the end of the flag, for example:
+%                'xchar 12 [yes we can]' (here the brackets do not mean
+%                that this starting value is optional, but they must
+%                appear in the string)
+%  'file|dir'    button for selecting file name / directory name
+% 
+%  Special specifications in spec:
+%  'label'       field name will be displayed (usually labels a new
+%                section) but does not correspond to any data
+%  'struct' or full specification sub-structure
+%                button to edit the sub-structure
+%  'hide'        value is not displayed
+%  'readonly [n]'
+%                read-only display of value as a string
+%  {'push' 'str1','str2',...}
+%                create array of push buttons that will cause an action
+%                to be launched
+%                in this case callback fun will be called with action
+%                string as an argument (instead of structure s)
+%  
+%  One might want to display small sentences rather than simple names
+%  when prompting user. For this, the following syntaxes are allowed:
+%  - the sequence '__' in the field names will be replace by a space in
+%    the display 
+%  - alternatively, spec can be a 2-elements structure (or s a
+%    3-elements structures), the second element containing the long-name
+%    version for each field.
+% 
+%  
+%  See also fn_structedit, fn_input, fn_propcontrol
+
+%% Source
+% Thomas Deneux
+%
+% Copyright 2007-2017
+%
+
+##### SOURCE END #####
+--></body></html>

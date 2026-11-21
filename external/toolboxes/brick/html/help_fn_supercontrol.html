@@ -1,0 +1,198 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>fn_supercontrol</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-07"><meta name="DC.source" content="help_fn_supercontrol.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>fn_supercontrol</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Source</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>X = fn_supercontrol([hp,]specs[,callback[,x0]])
+specs = fn_supercontrol.examplespecs
+fn_supercontrol('demo')</pre><h2>Description<a name="2"></a></h2><pre>Input:
+- hp          uipanel handle
+- specs       structure with fields:
+              . name      string
+              . controls  structure with fields (* is mandatory):
+                          style*  popupmenu, edit, checkbox,
+                                  radiobutton, togglebutton,
+                                  pushbutton, stepper, file or dir
+                          string  the 'string' property of the
+                                  control
+                          length* relative width occupied by the
+                                  control + its label if any
+                          default* default value (type depends on
+                                  control style)
+                          label   a label placed on the left
+                          labellength     relative width occupied by
+                                  the label (set to 0 if no label)
+                          callback        for push button only:
+                                  - function with prototype
+                                  valuek = fun(value) where value is
+                                  a cell array and valuek an element
+                                  of this array [MORE DOC NEEDED]
+                                  - or character array: flag that
+                                  will be sent to X.callback
+                          type    type of the value (useful in
+                                  particular for the 'edit' style)
+                          more    more properties stored in a cell
+                                  array with successive pairs of
+                                  property names/values
+- callback    function to be executed when control values are
+              changed by user, with prototype @(x)fun(x),
+              where x is X.x (see below)
+- x0          initial value (see below comments on X.x)</pre><pre>Output:
+- X           fn_supercontrol object; X.x is a structure that
+              stores the values, with fields:
+              .name       string
+              .active     logical
+              .value      cell array with values (one per
+                          control in the specs of the same
+                          name)</pre><pre>One can change the values either by user action (acionning
+the controls) or by setting the value of X.x.</pre><pre>Special notes:
+- chgactive flag: The callback might be invoked but the
+"active" part of the value has not changed (for example, when
+a new, inactive line has been creadted). The property
+X.activechg says whether this active part has changed or not.
+- 'edit': if the type is set to 'char' or not set, non-character
+values are stored in the 'userdata' property and the string
+'userdata' appears; the same happens when the type is numeric or
+logical and values are too large to be displayed correctly
+- 'pushbutton': when pressing the button, the callback is executed
+and changes the value accordingly</pre><pre>See also fn_control</pre><h2>Source<a name="3"></a></h2><p>Thomas Deneux</p><p>Copyright 2010-2017</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% fn_supercontrol
+
+%% Syntax
+%  X = fn_supercontrol([hp,]specs[,callback[,x0]])
+%  specs = fn_supercontrol.examplespecs
+%  fn_supercontrol('demo')
+
+%% Description
+%  Input:
+%  - hp          uipanel handle
+%  - specs       structure with fields:
+%                . name      string
+%                . controls  structure with fields (* is mandatory):
+%                            style*  popupmenu, edit, checkbox,
+%                                    radiobutton, togglebutton,
+%                                    pushbutton, stepper, file or dir 
+%                            string  the 'string' property of the
+%                                    control
+%                            length* relative width occupied by the
+%                                    control + its label if any
+%                            default* default value (type depends on
+%                                    control style)
+%                            label   a label placed on the left
+%                            labellength     relative width occupied by
+%                                    the label (set to 0 if no label)
+%                            callback        for push button only:
+%                                    - function with prototype 
+%                                    valuek = fun(value) where value is
+%                                    a cell array and valuek an element
+%                                    of this array [MORE DOC NEEDED]
+%                                    - or character array: flag that
+%                                    will be sent to X.callback
+%                            type    type of the value (useful in
+%                                    particular for the 'edit' style)
+%                            more    more properties stored in a cell
+%                                    array with successive pairs of
+%                                    property names/values
+%  - callback    function to be executed when control values are
+%                changed by user, with prototype @(x)fun(x),
+%                where x is X.x (see below)
+%  - x0          initial value (see below comments on X.x)
+% 
+%  Output:
+%  - X           fn_supercontrol object; X.x is a structure that
+%                stores the values, with fields:
+%                .name       string
+%                .active     logical
+%                .value      cell array with values (one per
+%                            control in the specs of the same
+%                            name)
+% 
+%  One can change the values either by user action (acionning
+%  the controls) or by setting the value of X.x.
+% 
+%  Special notes:
+%  - chgactive flag: The callback might be invoked but the
+%  "active" part of the value has not changed (for example, when
+%  a new, inactive line has been creadted). The property
+%  X.activechg says whether this active part has changed or not.
+%  - 'edit': if the type is set to 'char' or not set, non-character
+%  values are stored in the 'userdata' property and the string
+%  'userdata' appears; the same happens when the type is numeric or
+%  logical and values are too large to be displayed correctly
+%  - 'pushbutton': when pressing the button, the callback is executed
+%  and changes the value accordingly
+% 
+%  See also fn_control
+
+%% Source
+% Thomas Deneux
+%
+% Copyright 2010-2017
+%
+
+##### SOURCE END #####
+--></body></html>

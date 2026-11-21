@@ -19,7 +19,7 @@ function experiment = setActiveNetwork(experiment, varargin)
 % EXAMPLE:
 %   experiment = setActiveNetwork(experiment, setActiveNetworkOptions)
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 %
 % See also setActiveNetworkOptions
 
@@ -59,7 +59,12 @@ if(isempty(groupList))
   logMsg(sprintf('Group %s not found on experiment %s', mainGroup, experiment.name), 'w');
   return;
 end
-
+if(isfield(experiment, 'RS'))
+  experiment = loadBigFields(experiment, {'RS'});
+end
+if(isfield(experiment, 'inference'))
+  experiment = loadBigFields(experiment, {'inference'});
+end
 % Time to iterate through all the groups
 for git = 1:length(groupList)
   if(params.pbar > 0)
@@ -75,10 +80,22 @@ for git = 1:length(groupList)
     case 'GTE'
       RS = (experiment.GTE.(field){idx}(:, :, 2) > params.confidenceLevelThreshold);
     case 'GTE unconditioned'
-      RS = (experiment.GTEunconditioned.(field){idx}(:, :, 2) > params.confidenceLevelThreshold);  
+      RS = (experiment.GTEunconditioned.(field){idx}(:, :, 2) > params.confidenceLevelThreshold); 
+     case 'GTE raw'
+      RS = experiment.GTE.(field){idx}(:, :, 1);
+    case 'GTE raw unconditioned'
+      RS = experiment.GTEunconditioned.(field){idx}(:, :, 1); 
+    case 'xcorr'
+      RS = experiment.inference.xcorr;
+    case 'xcorrMax'
+      RS = experiment.inference.xcorrMax;
+    case 'FC'
+      experiment = loadBigFields(experiment, {'FC'});
+      RS = experiment.FC.(field){idx} > 0;
   end
   experiment.RS.(field){idx} = double(RS);
 end
+experiment.saveBigFields = true;
 %--------------------------------------------------------------------------
 barCleanup(params);
 %--------------------------------------------------------------------------

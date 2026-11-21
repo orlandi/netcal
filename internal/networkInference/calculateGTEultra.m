@@ -33,6 +33,8 @@ function [GTE, sGTE, biasGTE, debugData] = calculateGTEultra(D, G, varargin)
 %
 % EXAMPLE:
 %    GTE = calculateGTEultra(D);
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
+
 
 %%% Assign default values
 params.markovOrder = [2 2];
@@ -245,7 +247,7 @@ switch params.surrogateType
     return;
 end
 
-if(params.verbose)
+if(params.verbose || params.pbar > 0)
   ncbar.setCurrentBarName('Generating surrogate data');
 end
 currentEntry = 0;
@@ -417,7 +419,10 @@ for i = 1:N
     currentEntry = currentEntry+1/N;
   end
   sGTE(i, :, :, :) = sGTEi;
+
   if(params.verbose)
+    ncbar.update(currentEntry/N);
+  elseif(params.pbar > 0)
     ncbar.update(currentEntry/N);
   end
 end
@@ -454,7 +459,7 @@ function [GTE, P] = fromIdxToGTE(indxIJ, origP, Pnumel, ndimsP, bins, ki, kj, IF
     Ipast = sum(Ipast,ndimsP-dim+1-IFT);
   end 
   tmpRepmat = ones(1,ndimsP);
-  tmpRepmat((end-(ki+IFT-1)):end-1) = bins;
+  tmpRepmat((end-(ki+IFT)):end-1) = bins; % FIX
   %tmpRepmat((end-k+1-1):end-1) = bins;
   Ipast = repmat(Ipast, tmpRepmat);
 

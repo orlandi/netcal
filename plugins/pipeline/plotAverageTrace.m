@@ -20,7 +20,7 @@ function experiment = plotAverageTrace(experiment, varargin)
 
 % EXPERIMENT PIPELINE
 % name: plot average trace
-% parentGroups: fluorescence: basic: plots
+% parentGroups: fluorescence: basic: plugins
 % optionsClass: plotAverageTraceOptions
 % requiredFields: avgT, avgTrace, folder, name
 

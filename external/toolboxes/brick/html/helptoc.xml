@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<toc version="3.0">
+<!-- First tocitem specifies top level in Help browser Contents pane -->
+<!-- This can be a roadmap page, as shown below, or a content page -->
+    <tocitem target="BrickToolbox.html">Brick Toolbox
+        <!-- Nest tocitems to create hierarchical entries in  Contents-->
+        <!-- To include icons, use the following syntax for tocitems: -->
+        <!-- <tocitem target="foo.html" image="HelpIcon.NAME"> -->
+        <!-- Title-of-Section </tocitem> -->
+        <!-- where NAME is one of the following (use capital letters): -->
+        <!-- FUNCTION, USER_GUIDE, EXAMPLES, BLOCK, GETTING_STARTED, -->
+        <!-- DEMOS, RELEASE_NOTES --> 
+        <!-- Icon images used for these entries are also stored in -->
+        <!-- matlabroot/toolbox/matlab/icons -->
+        
+        <tocitem target="HelpNotes.html" image="HelpIcon.GETTING_STARTED">
+            Useful Notes
+        </tocitem>
+        <tocitem target="Highlights1.html" image="HelpIcon.GETTING_STARTED">
+            Brick Highlights
+        </tocitem>
+        <tocitem target="Highlights2.html" image="HelpIcon.GETTING_STARTED">
+            More Highlights
+        </tocitem>
+        <tocitem target="helpfuncbycat.html" 
+            image="HelpIcon.FUNCTION">Function Reference
+        </tocitem>
+        
+        <!-- Optional List of Examples, with hyperlinks to examples in other files -->
+        <!-- 
+        <tocitem target="mytbx_example.html" 
+                 image="HelpIcon.HelpIcon.EXAMPLES">Mytoolbox Examples
+        </tocitem>
+        -->
+        
+        <!-- Optional link or links to your or other Web sites -->
+        <!-- 
+        <tocitem target="http://trac.int.univ-amu.fr/brick" 
+                 image="$toolbox/matlab/icons/webicon.gif">
+        Brick Toolbox Web Site
+        </tocitem>
+        -->
+        
+    </tocitem>
+</toc>

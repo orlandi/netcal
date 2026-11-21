@@ -1,9 +1,14 @@
 function helpText = generateAutomaticHelpFile(file, varargin)
 
-  if(length(varargin) < 1)
+  if(length(varargin) < 1 || isempty(varargin{1}))
     showHeader = true;
   else
     showHeader = varargin{1};
+  end
+  if(length(varargin) < 2)
+    src = [];
+  else
+    src = varargin{2};
   end
   fID = fopen(file,'r');
   insideProps = false;
@@ -76,6 +81,27 @@ function helpText = generateAutomaticHelpFile(file, varargin)
         header = strsplit(block{i});
         header = strsplit(header{1}, '@');
         header = ['## ' header{1}];
+        % Let's fix
+        if(~isempty(src))
+          try
+            if(any(strcmp(header, properties(src))))
+              header(1:3)
+              if(~strcmp(header(1:3), 'IO_'))
+                header = header(3:end);
+              end
+              header = strrep(header,'_','');
+              header = regexprep(header,'((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))', ' $1');
+              header(1) = upper(header(1));
+              % Needed hack
+              header = strrep(header, 'm Hz', ' mHz');
+            else
+              header = strrep(header,'_','');
+              header = regexprep(header,'((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))', ' $1');
+              header = strrep(header, 'm Hz', ' mHz');
+              header(1) = upper(header(1));
+            end
+          end
+        end
       end
     end
     % Now that we have a header, turn all comments into text
@@ -92,7 +118,7 @@ function helpText = generateAutomaticHelpFile(file, varargin)
         for i = 1:length(block)
           if(regexp(block{i},'[%]*'))
             newLine = strsplit(strtrim(block{i}(2:end)));
-            if(length(newLine) == 1 && strcmp(newLine{1}(end), ':'))
+            if(length(newLine) == 1 && ~isempty(newLine{1}) && strcmp(newLine{1}(end), ':'))
               % It;s a new header
               blockBody = [blockBody, sprintf('### %s\n',block{i}(2:end-1))];
             else

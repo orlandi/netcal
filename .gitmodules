@@ -1,6 +1,12 @@
-[submodule "external/CellSort"]
-	path = external/CellSort
-	url = https://github.com/orlandi/CellSort
-[submodule "external/CaImAn-MATLAB"]
-	path = external/CaImAn-MATLAB
-	url = https://github.com/orlandi/CaImAn-MATLAB
+[submodule "CellSort"]
+	path = external/submodules/CellSort
+	url = git@github.com:orlandi/CellSort
+[submodule "CaImAn"]
+	path = external/submodules/CaImAn-MATLAB
+	url = git@github.com:orlandi/CaImAn-MATLAB
+[submodule "jsonlab"]
+	path = external/submodules/jsonlab
+	url = git@github.com:orlandi/jsonlab
+[submodule "helperTools"]
+	path = internal/submodules/helperTools
+	url = git@github.com:orlandi/helperTools

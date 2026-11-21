@@ -92,7 +92,7 @@ y_range = max(trace)-min(trace);
 xlim([min(experiment.avgT)-x_range*0.01 max(experiment.avgT)+x_range*0.01]);
 ylim([min(trace)-y_range*0.01 max(trace)+y_range*0.01]);
 box on;
-title([experiment.name type ' fluorescence trace']);
+title([experiment.name type ' fluorescence trace'], 'interpreter', 'none');
 set(gcf,'Color','w');
 pos = get(hFig, 'Position');
 pos(4) = pos(3)/((1+sqrt(5))/2);

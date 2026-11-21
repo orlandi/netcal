@@ -20,7 +20,7 @@ function [success, optionsObject] = optionsWindow(optionsObject, varargin)
 % EXAMPLE:
 %   [success, parameters] = optionsWindow(baseOptions, 'Simple window')
 %
-% Copyright (C) 2016-2018, Javier G. Orlandi <javiergorlandi@gmail.com>
+% Copyright (C) 2016-2025, Javier G. Orlandi <javier.orlandi@ucalgary.ca>
 %
 % This function is derived from the original propertiesGUI from
 % Yair M. Altman http://undocumentedmatlab.com/blog/propertiesgui
@@ -60,17 +60,20 @@ end
 %%% -----------------------------------------------------------------------
 % Set default values to the class
 
-optionsObject = optionsObject.setDefaults();
+%optionsObject = optionsObject.setDefaults();
 
 % Create a copy of the original class object with its defaults
 mainClass = class(optionsObject);
 originalClassObject = eval(mainClass);
-originalClassObject = originalClassObject.setDefaults();
 % Set experiment defaults if it still hold the original values
+if(isequaln(optionsObject, originalClassObject))
+  optionsObject = optionsObject.setDefaults();
+end
+% Set experiment defaults if it still hold the original values
+%optionsObject = optionsObject.initDropdown();
 if(~isempty(params.experiment) && isequaln(optionsObject, originalClassObject))
   optionsObject = optionsObject.setExperimentDefaults(params.experiment);
 end
-
 % Set project defaults if it still holds the original values
 if(~isempty(params.project) && isequaln(optionsObject, originalClassObject))
   optionsObject = optionsObject.setProjectDefaults(params.project);
@@ -79,9 +82,11 @@ end
 optionsStruct = optionsObject.get();
 originalOptionsStruct = optionsStruct;
 
-
 % Now we pass the default class parameters for everything
 classObjectDefaults = eval(mainClass);
+classObjectDefaults = classObjectDefaults.setDefaults();
+%%% 2025 fix to reset the dropdown
+classObjectDefaults = classObjectDefaults.initDropdown();
 if(~isempty(params.experiment))
   classObjectDefaults = classObjectDefaults.setExperimentDefaults(params.experiment);
 end
@@ -91,7 +96,6 @@ end
 structObjectDefaults = classObjectDefaults.get();
 
 optionsStruct = structObjectDefaults;
-
 
 
 
@@ -244,12 +248,14 @@ end
 
 % Second column (empty for now)
 %--------------------------------------------------------------------------
-% De help
+% The help
 if(isempty(parent))
-  helpPanel = MarkdownPanel('Parent', hs.mainWindowGrid);
-  set(helpPanel, 'Content', helpText);
+  %helpPanel = MarkdownPanel('Parent', hs.mainWindowGrid);
+  %set(helpPanel, 'Content', helpText);
+  helpPanel = newMarkdownPanel24(hs.mainWindowGrid, helpText);
   btHelp.Callback = {@btHelp_Callback, helpPanel};
-  set(hs.mainWindowGrid, 'Widths', [-1 0]);
+  helpPanel
+  set(hs.mainWindowGrid, 'Widths', [-1 0 0]);
 else
   btHelp.Callback = {@btHelp_CallbackStandalone, classFile, helpFile, superClassListFiles};
   set(hs.mainWindowGrid, 'Widths', -1);
@@ -381,6 +387,7 @@ end
   function btDefaults_Callback(btOK, eventData, mainClass, propsList)
     defaultsClassObject = eval(mainClass);
     defaultsClassObject = defaultsClassObject.setDefaults();
+    defaultsClassObject = defaultsClassObject.initDropdown();
     if(~isempty(params.experiment))
       defaultsClassObject = defaultsClassObject.setExperimentDefaults(params.experiment);
     end
@@ -390,7 +397,7 @@ end
     defaultsStructObject = defaultsClassObject.get();
     
     optionsStruct = updatePropsList(propsList, defaultsStructObject);
-
+    
   end
 
   % Subfunctions to set properties - I believe that's quite redundant (botch)
@@ -416,6 +423,7 @@ end
       elseif(isstruct(structObject.(propNameb)))
          [~, ~] = setStructProperty(structObject, propNameb, curPropb);
          % We don't update the root of the structure
+         
       else
         [newValue, successDef] = setDefaultProperty(structObject, propNameb, curPropb);
         if(successDef)
@@ -539,13 +547,14 @@ end
   function btHelp_Callback(btOk, ~, helpPanel)
     hFigb = btOk.Parent.Parent.Parent.Parent;
     hGrid = btOk.Parent.Parent.Parent;
+    
     if(btOk.Value)
       hFigb.Position(3) = 2*hFigb.Position(3);
-      set(helpPanel, 'Content', helpPanel.Content);
-      set(hGrid, 'Widths', [-1 -1]);
+      %set(helpPanel, 'Content', helpPanel.Content);
+      set(hGrid, 'Widths', [-1 0 -1]);
     else
       hFigb.Position(3) = 1/2*hFigb.Position(3);
-      set(hGrid, 'Widths', [-1 0]);
+      set(hGrid, 'Widths', [-1 0 0]);
     end
   end
 
@@ -568,7 +577,7 @@ end
       helpFig.Position = setFigurePosition(gui, 'width', 500, 'height', 500);
     end
 
-    helpPanelStandAlone = MarkdownPanel('Parent', helpFig);
+    %helpPanelStandAlone = MarkdownPanel('Parent', helpFig);
     if(exist(helpFile, 'file'))
       helpTextStandAlone = fileread(helpFile);
     else
@@ -580,39 +589,40 @@ end
       %helpText
       %helpText = {'# Help'; 'Not available (TODO)'};
     end
-    set(helpPanelStandAlone, 'Content', helpTextStandAlone);
+    %set(helpPanelStandAlone, 'Content', helpTextStandAlone);
+    helpPanel = newMarkdownPanel24(helpFig, helpTextStandAlone);
     helpFig.Visible = 'on';
 
     %timerFcn = @(s,e)set(helpPanelStandAlone, 'Content', char(helpPanelStandAlone.Content));
-    htimer = timer( ...
-                    'Period',        1, ...
-                    'BusyMode',      'drop', ...
-                    'TimerFcn',      {@basicTimerFcn, helpPanelStandAlone, char(helpPanelStandAlone.Content)}, ...
-                    'ExecutionMode', 'fixedRate');
-
-    % Destroy the timer when the panel is destroyed
-    L = addlistener(helpPanelStandAlone, 'ObjectBeingDestroyed', @timerCallback);
-    setappdata(helpFig, 'Timer', L);
-
-    % Start the refresh timer
-    start(htimer)
+%     htimer = timer( ...
+%                     'Period',        1, ...
+%                     'BusyMode',      'drop', ...
+%                     'TimerFcn',      {@basicTimerFcn, helpPanelStandAlone, char(helpPanelStandAlone.Content)}, ...
+%                     'ExecutionMode', 'fixedRate');
+% 
+%     % Destroy the timer when the panel is destroyed
+%     L = addlistener(helpPanelStandAlone, 'ObjectBeingDestroyed', @timerCallback);
+%     setappdata(helpFig, 'Timer', L);
+% 
+%     % Start the refresh timer
+%     start(htimer)
   
     %----------------------------------------------------------------------
-    function basicTimerFcn(~, ~, panelObj, content)
-      try
-        set(panelObj, 'Content', content);
-      catch
-      end
-    end
-    
+%     function basicTimerFcn(~, ~, panelObj, content)
+%       try
+%         set(panelObj, 'Content', content);
+%       catch
+%       end
+%     end
+%     
     %----------------------------------------------------------------------
-    function timerCallback(tObj, ~)
-      try
-        stop(tObj);
-        delete(tObj);
-      catch
-      end
-   end
+%     function timerCallback(tObj, ~)
+%       try
+%         stop(tObj);
+%         delete(tObj);
+%       catch
+%       end
+%    end
   end
 
   % Enter & Esc to quit the window
@@ -772,6 +782,8 @@ end
               newVal = [];
             end
           end
+        elseif(iscell(p.(curField)) && isempty(p.(curField)))
+          newVal = '';
         end
       end
       p.(curField) = newVal;
