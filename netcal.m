@@ -38,7 +38,7 @@ else
   appName = [appName, ' Dev Build'];
 end
   
-currVersion = '10.0.1';
+currVersion = '10.0.3';
 appFolder = fileparts(mfilename('fullpath'));
 
 if(~DEVELOPMENT)
@@ -74,6 +74,7 @@ import('uiextras.jTree.*');
 
 addpath(genpath(appFolder));
 rmpath(genpath([appFolder filesep '.git'])) % But exclude .git/
+rmpath(genpath([appFolder filesep '.stversions'])) % And file version backups
 rmpath(genpath([appFolder filesep 'old'])) % And old
 rmpath(genpath([appFolder filesep 'external' filesep 'cvx'])) % And CVX for now
 rmpath(genpath(fullfile(appFolder, 'external', 'guiManagement', 'JavaTreeWrapper', 'java_src'))); % And tree wrapper sources
@@ -2856,6 +2857,24 @@ function success = updateFileByFile(varargin)
   if(ispc)
     fileList = strrep(fileList, '/', '\');
   end
+  % Content hashes (MD5) catch files that changed without changing their size.
+  % They are optional: a server without hashList.txt falls back to comparing sizes
+  serverHashes = containers.Map('KeyType', 'char', 'ValueType', 'char');
+  try
+    hashList = webread([updaterSource 'hashList.txt']);
+    if(ispc)
+      hashList = strrep(hashList, '/', '\');
+    end
+    hashLines = strsplit(strtrim(hashList), '\n');
+    for i = 1:length(hashLines)
+      hashTokens = strsplit(strtrim(hashLines{i}), ' ');
+      if(numel(hashTokens) >= 2)
+        serverHashes(strjoin(hashTokens(1:end-1), ' ')) = hashTokens{end};
+      end
+    end
+  catch
+    logMsg('No hash list found on the server. Comparing only file sizes', netcalMainWindow, 'w');
+  end
   % Turn each line into 2 strings to process and compare
   fileListLines = strsplit(fileList, '\n');
   filesToDownload = {};
@@ -2870,7 +2889,9 @@ function success = updateFileByFile(varargin)
     currFile = dir(splitLine{1});
     % Always update netcal.m - since it might very easily have same byte length as other versions
     try
-      if((force && ~strcmpi(currFile.name, 'netcal.m')) || isempty(currFile) || (currFile.bytes ~= splitLine{2} && ~strcmpi(currFile.name, 'netcal.m')))
+      % Same size but different content
+      contentDiffers = ~isempty(currFile) && currFile.bytes == splitLine{2} && isKey(serverHashes, splitLine{1}) && ~strcmp(fileMD5(splitLine{1}), serverHashes(splitLine{1}));
+      if((force && ~strcmpi(currFile.name, 'netcal.m')) || isempty(currFile) || ((currFile.bytes ~= splitLine{2} || contentDiffers) && ~strcmpi(currFile.name, 'netcal.m')))
         filesToDownload{end+1} = splitLine{1};
       end
     catch

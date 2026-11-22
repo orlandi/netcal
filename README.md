@@ -29,6 +29,20 @@ NETCAL is a MATLAB-built, dedicated software platform to record, manage and anal
 
 Starting November 2026, Claude Code is being used to update this repository.
 
+## [10.0.3] - 2026-11-21
+
+### Fixed
+- The colormap preview images (`external/colormaps/colormap_*.png`) and `external/guiManagement/JavaTreeWrapper/Readme.pdf` were hidden from git by `.gitignore`, so they were missing from the public repository and from packages built from it. They are now tracked, and the colormap picker shows every colormap
+
+## [10.0.2] - 2026-11-21
+
+### Modified
+- The updater now also compares MD5 hashes (new `hashList.txt` next to `fileList.txt`), so files whose content changed but whose size did not are updated too. Servers without `hashList.txt` fall back to comparing sizes, and older clients ignore the new file
+- `Check consistency` also reports files with the right size but different content
+
+### Added
+- `fileMD5`: MD5 hash of a file
+
 ## [10.0.1] - 2026-11-20
 
 ### Modified

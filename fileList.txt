@@ -72,7 +72,7 @@ internal/fluorescence/applyCorrection.m 7271
 internal/fluorescence/applySmoothing.m 1127
 internal/fluorescence/blkPercentile.m 454
 internal/fluorescence/burstDetection.m 11426
-internal/fluorescence/burstDetectionPSP.m 10091
+internal/fluorescence/burstDetectionPSP.m 9796
 internal/fluorescence/computePSDavg.m 4633
 internal/fluorescence/correctTraces.m 4937
 internal/fluorescence/denoiseRecording.m 17196
@@ -90,7 +90,7 @@ internal/fluorescence/traceUnsupervisedEventDetection.m 9300
 internal/fluorescence/options/KClProtocolOptions.m 4519
 internal/fluorescence/options/backgroundRemovalOptions.m 577
 internal/fluorescence/options/burstDetectionOptions.m 2613
-internal/fluorescence/options/burstDetectionPSPoptions.m 1761
+internal/fluorescence/options/burstDetectionPSPoptions.m 1709
 internal/fluorescence/options/burstPatternOptions.m 758
 internal/fluorescence/options/computePSDavgOptions.m 1997
 internal/fluorescence/options/correctTracesOptions.m 5019
@@ -113,7 +113,7 @@ internal/groups/generatePredefinedPatterns.m 4354
 internal/groups/identifyFiringNeurons.m 2416
 internal/groups/identifyHCG.m 7117
 internal/groups/identifyISI.m 8016
-internal/groups/identifyOverlappingCells.m 9016
+internal/groups/identifyOverlappingCells.m 8814
 internal/groups/importFilePatterns.m 4727
 internal/groups/patternCountClassification.m 6437
 internal/groups/options/KMeansOptions.m 563
@@ -125,7 +125,7 @@ internal/groups/options/eventSimplificationOptions.m 489
 internal/groups/options/identifyFiringNeuronsOptions.m 1412
 internal/groups/options/identifyHCGoptions.m 1886
 internal/groups/options/identifyISIoptions.m 2898
-internal/groups/options/identifyOverlappingCellsOptions.m 1912
+internal/groups/options/identifyOverlappingCellsOptions.m 1858
 internal/groups/options/importPatternsOptions.m 1377
 internal/groups/options/learningEventOptions.m 682
 internal/groups/options/learningManualOptions.m 244
@@ -169,6 +169,7 @@ internal/guiManagement/customTreeDnD.m 15988
 internal/guiManagement/decodeFloat.m 229
 internal/guiManagement/experimentToWorkspace.m 287
 internal/guiManagement/experimentTree.m 10904
+internal/guiManagement/fileMD5.m 1227
 internal/guiManagement/fixURL.m 221
 internal/guiManagement/fromBytes.m 130
 internal/guiManagement/generateAutomaticHelpFile.m 3718
@@ -205,7 +206,7 @@ internal/guiManagement/menus/menuTutorialOpen.m 1030
 internal/guiManagement/menus/menufluorescenceAnalysisCutTraces.m 1118
 internal/guiManagement/menus/menufluorescenceAnalysisRebaseTime.m 870
 internal/guiManagement/menus/pluginChecker.m 820
-internal/guiManagement/menus/updateCheckConsistency.m 2290
+internal/guiManagement/menus/updateCheckConsistency.m 3143
 internal/guiManagement/options/addBatchOptions.m 1293
 internal/guiManagement/options/defaultFPSoptions.m 473
 internal/images/autoLevelsFIJI.m 2341
@@ -252,13 +253,13 @@ internal/networks/connectivityMatrixToGexf.m 5364
 internal/networks/networkToGEXF.m 3804
 internal/options/baseOptions.m 4895
 internal/options/generateAutomaticHelpFile.m 4631
-internal/options/optionsWindow.m 54765
+internal/options/optionsWindow.m 53298
 internal/options/optionsWindowNew.m 54610
 internal/options/preloadMultipleOptions.m 2440
 internal/options/preloadOptions.m 3155
 internal/options/help/README.md 148
 internal/plots/UnivarScatterV2.m 27395
-internal/plots/ciplotAuto.m 756
+internal/plots/ciplotAuto.m 728
 internal/plots/ciplotXY.m 1116
 internal/plots/flowCircle.m 25649
 internal/plots/getCurvedConnection.m 1039
@@ -307,11 +308,11 @@ internal/spikeInference/options/schmittOptions.m 2585
 internal/spikes/burstDetectionISIN.m 8014
 internal/spikes/burstDetectionISINautomatic.m 21001
 internal/spikes/burstDetectionISINexplorer.m 5205
-internal/spikes/burstDetectionRise.m 11856
+internal/spikes/burstDetectionRise.m 11531
 internal/spikes/burstDetectionSpikes.m 6263
 internal/spikes/burstDetectionSurprise.m 15186
 internal/spikes/burstDetectionX.m 13499
-internal/spikes/burstDetectionXplot.m 8760
+internal/spikes/burstDetectionXplot.m 8513
 internal/spikes/getSpikesFeatures.m 14190
 internal/spikes/importCascadePredictions.m 1944
 internal/spikes/spikeDetectConflicts.m 5483
@@ -320,11 +321,11 @@ internal/spikes/spikeRemoveConflicts.m 2916
 internal/spikes/options/burstDetectionISINautomaticOptions.m 2984
 internal/spikes/options/burstDetectionISINexplorerOptions.m 1692
 internal/spikes/options/burstDetectionISINoptions.m 1739
-internal/spikes/options/burstDetectionRiseOptions.m 2067
+internal/spikes/options/burstDetectionRiseOptions.m 2008
 internal/spikes/options/burstDetectionSpikesOptions.m 2135
 internal/spikes/options/burstDetectionSurpriseOptions.m 2882
 internal/spikes/options/burstDetectionXoptions.m 2444
-internal/spikes/options/burstDetectionXplotOptions.m 1553
+internal/spikes/options/burstDetectionXplotOptions.m 1513
 internal/spikes/options/spikeDetectConflictsOptions.m 2771
 internal/spikes/options/spikeDetectConflictsRateOptions.m 1553
 internal/spikes/options/spikeFeaturesDistributionPlotOptions.m 1017
@@ -510,7 +511,7 @@ external/PCAICA/FastICA_25/CVS/Root 21
 external/PCAICA/fastPCA/license.txt 1313
 external/PCAICA/fastPCA/pcaecon.m 981
 external/PCAICA/fastPCA/pcasecon.m 934
-external/PCAICA/fastPCA/readme.txt 1107
+external/PCAICA/fastPCA/readme.txt 1050
 external/PCAICA/fastPCA/svdecon.m 782
 external/PCAICA/fastPCA/svdsecon.m 954
 external/PCAICA/fastPCA/testsvd.m 966
@@ -557,7 +558,7 @@ external/data/bigtiff/saveastiff.m 12013
 external/data/gkde/gkde2.m 6769
 external/data/gkde/gkde2test.m 1458
 external/data/gkde/license.txt 1306
-external/data/gkde/html/gkde2test.html 6296
+external/data/gkde/html/gkde2test.html 6232
 external/data/gkde/html/gkde2test_01.png 25639
 external/data/gkde/html/gkde2test_02.png 18288
 external/data/gkde/html/gkde2test_03.png 26203
@@ -589,26 +590,26 @@ external/guiManagement/JavaTreeWrapper/+uiextras/+jTree/Tree.m 49033
 external/guiManagement/JavaTreeWrapper/+uiextras/+jTree/TreeNode.m 17269
 external/guiManagement/JavaTreeWrapper/+uiextras/+jTree/UIExtrasTree.jar 10958
 external/guiManagement/JavaTreeWrapper/+uiextras/+jTree/loadJavaCustomizations.m 1014
-external/guiManagement/JavaTreeWrapper/java_src/Readme.txt 332
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/build-impl.xml 78054
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/genfiles.properties 475
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/project.properties 2741
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/project.xml 520
+external/guiManagement/JavaTreeWrapper/java_src/Readme.txt 325
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/build-impl.xml 76654
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/genfiles.properties 467
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/project.properties 2657
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/project.xml 505
 external/guiManagement/JavaTreeWrapper/java_src/nbproject/private/config.properties 0
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/private/private.properties 184
-external/guiManagement/JavaTreeWrapper/java_src/nbproject/private/private.xml 230
-external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/CheckBoxTree.java 940
-external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/CheckBoxTreeCellRenderer.java 1382
-external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeCellRenderer.java 1077
-external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeNode.java 1782
-external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeTransferHandler.java 2869
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/private/private.properties 178
+external/guiManagement/JavaTreeWrapper/java_src/nbproject/private/private.xml 226
+external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/CheckBoxTree.java 899
+external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/CheckBoxTreeCellRenderer.java 1338
+external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeCellRenderer.java 1036
+external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeNode.java 1701
+external/guiManagement/JavaTreeWrapper/java_src/src/UIExtrasTree/TreeTransferHandler.java 2781
 external/guiManagement/MarkdownPanel/MarkdownPanel.m 17926
 external/guiManagement/MarkdownPanel/README.md 1660
 external/guiManagement/MarkdownPanel/showdown.min.js 26423
 external/guiManagement/createTable/TableSorter.jar 17005
 external/guiManagement/createTable/createTable.m 34781
 external/guiManagement/dndcontrol/MLDropTarget.class 2239
-external/guiManagement/dndcontrol/MLDropTarget.java 2266
+external/guiManagement/dndcontrol/MLDropTarget.java 2195
 external/guiManagement/dndcontrol/dndcontrol.m 9223
 external/guiManagement/dndcontrol/license.txt 1321
 external/guiManagement/getCases/getCases.m 14560
@@ -644,7 +645,7 @@ external/licenses/winontop.txt 1304
 external/plots/autoArrangeFigures.m 2970
 external/plots/axdrag.m 7002
 external/plots/calcCircle.m 2631
-external/plots/ciplot.m 1232
+external/plots/ciplot.m 1195
 external/plots/fix_xticklabels.m 3857
 external/plots/mtit.m 3792
 external/plots/plotSpikeRaster.m 22571
@@ -681,7 +682,7 @@ external/spikeInference/mlspike/help/spk_demo_02.png 13091
 external/spikeInference/mlspike/help/spk_demo_03.png 23707
 external/spikeInference/mlspike/help/spk_demo_04.png 70612
 external/spikeInference/mlspike/help/spk_demo_05.png 23132
-external/spikeInference/mlspike/help/spk_factorbox.html 61495
+external/spikeInference/mlspike/help/spk_factorbox.html 60349
 external/spikeInference/mlspike/help/spk_factorbox.png 1613
 external/spikeInference/mlspike/help/spk_factorbox_01.png 16607
 external/spikeInference/mlspike/help/spk_factorbox_02.png 30279
@@ -1286,8 +1287,8 @@ external/toolboxes/IoSR/+iosr/+statistics/trirnd.m 1246
 external/toolboxes/IoSR/+iosr/+svn/buildSvnProfile.m 4210
 external/toolboxes/IoSR/+iosr/+svn/headRev.m 2802
 external/toolboxes/IoSR/+iosr/+svn/readSvnKeyword.m 2196
-external/toolboxes/NCCToolboxV1/README - Complexity.txt 1844
-external/toolboxes/NCCToolboxV1/README - Criticality.txt 7931
+external/toolboxes/NCCToolboxV1/README - Complexity.txt 1814
+external/toolboxes/NCCToolboxV1/README - Criticality.txt 7798
 external/toolboxes/NCCToolboxV1/asdf2toraster.m 2662
 external/toolboxes/NCCToolboxV1/avgshapes.m 8109
 external/toolboxes/NCCToolboxV1/avprops.m 6923
@@ -1316,7 +1317,7 @@ external/toolboxes/NCCToolboxV1/rebin.m 3233
 external/toolboxes/NCCToolboxV1/rldecode.m 897
 external/toolboxes/NCCToolboxV1/sizegivdurwls.m 6202
 external/toolboxes/brick/Contents.m 15996
-external/toolboxes/brick/README.md 17168
+external/toolboxes/brick/README.md 16747
 external/toolboxes/brick/_montage.m 44388
 external/toolboxes/brick/alias.m 2012
 external/toolboxes/brick/ascii8x12.png 6246
@@ -1396,7 +1397,7 @@ external/toolboxes/brick/fn_float.m 521
 external/toolboxes/brick/fn_framedesign.m 12558
 external/toolboxes/brick/fn_framedisplay.m 14598
 external/toolboxes/brick/fn_get.m 2391
-external/toolboxes/brick/fn_getPr.cpp 548
+external/toolboxes/brick/fn_getPr.cpp 530
 external/toolboxes/brick/fn_getPr.m 563
 external/toolboxes/brick/fn_getPr.mexa64 7211
 external/toolboxes/brick/fn_getPr.mexw32 6144
@@ -1545,7 +1546,7 @@ external/toolboxes/brick/fn_xregister.m 2653
 external/toolboxes/brick/fourth.m 172
 external/toolboxes/brick/graph.m 14723
 external/toolboxes/brick/hsl2rgb.m 1136
-external/toolboxes/brick/info.xml 2383
+external/toolboxes/brick/info.xml 2336
 external/toolboxes/brick/interactivePolygon.m 7706
 external/toolboxes/brick/interface.m 14625
 external/toolboxes/brick/interface_template.m 827
@@ -1576,20 +1577,20 @@ external/toolboxes/brick/helpsource/Highlights2.m 2403
 external/toolboxes/brick/helpsource/checkcontents.m 1685
 external/toolboxes/brick/helpsource/checkcopyright.m 2529
 external/toolboxes/brick/helpsource/createhelpfiles.m 5871
-external/toolboxes/brick/license/license.txt 7816
+external/toolboxes/brick/license/license.txt 7651
 external/toolboxes/brick/private/NOTES.md 329
 external/toolboxes/brick/private/hash.m 2641
 external/toolboxes/brick/private/ps2pdf.m 17091
-external/toolboxes/brick/private/xml_MIT_Licence.txt 1079
+external/toolboxes/brick/private/xml_MIT_Licence.txt 1058
 external/toolboxes/brick/private/xml_gen_object_display.m 3859
 external/toolboxes/brick/private/xml_read.m 15890
 external/toolboxes/brick/private/xml_selftest_script.m 7234
-external/toolboxes/brick/private/xml_test_file.xml 527
+external/toolboxes/brick/private/xml_test_file.xml 505
 external/toolboxes/brick/private/xml_tutorial_script.m 16763
 external/toolboxes/brick/private/xml_write.m 13775
 external/toolboxes/brick/private/xml_write_xerces.m 3637
-external/toolboxes/brick/private/xml_html/xml_selftest_script.html 40756
-external/toolboxes/brick/private/xml_html/xml_tutorial_script.html 60711
+external/toolboxes/brick/private/xml_html/xml_selftest_script.html 39896
+external/toolboxes/brick/private/xml_html/xml_tutorial_script.html 59417
 external/toolboxes/toolbox_image/apply_colormap.m 322
 external/toolboxes/toolbox_image/barb.png 232752
 external/toolboxes/toolbox_image/callback_ti_wavelets.m 879
@@ -1642,7 +1643,7 @@ external/toolboxes/toolbox_image/perform_windowed_fourier_transform.m 6202
 external/toolboxes/toolbox_image/perform_zooming.m 252
 external/toolboxes/toolbox_image/publish_html.m 477
 external/toolboxes/toolbox_image/read_lum.m 658
-external/toolboxes/toolbox_image/readme.txt 526
+external/toolboxes/toolbox_image/readme.txt 520
 external/toolboxes/toolbox_image/save_image.m 1942
 external/toolboxes/toolbox_image/select_region.m 388
 external/toolboxes/toolbox_image/select_sub_image.m 708
@@ -1663,11 +1664,11 @@ external/toolboxes/toolbox_image/html/content_10.png 73602
 external/toolboxes/toolbox_image/html/content_11.png 64116
 external/toolboxes/toolbox_image/html/content_12.png 5601
 external/toolboxes/toolbox_image/html/gpeyre.xsl 8232
-external/toolboxes/toolbox_image/html/style.css 1397
-external/toolboxes/toolbox_image/mex/config.h 4761
-external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.cpp 2735
-external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.def 61
-external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.vcproj 4068
+external/toolboxes/toolbox_image/html/style.css 1305
+external/toolboxes/toolbox_image/mex/config.h 4618
+external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.cpp 2646
+external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.def 59
+external/toolboxes/toolbox_image/mex/perform_adaptive_filtering.vcproj 3922
 external/toolboxes/toolbox_image/toolbox/callback_atrou.m 303
 external/toolboxes/toolbox_image/toolbox/clamp.m 225
 external/toolboxes/toolbox_image/toolbox/compute_gaussian_filter.m 2270
@@ -1733,6 +1734,6 @@ plugins/pipeline/plotAverageTrace.m 3445
 docs/index.md 0
 docs/tutorials/Misc/Change Base Image.md 865
 docs/tutorials/ROI detection/Automatic/Use Contour Image.md 1274
-README.md 60300
+README.md 61071
 LICENSE.md 1089
-netcal.m 221387
+netcal.m 222442
